@@ -4,9 +4,12 @@ import android.util.Log;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -27,6 +30,10 @@ public class TestDepartureVision {
 
     SystemService systemService = new SystemService();
 
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this.getClass());
+    }
     @Test
     public void checkDepartureVision() {
         String code = "NY";

@@ -188,16 +188,16 @@ public class DownloadFileTest {
 
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("NJT NYP Departures.html");
 
-        File f = File.createTempFile("download_manager", ".testing.njts.tmp");
-        byte[] buffer = new byte[8 * 1024];
-        int bytesRead;
-        FileOutputStream outputStream = new FileOutputStream(f);
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
-        }
-        outputStream.close();
-        inputStream.close();
-        f.deleteOnExit();
+//        File f = File.createTempFile("download_manager", ".testing.njts.tmp");
+//        byte[] buffer = new byte[8 * 1024];
+//        int bytesRead;
+//        FileOutputStream outputStream = new FileOutputStream(f);
+//        while ((bytesRead = inputStream.read(buffer)) != -1) {
+//            outputStream.write(buffer, 0, bytesRead);
+//        }
+//        outputStream.close();
+//        inputStream.close();
+//        f.deleteOnExit();
 
         Mockito.when(cursor.getColumnIndex(DownloadManager.COLUMN_ID)).thenAnswer((invocation) -> 0);
         Mockito.when(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)).thenAnswer((invocation) -> 1);
@@ -207,13 +207,13 @@ public class DownloadFileTest {
 
         Mockito.when(cursor.getInt(0)).thenAnswer((i) -> queryData.getID());
         Mockito.when(cursor.getInt(1)).thenAnswer((i) -> queryData.getStatus());
-        Mockito.when(cursor.getString(2)).thenAnswer((i) -> f.toURI().toASCIIString()); // local file if successful.
+        //Mockito.when(cursor.getString(2)).thenAnswer((i) -> f.toURI().toASCIIString()); // local file if successful.
         Mockito.when(cursor.getString(3)).thenAnswer((i) -> url);
 
-        PowerMockito.mockStatic(Uri.class);
-        Uri uri = Mockito.mock(Uri.class);
-        Mockito.when(uri.getPath()).thenReturn(f.toString());
-        PowerMockito.when(Uri.parse(f.toURI().toASCIIString())).thenReturn(uri);
+        //PowerMockito.mockStatic(Uri.class);
+        //Uri uri = Mockito.mock(Uri.class);
+        //Mockito.when(uri.getPath()).thenReturn(f.toString());
+        //PowerMockito.when(Uri.parse(f.toURI().toASCIIString())).thenReturn(uri);
 
         Mockito.when(cursor.moveToNext()).thenAnswer(new Answer<Object>() {
             @Override
