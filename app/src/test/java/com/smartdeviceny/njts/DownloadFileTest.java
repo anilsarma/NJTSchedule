@@ -44,10 +44,11 @@ public class DownloadFileTest {
 
 
         DownloadFile downloadFile = new DownloadFile(context, callback);
+        final int requestid = 12;
         Mockito.when(manager.enqueue(Mockito.any())).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                return null;
+                return requestid;
             }
         });
         downloadFile.downloadFile(url, "title", "description", DownloadManager.Request.NETWORK_MOBILE| DownloadManager.Request.NETWORK_WIFI,
@@ -62,15 +63,34 @@ public class DownloadFileTest {
         Intent intent = Mockito.mock(Intent.class);
         Cursor cursor = Mockito.mock(Cursor.class);
         Mockito.when(manager.query(Mockito.any())).thenReturn(cursor);
-        Mockito.when(cursor.isAfterLast()).thenAnswer(new Answer<Object>() {
-            int count = 0;
+
+        final DownloadDataTable queryData = new DownloadDataTable();
+        queryData.add( DownloadManager.STATUS_SUCCESSFUL, requestid);
+
+
+        Mockito.when(cursor.getColumnIndex(DownloadManager.COLUMN_ID)).thenAnswer((invocation) -> 0);
+        Mockito.when(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)).thenAnswer((invocation) -> 1);
+        Mockito.when(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)).thenAnswer((invocation) -> 2);
+
+        Mockito.when(cursor.getInt(0)).thenAnswer((i) -> queryData.getID());
+        Mockito.when(cursor.getInt(1)).thenAnswer((i) -> queryData.getStatus());
+        Mockito.when(cursor.getString(2)).thenAnswer((i) -> url);
+
+
+        Mockito.when(cursor.moveToNext()).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                count ++;
-                if (count == 0) {
-                    return false;
+               queryData.setIndex(queryData.getIndex() +1);
+               return queryData.getIndex();
+            }
+        });
+        Mockito.when(cursor.isAfterLast()).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                if (queryData.getIndex()>= queryData.size()) {
+                    return true;
                 }
-                return true;
+                return false;
             }
         });
 
