@@ -71,10 +71,12 @@ public class DownloadFileTest {
         Mockito.when(cursor.getColumnIndex(DownloadManager.COLUMN_ID)).thenAnswer((invocation) -> 0);
         Mockito.when(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)).thenAnswer((invocation) -> 1);
         Mockito.when(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)).thenAnswer((invocation) -> 2);
+        Mockito.when(cursor.getColumnIndex(DownloadManager.COLUMN_URI)).thenAnswer((invocation) -> 3);
 
         Mockito.when(cursor.getInt(0)).thenAnswer((i) -> queryData.getID());
         Mockito.when(cursor.getInt(1)).thenAnswer((i) -> queryData.getStatus());
-        Mockito.when(cursor.getString(2)).thenAnswer((i) -> url);
+        Mockito.when(cursor.getString(2)).thenAnswer((i) -> url); // local file if successful.
+        Mockito.when(cursor.getString(3)).thenAnswer((i) -> url);
 
 
         Mockito.when(cursor.moveToNext()).thenAnswer(new Answer<Object>() {
