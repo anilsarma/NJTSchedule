@@ -47,7 +47,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SystemService extends Service {
 
@@ -786,8 +788,15 @@ public class SystemService extends Service {
     }
 
     public HashMap<String, DepartureVisionData> getCachedDepartureVisionStatus_byTrip() {
+        HashMap<String, DepartureVisionData> data = new HashMap<>();
         synchronized (lock_status_by_trip) {
-            return status_by_trip;
+            //data = status_by_trip.entrySet().stream().collect(Collectors.toMap(e -> (String)e.getKey()), e -> (Dee.clone() ));
+            // make an copy
+            for (Map.Entry entry: status_by_trip.entrySet()) {
+                data.put( (String)entry.getKey(), ((DepartureVisionData)entry.getValue()).clone());
+            }
+            //return (HashMap<String, DepartureVisionData>) status_by_trip.clone();
+            return data;
         }
     }
 

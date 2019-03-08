@@ -35,7 +35,7 @@ import com.smartdeviceny.njts.values.NotificationValues;
 public class MainActivity extends AppCompatActivity {
     boolean mIsBound = false;
     public SystemService systemService;
-    public ProgressDialog progressDialog =null;
+    public ProgressDialog progressDialog = null;
     int tabSelected = -1;
     SharedPreferences config;
 
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         viewPager.setAdapter(adapter);
         tabLayout.setupWithViewPager(viewPager);
 
-        tabLayout.addOnTabSelectedListener(new  TabLayout.OnTabSelectedListener() {
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 tabSelected = tab.getPosition();
@@ -97,43 +97,45 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         // bug in noughat... crap
-        Utils.scheduleJob(this.getApplicationContext(), DepartureVisionJobService.class, 15*1000, false);
+        Utils.scheduleJob(this.getApplicationContext(), DepartureVisionJobService.class, 15 * 1000, false);
     }
+
     public void doCheckIsDatabaseReady(Context context) {
-        if (systemService!= null ) {
+        if (systemService != null) {
             //systemService.checkForUpdate();
-            if ( progressDialog != null && progressDialog.isShowing()) {
+            if (progressDialog != null && progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
-            if( !systemService.isDatabaseReady()) {
+            if (!systemService.isDatabaseReady()) {
                 showUpdateProgressDialog(context, "System getting ready.");
             }
 
         } else {
-            Log.d("MAIN", "system service not init " + systemService );
+            Log.d("MAIN", "system service not init " + systemService);
         }
     }
 
     public void doCheckForUpdate(Context context) {
-        if (systemService!= null ) {
+        if (systemService != null) {
             systemService.checkForUpdate(false);
-            if ( progressDialog != null && progressDialog.isShowing()) {
+            if (progressDialog != null && progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
-            if( systemService.isUpdateRunning()) {
+            if (systemService.isUpdateRunning()) {
                 showUpdateProgressDialog(context, "Checking for Latest NJ Transit Train Schedules");
             }
         } else {
-            Log.d("MAIN", "system service not init " + systemService );
+            Log.d("MAIN", "system service not init " + systemService);
         }
     }
 
     public void doForceCheckUpgrade(Context context) {
-        if (systemService!= null ) {
+        if (systemService != null) {
             systemService.doForceCheckUpgrade();
             //doCheckForUpdate(context);
         }
     }
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -148,8 +150,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPostResume() {
-        if(progressDialog !=null && progressDialog.isShowing()) {
-            if(systemService != null && !systemService.isUpdateRunning()) {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            if (systemService != null && !systemService.isUpdateRunning()) {
                 progressDialog.dismiss();
                 progressDialog = null;
             }
@@ -189,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_Refresh:
-                if(systemService!=null) {
+                if (systemService != null) {
                     //SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     String departureVisionCode = ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
                     systemService.schdeuleDepartureVision(departureVisionCode, 5000);
@@ -197,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.menu_reverse: {
                 // swap the routes
-                if(tabSelected==0 || tabSelected == 1|| tabSelected == 3 ) {
+                if (tabSelected == 0 || tabSelected == 1 || tabSelected == 3) {
                     //SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     String start = ConfigUtils.getConfig(config, Config.START_STATION, ConfigDefault.START_STATION);
                     String stop = ConfigUtils.getConfig(config, Config.STOP_STATION, ConfigDefault.STOP_STATION);
@@ -207,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                     Utils.setConfig(config, Config.DV_STATION, station_code);
 
                     //for(Fragment f:getSupportFragmentManager().getFragments())
-                    if(systemService!=null) {
+                    if (systemService != null) {
                         systemService.updateActiveDepartureVisionStation(station_code);
                         systemService.schdeuleDepartureVision(station_code, 10000);
                     }
@@ -224,8 +226,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void updateFavorite( boolean status, String block_id) {
-        if( status ) {
+    public void updateFavorite(boolean status, String block_id) {
+        if (status) {
             systemService.addFavorite(block_id);
         } else {
             systemService.removeFavorite(block_id);
@@ -234,11 +236,11 @@ public class MainActivity extends AppCompatActivity {
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            systemService = ((RemoteBinder)service).getService();
+            systemService = ((RemoteBinder) service).getService();
             doCheckIsDatabaseReady(MainActivity.this);
 
             Log.d("MAIN", "SystemService connected, calling onSystemServiceConnected on fragments");
-            for(Fragment f:getSupportFragmentManager().getFragments()) {
+            for (Fragment f : getSupportFragmentManager().getFragments()) {
                 ServiceConnected frag = (ServiceConnected) f;
                 if (frag != null) {
                     frag.onSystemServiceConnected(systemService);
@@ -274,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void showUpdateProgressDialog(Context context, @Nullable String msg) {
         progressDialog = new ProgressDialog(context);
-        if(msg == null) {
+        if (msg == null) {
             msg = "Checking for NJ Transit schedule updates";
         }
         progressDialog.setMessage(msg);
@@ -283,64 +285,67 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void doConfigChanged() {
-        for(Fragment f:getSupportFragmentManager().getFragments()) {
+        for (Fragment f : getSupportFragmentManager().getFragments()) {
             ServiceConnected frag = (ServiceConnected) f;
             if (frag != null) {
-                if(systemService != null ) {
+                if (systemService != null) {
                     frag.configChanged(systemService);
                 }
             }
         }
     }
+
     private void sendNotifyConfigChanged() {
         Intent intent = new Intent(NotificationValues.BROADCAT_NOTIFY_CONFIG_CHANGED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         Log.d("MAIN", "sending BROADCAT_NOTIFY_CONFIG_CHANGED");
 
     }
+
     public String getStationCode() {
 
-        return ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION );
+        return ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
     }
+
     public class LocalBcstReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             // TODO Auto-generated method stub
             //Log.d("MAIN", "onReceive " + intent.getAction());
-            if (intent.getAction().equals(NotificationValues.BROADCAT_DATABASE_READY )) {
+            if (intent.getAction().equals(NotificationValues.BROADCAT_DATABASE_READY)) {
                 //Log.d("MAIN", "Database is ready we can do all the good stuff");
-                if(progressDialog != null && progressDialog.isShowing()) {
+                if (progressDialog != null && progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
                 doConfigChanged();
             } else if (intent.getAction().equals(NotificationValues.BROADCAT_DATABASE_CHECK_COMPLETE)) {
                 //Log.d("MAIN", NotificationValues.BROADCAT_DATABASE_CHECK_COMPLETE);
-                if(progressDialog != null && progressDialog.isShowing()) {
+                if (progressDialog != null && progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
-            } else if (intent.getAction().equals(NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED )) {
+            } else if (intent.getAction().equals(NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED)) {
                 //Log.d("MAIN", NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED);
-                for(Fragment f:getSupportFragmentManager().getFragments()) {
+                for (Fragment f : getSupportFragmentManager().getFragments()) {
                     ServiceConnected frag = (ServiceConnected) f;
-                    if(systemService != null ) {
+                    if (systemService != null) {
                         frag.onDepartureVisionUpdated(systemService);
                     }
 
                 }
-            } else if (intent.getAction().equals(NotificationValues.BROADCAT_PERIODIC_TIMER )) {
+            } else if (intent.getAction().equals(NotificationValues.BROADCAT_PERIODIC_TIMER)) {
                 //Log.d("MAIN", NotificationValues.BROADCAT_PERIODIC_TIMER);
                 boolean hasfrag = false;
-                for(Fragment f:getSupportFragmentManager().getFragments()) {
+                for (Fragment f : getSupportFragmentManager().getFragments()) {
                     ServiceConnected frag = (ServiceConnected) f;
-                    if(systemService != null ) {
+                    if (systemService != null) {
                         frag.onTimerEvent(systemService);
                     }
                 }
-            } else if (intent.getAction().equals(NotificationValues.BROADCAT_NOTIFY_CONFIG_CHANGED )) {
+            } else if (intent.getAction().equals(NotificationValues.BROADCAT_NOTIFY_CONFIG_CHANGED)) {
                 //Log.d("MAIN", NotificationValues.BROADCAT_NOTIFY_CONFIG_CHANGED);
-                for(Fragment f:getSupportFragmentManager().getFragments()) {
+                for (Fragment f : getSupportFragmentManager().getFragments()) {
                     ServiceConnected frag = (ServiceConnected) f;
-                    if(systemService != null ) {
+                    if (systemService != null) {
                         frag.configChanged(systemService);
                     }
                 }
@@ -349,6 +354,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     // Our handler for received Intents. This will be called whenever an Intent
     private BroadcastReceiver mMessageReceiver = new LocalBcstReceiver();
 }
