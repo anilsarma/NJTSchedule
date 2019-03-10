@@ -15,9 +15,18 @@ public class ConfigUtils {
     static public String getConfig(SharedPreferences config, String name, String defaultValue) {
         return config.getString(name, defaultValue);
     }
+    static public int getInt(SharedPreferences config, String name, int defaultValue) {
+        return config.getInt(name, defaultValue);
+    }
+
     static public void setConfig(SharedPreferences config, String name, String value) {
         SharedPreferences.Editor editor  = config.edit();
         editor.putString(name, value);
+        editor.commit();
+    }
+    static public void setInt(SharedPreferences config, String name, int value) {
+        SharedPreferences.Editor editor  = config.edit();
+        editor.putInt(name, value);
         editor.commit();
     }
 }

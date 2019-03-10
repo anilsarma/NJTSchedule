@@ -10,15 +10,19 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Build;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.util.Base64;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.smartdeviceny.njts.R;
+
+import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -100,7 +104,10 @@ public class Utils {
         Date date = new Date();
         return dateFormat.format(date);
     }
-
+    public static String formatPrintableTime(Date time, @Nullable  String format)  {
+        SimpleDateFormat printFormat = new SimpleDateFormat(format ==null?"hh:mm a":format);
+        return printFormat.format(time);
+    }
     static public Date adddays(Date date, int days) {
         //if (days > 0 )
         {
@@ -328,9 +335,9 @@ public class Utils {
         return str.toString();
     }
 
-    public static void scheduleJob(Context context, @NonNull Class<?> cls, @Nullable Integer ms_frequency, boolean periodic) {
+    public static boolean scheduleJob(Context context, JobID id,  @NonNull Class<?> cls, @Nullable Integer ms_frequency, boolean periodic, @Nullable PersistableBundle bundle) {
         ComponentName serviceComponent = new ComponentName(context, cls);
-        JobInfo.Builder builder = new JobInfo.Builder(1, serviceComponent);
+        JobInfo.Builder builder = new JobInfo.Builder(id.getID(), serviceComponent);
         if (ms_frequency == null) {
             ms_frequency = new Integer(60 * 1000); // every minute.
         }
@@ -340,15 +347,22 @@ public class Utils {
             builder.setMinimumLatency(ms_frequency); // wait at least
             builder.setOverrideDeadline((int) (ms_frequency)); // maximum delay
         }
+       if(bundle !=null ) {
+           builder.setExtras(bundle);
+       }
+
+
         //builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED); // require unmetered network
         //builder.setRequiresDeviceIdle(true); // device should be idle
         //builder.setRequiresCharging(true); // we don't care if the device is charging or not
         JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler.schedule(builder.build()) <= 0) {
             Log.e("JOB", "error: Some error while scheduling the job");
+            return false;
         } else {
             // Log.d("JOB", "job scheduled " + ms_frequency);
         }
+        return true;
     }
 
     static public String getExtension(File name) {
@@ -390,7 +404,7 @@ public class Utils {
     }
 
     static public void delete(File file) {
-        if (file != null) {
+        if (file != null && file.exists()) {
             try {
                 if (file.getAbsoluteFile().delete()) {
                     Log.d("DEL", "deleted " + file.getAbsolutePath());
@@ -398,6 +412,7 @@ public class Utils {
                     Log.e("DEL", "delete failed " + file.getAbsolutePath());
                 }
             } catch (Exception e) {
+                Log.e("DEL", "delete failed " + file.getAbsolutePath() + " " + e);
             }
         }
     }
@@ -422,7 +437,7 @@ public class Utils {
     }
 
     public static void cleanFiles(File dir, String prefix) {
-        if( dir ==null ) {
+        if (dir == null) {
             return;
         }
         for (File f : dir.listFiles()) {
@@ -440,60 +455,211 @@ public class Utils {
         }
     }
 
-    private static void createNotificationChannel(Context context, String CHANNEL_ID) {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
+
+
+//    private static void createNotificationChannel(Context context, String CHANNEL_ID) {
+//        // Create the NotificationChannels, but only on API 26+ because
+//        // the NotificationChannels class is new and not in the support library
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            CharSequence name = context.getString(R.string.channel_name);
+//            String description = context.getString(R.string.channel_description);
+//            int importance = NotificationManager.IMPORTANCE_LOW; // control sound.
+//            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+//            channel.setDescription(description);
+//            // Register the channel with the system; you can't change the importance
+//            // or other notification behaviors after this
+//            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+//            notificationManager.createNotificationChannel(channel);
+//            //Log.i("NOTIFY", "Channel created");
+//        }
+//    }
+    private static void createNotificationChannel(Context context, NotificationChannels channelID) {
+        // Create the NotificationChannels, but only on API 26+ because
+        // the NotificationChannels class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = context.getString(R.string.channel_name);
-            String description = context.getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
+            NotificationChannel channel = new NotificationChannel(channelID.getUniqueID(), channelID.getName(), channelID.getImportance());
+            channel.setDescription(channelID.getDescription());
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
     }
-
-    public static NotificationCompat.Builder makeNotificationBuilder(Context context, String channelID, String title, String msg) {
-        createNotificationChannel(context, channelID);
-        //int icon = R.mipmap.ic_launcher;
-        //long when = System.currentTimeMillis();
-//        Notification notification = new Notification(icon, getString(R.string.app_name), when);
-//        notification.flags |= Notification.FLAG_NO_CLEAR; //Do not clear the notification
-//        notification.defaults |= Notification.DEFAULT_LIGHTS; // LED
-//        notification.defaults |= Notification.DEFAULT_VIBRATE; //Vibration
-//        notification.defaults |= Notification.DEFAULT_SOUND; // Sound
-
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelID).setSmallIcon(R.mipmap.app_njs_icon).setContentTitle(title).setVisibility(
-                NotificationCompat.VISIBILITY_PUBLIC).setContentText(msg);
+//    private static NotificationCompat.Builder createNotificationGroup(Context context, String channelID, String group, String title, String msg) {
+//        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelID);
+//        mBuilder.setSmallIcon(R.mipmap.app_njs_icon);
+//        mBuilder.setGroup(group);
+//        mBuilder.setContentTitle(group).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+//        mBuilder.setContentText(msg);
+//        mBuilder.setGroupSummary(true);
+//        return mBuilder;
+//    }
+    private static NotificationCompat.Builder createNotificationGroup(Context context, NotificationGroup group) {
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, group.getChannel().getUniqueID());
+        mBuilder.setSmallIcon(R.mipmap.app_njs_icon);
+        mBuilder.setGroup(group.getUniqueID());
+        mBuilder.setContentTitle(group.getName()).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+        mBuilder.setContentText(group.getDescription());
+        mBuilder.setGroupSummary(true);
         return mBuilder;
     }
 
-    public static void notify(Context context, NotificationCompat.Builder builder, @Nullable Integer id) {
-        final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        Notification notification = builder.build();
-        //notification.flags |= Notification.FLAG_AUTO_CANCEL;
-        if (id == null) {
-            id = new Integer(1);
-        }
-        mNotificationManager.notify(id, notification);
+//    public static NotificationCompat.Builder makeNotificationBuilder(Context context, String channelID, String group, String title, String msg) {
+//        createNotificationChannel(context, channelID);
+//        //int icon = R.mipmap.ic_launcher;
+//        //long when = System.currentTimeMillis();
+////        Notification notification = new Notification(icon, getString(R.string.app_name), when);
+////        notification.flags |= Notification.FLAG_NO_CLEAR; //Do not clear the notification
+////        notification.defaults |= Notification.DEFAULT_LIGHTS; // LED
+////        notification.defaults |= Notification.DEFAULT_VIBRATE; //Vibration
+////        notification.defaults |= Notification.DEFAULT_SOUND; // Sound
+//        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelID);
+//        mBuilder.setSmallIcon(R.mipmap.app_njs_icon);
+//        mBuilder.setGroup(group);
+//        mBuilder.setContentTitle(title).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+//        mBuilder.setContentText(msg);
+//        return mBuilder;
+//    }
+
+    public static NotificationCompat.Builder makeNotificationBuilder(Context context, NotificationGroup group, String title, String msg) {
+
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, group.getChannel().getUniqueID());
+        mBuilder.setSmallIcon(R.mipmap.app_njs_icon);
+        mBuilder.setGroup(group.getUniqueID());
+        mBuilder.setContentTitle(title).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+        mBuilder.setContentText(msg);
+        return mBuilder;
     }
 
-    public static void notify_user(Context context, String channelID, String title, String msg, @Nullable Integer id) {
+
+//    public static void notify_user(Context context, String channelID, String group, String group_title, String title, String msg, @Nullable Integer id) {
+//        final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+//        NotificationCompat.Builder mBuilder = makeNotificationBuilder(context, channelID, group,  title, msg);
+//        Notification notification = mBuilder.build();
+//
+//        notification.flags |= Notification.FLAG_AUTO_CANCEL;
+//        notification.defaults |=Notification.DEFAULT_SOUND;
+//
+//        Log.d("SVC", "notification sent " + msg);
+//        if (id == null) {
+//            id = new Integer(1);
+//        }
+//        //mNotificationManager.notify(id, notification);
+//        mNotificationManager.notify(1, createNotificationGroup(context, channelID, group, group_title, group_title).build());
+//        mNotificationManager.notify(id, notification);
+//    }
+//    public static void notify_user_big_text(Context context, String channelID, String group, String group_title, String title, String msg, @Nullable Integer id) {
+//        final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+//        NotificationCompat.Builder mBuilder = makeNotificationBuilder(context, channelID, group,  title, msg);
+//        mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(msg));
+//        Notification notification = mBuilder.build();
+//
+//
+//        notification.flags |= Notification.FLAG_AUTO_CANCEL;
+//        notification.defaults |=Notification.DEFAULT_SOUND;
+//
+//        Log.d("SVC", "notification sent " + msg);
+//        if (id == null) {
+//            id = new Integer(1);
+//        }
+//        //mNotificationManager.notify(id, notification);
+//        mNotificationManager.notify(1, createNotificationGroup(context, channelID, group, group_title, group_title).build());
+//        mNotificationManager.notify(id, notification);
+//    }
+
+
+    public static void notify_user(Context context, NotificationGroup group, String msg, @Nullable Integer id) {
+        createNotificationChannel(context, group.getChannel());
+
         final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationCompat.Builder mBuilder = makeNotificationBuilder(context, channelID, title, msg);
+        NotificationCompat.Builder mBuilder = makeNotificationBuilder(context, group,  group.getDescription(), msg);
         Notification notification = mBuilder.build();
+
         notification.flags |= Notification.FLAG_AUTO_CANCEL;
-        //notification.defaults |= Notification.DEFAULT_SOUND;
+        notification.defaults |=Notification.DEFAULT_SOUND;
 
         Log.d("SVC", "notification sent " + msg);
         if (id == null) {
-            id = new Integer(1);
+            id = group.getID() + 1;
         }
+        mNotificationManager.notify(group.getID(), createNotificationGroup(context, group).build());
         mNotificationManager.notify(id, notification);
     }
 
+    public static void notify_user_big_text(Context context, NotificationGroup group, String msg, @Nullable Integer id) {
+        createNotificationChannel(context, group.getChannel());
 
+        final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationCompat.Builder mBuilder = makeNotificationBuilder(context, group,  group.getDescription(), msg);
+        mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(msg));
+        Notification notification = mBuilder.build();
+
+
+        notification.flags |= Notification.FLAG_AUTO_CANCEL;
+        notification.defaults |=Notification.DEFAULT_SOUND;
+
+        Log.d("SVC", "notification sent " + msg);
+        if (id == null) {
+            id = group.getID() + 1;
+        }
+        //mNotificationManager.notify(id, notification);
+        mNotificationManager.notify(group.getID(), createNotificationGroup(context, group).build());
+        mNotificationManager.notify(id, notification);
+    }
+
+    public static long alignTime(long polling_time) {
+        Date now = new Date();
+        long epoch_time = now.getTime();
+        epoch_time += polling_time; // next polling time
+        epoch_time = (epoch_time / polling_time) * polling_time; // to the next clock time.
+        long diff = epoch_time - now.getTime();
+        if(diff > polling_time) {
+            diff = diff%polling_time;
+//            if(diff < 1000) {
+//                diff = polling_time;
+//            }
+        }
+        return diff;
+    }
+    public static void sleep(int ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (Exception e) {
+
+        }
+    }
+
+    public static String encodeToString(File inputFile) throws  IOException {
+        byte[] fileContent = FileUtils.readFileToByteArray(inputFile);
+        return encodeToString(new String(fileContent));
+    }
+
+    public static String encodeToString(String inputFile) throws  IOException {
+        byte[] fileContent = inputFile.getBytes();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            byte[] encodedString = java.util.Base64.getEncoder().encode(fileContent);
+            return new String(encodedString);
+        } else {
+            String encodedString = Base64.encodeToString(fileContent, fileContent.length);
+            return new String(encodedString);
+        }
+
+
+    }
+
+    public static String decodeToString(File inputFile) throws  IOException {
+        byte[] fileContent = FileUtils.readFileToByteArray(inputFile);
+        return decodeToString(new String(fileContent));
+
+    }
+    public static String decodeToString(String inputFile) throws  IOException {
+        byte[] fileContent = inputFile.getBytes();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            byte[] encodedString = java.util.Base64.getDecoder().decode(fileContent);
+            return new String(encodedString);
+        } else {
+            byte[] encodedString = Base64.decode(fileContent, 0);
+            return new String(encodedString);
+        }
+    }
 }

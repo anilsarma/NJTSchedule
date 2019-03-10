@@ -7,8 +7,13 @@ public interface ConfigDefault {
     String ROUTE = "Northeast Corridor";
     String DELTA_DAYS = "1";
     String DV_STATION = "NY";
-    String POLLING_TIME = "30000";
+    int POLLING_TIME = 30000;
 
     boolean DEBUG=false;
+    boolean TRAIN_NOTIFICTION = true;
+    int NOTIFICATION_DELAY = 5;
+    String DEPARTURE_VISION = "{'time':0, 'url':'', 'data':''}";
+    String DEPARTURE_VISION_HISTORY = "{'time':0, 'history':{}}";
+
 
 }

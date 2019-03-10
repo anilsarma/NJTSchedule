@@ -3,12 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/menu_bookmarks"
-        android:titleCondensed="Settings"
-        android:title="Settings"
-        android:visible="true"
         android:icon="@android:drawable/ic_menu_agenda"
-        app:showAsAction="always">
-    </item>
+        android:title="Settings"
+        android:titleCondensed="Settings"
+        android:visible="false"
+        app:showAsAction="always"></item>
     <item
         android:id="@+id/menu_reverse"
         android:titleCondensed="Reverse"

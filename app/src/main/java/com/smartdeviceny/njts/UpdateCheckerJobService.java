@@ -1,59 +1,243 @@
 package com.smartdeviceny.njts;
 
+import android.app.ActivityManager;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.IBinder;
+import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.smartdeviceny.njts.parser.DepartureVisionData;
+import com.smartdeviceny.njts.parser.DepartureVisionParser;
+import com.smartdeviceny.njts.parser.Route;
+import com.smartdeviceny.njts.utils.JobID;
+import com.smartdeviceny.njts.utils.NotificationGroup;
+import com.smartdeviceny.njts.utils.SQLWrapper;
+import com.smartdeviceny.njts.utils.Utils;
+import com.smartdeviceny.njts.values.Config;
+import com.smartdeviceny.njts.values.ConfigDefault;
 import com.smartdeviceny.njts.values.NotificationValues;
 
-import java.text.SimpleDateFormat;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class UpdateCheckerJobService extends JobService {
-
     public UpdateCheckerJobService() {
         super();
     }
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-
+        //Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, in Start", NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
         try {
-            ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-            boolean isWiFi = activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
-            boolean isMobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
-
-            Log.d("UPDJOB", "onStartJob - periodic job. " + isConnected + " wifi:" + isWiFi + " isMobile:" + isMobile);
-            if(!isConnected) {
-
+            PersistableBundle bundle = jobParameters.getExtras();
+            if (bundle == null || bundle.getBoolean("periodic", false)) {
+                oneTimeCheck();
             }
-            // we should do this in the background on wifi only.
-            SharedPreferences config  = PreferenceManager.getDefaultSharedPreferences(this);
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-            Date now = new Date();
-            String last = config.getString("LAST_TIME", formatter.format(now));
-            Date lasttime = formatter.parse(last);
-            long diff = now.getTime()- lasttime.getTime();
-            //Log.d("UPDJOB", "Time diffence :"  + (diff/(1000 * 60)) + " minutes");
-            //if( diff  > (1000* 60 * 60 * 6 )) { // 6 hrs.
-                sendCheckForUpdate();
-            //}
-        } catch(Exception e) {
-          e.printStackTrace();
+            periodicCheck(jobParameters);
+        } catch (Exception e) {
+            e.printStackTrace();
+
         } finally {
-            jobFinished(jobParameters, false);
-            //Log.d("UPDJOB", "onStartJob - periodic job, complete");
+            scheduleJob();
+            jobFinished(jobParameters, true);
         }
         return false; // let the system know we have no job running ..
+    }
+
+    HashMap<String, Date> getHistory() {
+        HashMap<String, Date> code = new HashMap<>();
+        try {
+            SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION_HISTORY, ConfigDefault.DEPARTURE_VISION_HISTORY));
+            long time = json.getLong("time");
+            Date dataTime = new Date(time);
+            Date now = new Date();
+            if ((now.getTime() - dataTime.getTime()) > TimeUnit.HOURS.toMillis(6)) {
+                return code;
+            }
+
+            HashMap<String, Long> history = (HashMap<String, Long>) json.get("history");
+            for (Map.Entry<String, Long> e : history.entrySet()) {
+                Date dt = new Date(e.getValue());
+                // drop old entries, more than 6 hours.
+                if ((now.getTime() - dt.getTime()) > TimeUnit.HOURS.toMillis(6)) {
+                    continue;
+                }
+                code.put(e.getKey(), dt);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return code;
+    }
+
+    void save(HashMap<String, Date> history) {
+        JSONObject container = new JSONObject();
+        JSONObject hist = new JSONObject();
+        for (Map.Entry<String, Date> e : history.entrySet()) {
+            try {
+                hist.put(e.getKey(), e.getValue().getTime());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        try {
+            container.put("time", (long) new Date().getTime());
+            container.put("history", hist);
+            SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            Utils.setConfig(config, Config.DEPARTURE_VISION_HISTORY, container.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    void periodicCheck(JobParameters jobParameters) {
+        SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        HashMap<String, DepartureVisionData> dv = new HashMap<>();
+        if(!config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION) ) {
+            return;
+        }
+        try {
+            JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
+            String data = (String) json.get("data");
+            String code = (String) json.get("code");
+            long time = json.getLong("time");
+//            Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, Read Json " + data,
+//                    NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 4);
+            if (data.length() > 0) {
+                data = Utils.decodeToString(data);
+                DepartureVisionParser parser = new DepartureVisionParser();
+                dv = parser.parseDepartureVision(code, Jsoup.parse(data));
+                for (Map.Entry<String, DepartureVisionData> entry : dv.entrySet()) {
+                    DepartureVisionData v = entry.getValue();
+                    Date dt = new Date(time);
+                    v.createTime = Utils.makeDate(Utils.getTodayYYYYMMDD(dt), v.tableTime, "yyyyMMdd HH:mm a");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("UPD", e.toString());
+
+        }
+//        if (isSystemServiceRunning()) {
+//            Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, System Service running",
+//                    NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
+//        } else {
+//            Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, System Service not running",
+//                    NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
+//        }
+        {
+
+            HashMap<String, Date> history = getHistory();
+            try (SQLWrapper wrapper = new SQLWrapper(getApplicationContext())) {
+                wrapper.open();
+                String startStation = wrapper.getConfig().getString(Config.START_STATION, ConfigDefault.START_STATION);
+                String stopStation = wrapper.getConfig().getString(Config.STOP_STATION, ConfigDefault.STOP_STATION);
+                ArrayList<Route> routes = wrapper.getRoutes(startStation, stopStation, null, null);
+
+                StringBuffer str = new StringBuffer();
+                str.append("[\n");
+                Date now = new Date();
+
+                for (Route info : routes) {
+                    String key =   startStation + "." + info.block_id;
+                    if (!info.favorite) {
+                        continue;
+                    }
+
+                    if (history.keySet().contains(key)) {
+                        long diff = now.getTime() - history.get(key).getTime();
+                        int duration = config.getInt(Config.NOTIFICATION_DELAY, ConfigDefault.NOTIFICATION_DELAY);
+                        if (diff < TimeUnit.MINUTES.toMillis(duration)) {
+                            Log.d("UPD", key + " Filtered by time " + TimeUnit.MILLISECONDS.toMinutes(diff) + " minutes, period:" + duration + " minutes");
+                            continue;
+                        }
+                    }
+                    long diff = (info.departure_time_as_date.getTime() - now.getTime());
+                    // if after 12 we need to make an adjustment to the time in the departure vision.
+//                    if (now.getHours() > 12) {
+//                        diff += TimeUnit.HOURS.toMillis(12);
+//                    }
+
+                    if (diff > 0 && diff < TimeUnit.MINUTES.toMillis(60)) {
+                        String msg = info.block_id + " departs " + Utils.formatPrintableTime(info.departure_time_as_date, null) + " from " + info.station_code;
+                        DepartureVisionData entry = dv.get(info.block_id);
+                        if (entry != null) {
+                            // make sure we don't use stale data.
+                            if (Utils.getTodayYYYYMMDD(now).equals(Utils.getTodayYYYYMMDD(entry.createTime))) {
+                                msg += " Track " + entry.track + " " + entry.status + " ";
+                            }
+                        }
+                        str.append(msg + "\n");
+                        Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPCOMING, msg,
+                                NotificationGroup.UPCOMING.getID() + 10000 + Integer.parseInt(info.block_id));
+                        history.put(key, now);
+                    }
+                }
+                str.append("]");
+//                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Stations:" + str.toString(),
+//                        NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 3);
+            } catch (Exception e) {
+
+            } finally {
+                save(history);
+            }
+        }
+    }
+
+    boolean isSystemServiceRunning() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        List<ActivityManager.RunningServiceInfo> processes = activityManager.getRunningServices(100);
+        StringBuffer str = new StringBuffer();
+        str.append("[");
+        for (ActivityManager.RunningServiceInfo info : processes) {
+            str.append(info.service.getClassName() + "\n");
+        }
+
+        str.append("]");
+//        Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "running list " + str.toString(),
+//                NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 2);
+
+
+        for (ActivityManager.RunningServiceInfo info : processes) {
+            if (info.service.getClassName().equals(SystemService.class.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void scheduleJob() {
+        int polling_time = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getInt(Config.POLLING_TIME, ConfigDefault.POLLING_TIME);
+        polling_time = Math.max(10000, polling_time);
+        Date now = new Date();
+        long epoch_time = now.getTime();
+        epoch_time += polling_time; // next polling time
+        epoch_time = (epoch_time / polling_time) * polling_time; // to the next clock time.
+        long diff = epoch_time - now.getTime();
+
+        PersistableBundle bundle = new PersistableBundle();
+        bundle.putBoolean("periodic", true);
+        Utils.scheduleJob(this.getApplicationContext(), JobID.UpdateCheckerJobService, UpdateCheckerJobService.class, (int) diff, false, bundle);
     }
 
     @Override
@@ -62,9 +246,19 @@ public class UpdateCheckerJobService extends JobService {
         return false;
     }
 
+    void oneTimeCheck() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        boolean isWiFi = activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
+        boolean isMobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
+        Log.d("UPDJOB", "onStartJob - periodic job. " + isConnected + " wifi:" + isWiFi + " isMobile:" + isMobile);
+        sendCheckForUpdate();
+    }
+
     public void sendCheckForUpdate() {
         Intent intent = new Intent(NotificationValues.BROADCAT_CHECK_FOR_UPDATE);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        //Log.d("UPDJOB", "sending " + NotificationValues.BROADCAT_CHECK_FOR_UPDATE);
     }
+
 }

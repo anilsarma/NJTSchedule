@@ -49,7 +49,7 @@ public class DownloadFileTest {
                 IntentFilter intent = invocation.getArgument(1);
 
                 reciver = recv;
-                System.out.println("call the reiver now");
+                System.out.println("call the reciver now");
                 return null;
             }
         });

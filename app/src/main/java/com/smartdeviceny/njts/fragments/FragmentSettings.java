@@ -24,6 +24,7 @@ import com.smartdeviceny.njts.MainActivity;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.SystemService;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
+import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
@@ -31,7 +32,7 @@ import com.smartdeviceny.njts.values.ConfigDefault;
 
 import java.util.ArrayList;
 
-public class FragmentSettings extends Fragment implements ServiceConnected{
+public class FragmentSettings extends Fragment implements ServiceConnected {
 
     ArrayAdapter<CharSequence> routes_adapter;
     ArrayAdapter<CharSequence> start_adapter;
@@ -44,17 +45,22 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
     TextView edittext_app_version;
     EditText text_edit_delta_days;
     EditText edit_text_polling_frequency;
+    Switch checkBox_upcoming_train_notificaiton;
+    EditText edit_text_notification_delay;
     Switch checkBox_debug;
     SharedPreferences config;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        try { config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());} catch (Exception e) { }
-        View view =  inflater.inflate(R.layout.settings, container, false);
-        routes_adapter  = new ArrayAdapter<>(getActivity(), R.layout.spinner_item);
-        start_adapter  = new ArrayAdapter<>(getActivity(), R.layout.spinner_item);
-        stop_adapter  = new ArrayAdapter<>(getActivity(), R.layout.spinner_item);
+        try {
+            config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+        } catch (Exception e) {
+        }
+        View view = inflater.inflate(R.layout.settings, container, false);
+        routes_adapter = new ArrayAdapter<>(getActivity(), R.layout.spinner_item);
+        start_adapter = new ArrayAdapter<>(getActivity(), R.layout.spinner_item);
+        stop_adapter = new ArrayAdapter<>(getActivity(), R.layout.spinner_item);
 
         routes_adapter.setDropDownViewResource(R.layout.template_spinner_drop_down);
         start_adapter.setDropDownViewResource(R.layout.template_spinner_drop_down);
@@ -65,7 +71,7 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
         route_spinner.setAdapter(routes_adapter);
 
         start_spinner = view.findViewById(R.id.start_station_spinner);
-        start_spinner .setAdapter(start_adapter);
+        start_spinner.setAdapter(start_adapter);
 
         stop_spinner = view.findViewById(R.id.stop_station_spinner);
         stop_spinner.setAdapter(stop_adapter);
@@ -74,8 +80,8 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 String route_name = adapterView.getSelectedItem().toString();
-                if( ((MainActivity)getActivity()).systemService != null) {
-                    updateStartStop(((MainActivity)getActivity()).systemService, route_name);
+                if (((MainActivity) getActivity()).systemService != null) {
+                    updateStartStop(((MainActivity) getActivity()).systemService, route_name);
                 }
             }
 
@@ -85,14 +91,14 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
             }
         });
         Button sqlButton = view.findViewById(R.id.button_schedule_update);
-        sqlButton.setOnClickListener(v -> ((MainActivity)getActivity()).doCheckForUpdate(getActivity()));
+        sqlButton.setOnClickListener(v -> ((MainActivity) getActivity()).doCheckForUpdate(getActivity()));
 
         edittext_app_version = view.findViewById(R.id.edittext_app_version);
         edittext_view_db_version = view.findViewById(R.id.edittext_db_version);
         edittext_view_db_version.setText("TBD");
         edittext_app_version.setText("TBD");
         text_edit_delta_days = view.findViewById(R.id.edit_text_delta_days);
-        if ( config != null){
+        if (config != null) {
             text_edit_delta_days.setText(ConfigUtils.getConfig(config, Config.DELTA_DAYS, ConfigDefault.DELTA_DAYS));
         }
         text_edit_delta_days.addTextChangedListener(new TextWatcher() {
@@ -104,23 +110,24 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 String value = charSequence.toString();
-                if(!value.isEmpty()){
+                if (!value.isEmpty()) {
                     try {
                         //SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
                         int v = Integer.parseInt(value);
-                        if( v > 15 ) {
+                        if (v > 15) {
                             v = 1;
                         }
-                        v = Math.min(5,v);
-                        v = Math.max(0,v);
+                        v = Math.min(5, v);
+                        v = Math.max(0, v);
                         ConfigUtils.setConfig(config, Config.DELTA_DAYS, "" + v);
                         //Toast.makeText(getActivity(), "set delta days to value " + value, Toast.LENGTH_LONG).show();
-                        ((MainActivity)getActivity()).doConfigChanged();
-                    }catch(Exception e) {
+                        ((MainActivity) getActivity()).doConfigChanged();
+                    } catch (Exception e) {
                         Toast.makeText(getActivity(), "Failed to set value " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }
             }
+
             @Override
             public void afterTextChanged(Editable editable) {
 
@@ -128,11 +135,8 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
         });
         edit_text_polling_frequency = view.findViewById(R.id.edit_text_polling_frequency);
         edit_text_polling_frequency.setText("10");
-        try {
-            String time = config.getString(Config.POLLING_TIME, ConfigDefault.POLLING_TIME);
-            int int_time= Integer.parseInt(time)/1000;
-            edit_text_polling_frequency.setText("" + int_time);
-        } catch(Exception e) {}
+        int time = config.getInt(Config.POLLING_TIME, ConfigDefault.POLLING_TIME) / 1000;
+        edit_text_polling_frequency.setText("" + time);
         edit_text_polling_frequency.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -142,22 +146,57 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 String value = charSequence.toString();
-                if(!value.isEmpty()){
+                if (!value.isEmpty()) {
                     try {
                         //SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
                         int v = Integer.parseInt(value);
                         v = Math.abs(v) * 1000;
-                        ConfigUtils.setConfig(config, Config.POLLING_TIME, "" + v);
-                        ((MainActivity)getActivity()).doConfigChanged();
-                    }catch(Exception e) {
+                        ConfigUtils.setInt(config, Config.POLLING_TIME, v);
+                        ((MainActivity) getActivity()).doConfigChanged();
+                    } catch (Exception e) {
                         Toast.makeText(getActivity(), "Failed to set value " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }
             }
+
             @Override
             public void afterTextChanged(Editable editable) {
 
             }
+        });
+
+        edit_text_notification_delay = view.findViewById(R.id.edittext_notification_delay);
+        edit_text_notification_delay.setText("" + config.getInt(Config.NOTIFICATION_DELAY, ConfigDefault.NOTIFICATION_DELAY));
+        edit_text_notification_delay.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String value = charSequence.toString();
+                if (!value.isEmpty()) {
+                    try {
+                        ConfigUtils.setInt(config, Config.NOTIFICATION_DELAY, Math.abs(Integer.parseInt(value)));
+                    } catch (Exception e) {
+                        Toast.makeText(getActivity(), "Failed to set value " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        checkBox_upcoming_train_notificaiton = view.findViewById(R.id.checkBox_train_notification);
+        checkBox_upcoming_train_notificaiton.setChecked(config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION));
+        checkBox_upcoming_train_notificaiton.setOnCheckedChangeListener((compoundButton, b) -> {
+            SharedPreferences.Editor edit = config.edit();
+            edit.putBoolean(Config.TRAIN_NOTIFICTION, b);
+            edit.apply();
         });
 
         checkBox_debug = view.findViewById(R.id.checkbox_debug);
@@ -168,14 +207,14 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
             edit.apply();
 
             Button debugUpgrade = view.findViewById(R.id.debugForceUpgrade);
-            debugUpgrade.setVisibility(b?View.VISIBLE:View.INVISIBLE);
+            debugUpgrade.setVisibility(b ? View.VISIBLE : View.INVISIBLE);
             view.invalidate();
 
         });
 
         Button debugUpgrade = view.findViewById(R.id.debugForceUpgrade);
-        debugUpgrade.setVisibility(checkBox_debug.isChecked()?View.VISIBLE:View.INVISIBLE);
-        debugUpgrade.setOnClickListener(v -> ((MainActivity)getActivity()).doForceCheckUpgrade(getActivity()));
+        debugUpgrade.setVisibility(checkBox_debug.isChecked() ? View.VISIBLE : View.INVISIBLE);
+        debugUpgrade.setOnClickListener(v -> ((MainActivity) getActivity()).doForceCheckUpgrade(getActivity()));
 
         return view;
         //return super.onCreateView(inflater, container, savedInstanceState);
@@ -185,36 +224,37 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         MainActivity m = (MainActivity) getActivity();
-        if (m.systemService != null ) {
+        if (m.systemService != null) {
             initData(m.systemService);
         }
     }
 
 
     public MainActivity getMainActivity() {
-        return (MainActivity)getActivity();
+        return (MainActivity) getActivity();
     }
+
     public SystemService getSystemService() {
-        if( ((MainActivity)getActivity()).systemService != null) {
-            return ((MainActivity)getActivity()).systemService;
+        if (((MainActivity) getActivity()).systemService != null) {
+            return ((MainActivity) getActivity()).systemService;
         }
         return null;
     }
 
-    void initData(SystemService systemService ) {
-        if(route_spinner ==null) {
+    void initData(SystemService systemService) {
+        if (route_spinner == null) {
             return; // system not initalized
         }
         config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         systemService.get_values("select * from routes", "route_long_name");
-        String values[] = systemService.get_values( "select * from routes", "route_long_name");
+        String values[] = systemService.get_values("select * from routes", "route_long_name");
 
         edittext_view_db_version.setText(systemService.getDBVersion());
         edittext_app_version.setText(getActivity().getString(R.string.app_version));
 
 
         routes_adapter.clear();
-        for(String rt: values ) {
+        for (String rt : values) {
             rt = Utils.capitalize(rt);
             //Log.e("STG", " query retrieved " + rt);
             routes_adapter.insert(rt, routes_adapter.getCount());
@@ -224,7 +264,7 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
         values = systemService.getRouteStations(Utils.getConfig(config, Config.ROUTE, ConfigDefault.ROUTE));
         start_adapter.clear();
         stop_adapter.clear();
-        for(String value: values ) {
+        for (String value : values) {
             //Log.e("STG", " query start retrieved " + value);
             start_adapter.insert(Utils.capitalize(value), start_adapter.getCount());
             stop_adapter.insert(Utils.capitalize(value), stop_adapter.getCount());
@@ -232,10 +272,10 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
         start_adapter.notifyDataSetChanged();
         stop_adapter.notifyDataSetChanged();
 
-        String rt = Utils.getConfig(config,Config.ROUTE, ConfigDefault.ROUTE);
+        String rt = Utils.getConfig(config, Config.ROUTE, ConfigDefault.ROUTE);
 
-        String start = Utils.getConfig(config,Config.START_STATION, ConfigDefault.START_STATION);
-        String stop = Utils.getConfig(config,Config.STOP_STATION, ConfigDefault.STOP_STATION);
+        String start = Utils.getConfig(config, Config.START_STATION, ConfigDefault.START_STATION);
+        String stop = Utils.getConfig(config, Config.STOP_STATION, ConfigDefault.STOP_STATION);
 
         route_spinner.setSelection(routes_adapter.getPosition(Utils.capitalize(rt)));
         start_spinner.setSelection(start_adapter.getPosition(Utils.capitalize(start)));
@@ -247,16 +287,19 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
             String start1 = start_spinner.getSelectedItem().toString();
             String stop1 = stop_spinner.getSelectedItem().toString();
 
-            MainActivity m = (MainActivity)getActivity();
-            if(m.systemService != null ){
+            MainActivity m = (MainActivity) getActivity();
+            if (m.systemService != null) {
                 int delta = -1;
-                try {delta = Integer.parseInt(ConfigUtils.getConfig(config, Config.DELTA_DAYS, "" + delta)); } catch (Exception e){ }
+                try {
+                    delta = Integer.parseInt(ConfigUtils.getConfig(config, Config.DELTA_DAYS, "" + delta));
+                } catch (Exception e) {
+                }
 
-                ArrayList<SystemService.Route> rts = m.systemService.getRoutes(start1, stop1, null, delta);
-                if(rts.isEmpty()) {
-                    Toast.makeText(getActivity(),"No direct trains found for " + start1 + " to " + stop1 + " config not updated", Toast.LENGTH_LONG).show();
-                }else {
-                    Toast.makeText(getActivity(),"config updated", Toast.LENGTH_LONG).show();
+                ArrayList<Route> rts = m.systemService.getRoutes(start1, stop1, null, delta);
+                if (rts.isEmpty()) {
+                    Toast.makeText(getActivity(), "No direct trains found for " + start1 + " to " + stop1 + " config not updated", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getActivity(), "config updated", Toast.LENGTH_LONG).show();
                     Utils.setConfig(config, Config.ROUTE, route);
                     Utils.setConfig(config, Config.START_STATION, start1);
                     Utils.setConfig(config, Config.STOP_STATION, stop1);
@@ -265,13 +308,13 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
         });
     }
 
-    void updateStartStop(SystemService systemService, String route_name ) {
+    void updateStartStop(SystemService systemService, String route_name) {
         // SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-        String [] values = systemService.getRouteStations(route_name);
+        String[] values = systemService.getRouteStations(route_name);
 
         start_adapter.clear();
         stop_adapter.clear();
-        for(String value: values ) {
+        for (String value : values) {
             //Log.e("STG", " query start retrieved " + value);
             start_adapter.insert(Utils.capitalize(value), start_adapter.getCount());
             stop_adapter.insert(Utils.capitalize(value), stop_adapter.getCount());
@@ -279,8 +322,8 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
         start_adapter.notifyDataSetChanged();
         stop_adapter.notifyDataSetChanged();
 
-        String start = Utils.getConfig(config,Config.START_STATION, ConfigDefault.START_STATION);
-        String stop = Utils.getConfig(config,Config.STOP_STATION, ConfigDefault.STOP_STATION);
+        String start = Utils.getConfig(config, Config.START_STATION, ConfigDefault.START_STATION);
+        String stop = Utils.getConfig(config, Config.STOP_STATION, ConfigDefault.STOP_STATION);
 
         route_spinner.setSelection(routes_adapter.getPosition(Utils.capitalize(route_name)));
         start_spinner.setSelection(start_adapter.getPosition(Utils.capitalize(start)));
@@ -305,11 +348,11 @@ public class FragmentSettings extends Fragment implements ServiceConnected{
 
     @Override
     public void configChanged(SystemService systemService) {
-        if(edittext_view_db_version != null ) {
+        if (edittext_view_db_version != null) {
             edittext_view_db_version.setText(systemService.getDBVersion());
         }
 
-        if( route_spinner!=null) {
+        if (route_spinner != null) {
             if (route_spinner.getSelectedItem() != null) {
                 updateStartStop(systemService, route_spinner.getSelectedItem().toString());
             }

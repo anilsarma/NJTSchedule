@@ -2,15 +2,17 @@ package com.smartdeviceny.njts;
 import android.content.Context;
 import android.util.Log;
 
+import com.smartdeviceny.njts.parser.DepartureVisionData;
+import com.smartdeviceny.njts.parser.DepartureVisionParser;
+import com.smartdeviceny.njts.utils.Utils;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -29,26 +31,40 @@ public class TestDepartureVision {
     Context mContext;
 
     SystemService systemService = new SystemService();
+    DepartureVisionParser parser = new DepartureVisionParser();
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this.getClass());
+    }
+
+
+    @Test
+    public void checkDepartureVisionString() {
+        String code = "NY";
+        try {
+            InputStream is = this.getClass().getClassLoader().getResourceAsStream("ny_depature_vision_ny.old.html");
+            String str = Utils.convertStreamToString(is);
+            parser.parseDepartureVision(code, Jsoup.parse(str));
+        } catch (Exception e) {
+
+        }
     }
     @Test
     public void checkDepartureVision() {
         String code = "NY";
         try {
             InputStream is = this.getClass().getClassLoader().getResourceAsStream("ny_depature_vision_ny.old.html");
-            systemService.parseDepartureVision(code, Jsoup.parse(is, null, "http://dv.njtransit.com"));
+            parser.parseDepartureVision(code, Jsoup.parse(is, null, "http://dv.njtransit.com"));
              is = this.getClass().getClassLoader().getResourceAsStream("ny_depature_vision_ny.html");
             Document doc = Jsoup.parse(is, null, "http://dv.njtransit.com");
 
-            HashMap<String, SystemService.DepartureVisionData> result = systemService.parseDepartureVision(code, doc);
+            HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, doc);
             for(String key:result.keySet()) {
-                SystemService.DepartureVisionData data = result.get(key);
+                DepartureVisionData data = result.get(key);
                 System.out.println(key +  "=[" + data + "]");
             }
-            SystemService.DepartureVisionData data = result.get("3227");
+            DepartureVisionData data = result.get("3227");
             assertNotEquals(data, null);
             assertEquals(data.status, "BOARDING");
             assertEquals(data.track, "12");
@@ -62,9 +78,9 @@ public class TestDepartureVision {
             systemService.updateDepartureVision(code, result);
             systemService.updateActiveDepartureVisionStation("NY");
             Thread.sleep(1000);
-            HashMap<String, SystemService.DepartureVisionData>dv = systemService.getCachedDepartureVisionStatus_byTrip();
+            HashMap<String, DepartureVisionData>dv = systemService.getCachedDepartureVisionStatus_byTrip();
             for(String key:dv.keySet()) {
-                SystemService.DepartureVisionData dvd = dv.get(key);
+                DepartureVisionData dvd = dv.get(key);
                 System.out.println(key +  "=[" + dvd + "]");
             }
             //assertNotEquals(dv.size(),0);

@@ -27,6 +27,7 @@ import android.view.MenuItem;
 import com.smartdeviceny.njts.adapters.FragmentPagerMainPageAdaptor;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
 import com.smartdeviceny.njts.utils.ConfigUtils;
+import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
 import com.smartdeviceny.njts.values.ConfigDefault;
@@ -97,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         // bug in noughat... crap
-        Utils.scheduleJob(this.getApplicationContext(), DepartureVisionJobService.class, 15 * 1000, false);
+        Utils.scheduleJob(this.getApplicationContext(), JobID.DepartureVisionJobService, DepartureVisionJobService.class, 15 * 1000, false, null);
     }
 
     public void doCheckIsDatabaseReady(Context context) {

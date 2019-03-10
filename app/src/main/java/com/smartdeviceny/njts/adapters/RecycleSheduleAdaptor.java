@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.TimeUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,14 +18,16 @@ import android.widget.TextView;
 import com.smartdeviceny.njts.MainActivity;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.SystemService;
+import com.smartdeviceny.njts.parser.DepartureVisionData;
+import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.Utils;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAdaptor.ViewHolder> {
     // stores and recycles views as they are scrolled off screen
@@ -43,7 +46,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
         LinearLayout details_line_layout;
         TextView  age;
 
-        SystemService.Route route; // will be updated when visible
+        Route route; // will be updated when visible
         int                 position;
 
         Button detail_button;
@@ -76,7 +79,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
         }
     }
     private LayoutInflater mInflater;
-    public List<SystemService.Route> mRoutes;
+    public List<Route> mRoutes;
     int resid_delayed;
     int resid_normal;
     int resid_selected;
@@ -87,7 +90,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
     int resid_gray;
 
     // data is passed into the constructor
-    public RecycleSheduleAdaptor(Context context, List<SystemService.Route> data) {
+    public RecycleSheduleAdaptor(Context context, List<Route> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mRoutes = data;
         Resources resources = mInflater.getContext().getApplicationContext().getResources();
@@ -105,14 +108,14 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
         //@android:color/holo_green_dark
 
     }
-    public HashMap<String, SystemService.DepartureVisionData> departureVision = new HashMap<>();
+    public HashMap<String, DepartureVisionData> departureVision = new HashMap<>();
 
     String make_key(String station, String block_id) {
         return station + "::" + block_id;
     }
-    public void updateDepartureVision(@Nullable HashMap<String, SystemService.DepartureVisionData> departureVision) {
-        HashMap<String, SystemService.DepartureVisionData> data = new HashMap<>();
-        for(SystemService.DepartureVisionData dv:departureVision.values()) {
+    public void updateDepartureVision(@Nullable HashMap<String, DepartureVisionData> departureVision) {
+        HashMap<String, DepartureVisionData> data = new HashMap<>();
+        for(DepartureVisionData dv:departureVision.values()) {
             data.put(make_key(dv.station, dv.block_id), dv);
         }
         this.departureVision = data;
@@ -120,7 +123,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
     }
 
     public void clearData() { this.mRoutes.clear(); }
-    public void updateRoutes( List<SystemService.Route> routes) {
+    public void updateRoutes( List<Route> routes) {
         this.mRoutes = routes;
     }
     // inflates the row layout from xml when needed
@@ -184,7 +187,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Date now = new Date();
-        SystemService.Route route = mRoutes.get(position);
+        Route route = mRoutes.get(position);
         holder.route = route;
         holder.position = position;
 
@@ -213,20 +216,30 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
         boolean oldEntry = false;
 
         SimpleDateFormat printFormat = new SimpleDateFormat("hh:mm a");
-        SystemService.DepartureVisionData dv = departureVision.get(make_key(route.station_code, route.block_id));
+        DepartureVisionData dv = departureVision.get(make_key(route.station_code, route.block_id));
 
         if( dv !=null ) {
             // we need to check for time.
+
            boolean current_trains = false; // current train could
            try {
-                Date tm = Utils.makeDate(Utils.getTodayYYYYMMDD(null), dv.time, "yyyyMMdd HH:mm"); // always today's date for this
+                Date tm = Utils.makeDate(Utils.getTodayYYYYMMDD(null), dv.time, "yyyyMMdd HH:mm"); // departure time has no hours
                 long diff = route.departure_time_as_date.getTime() - tm.getTime();
+
+                // this adjustment is needed because the time in the departure vision is not a 24 hr clock
+                if( route.departure_time_as_date.getHours()>12) {
+                    diff -= TimeUnit.HOURS.toMillis(12);
+                }
                 if( diff < Math.abs( 60 * 1000 * 60 )) {
                     current_trains=true;
                 }
+
+               Log.d("RECSA", "dv update " + dv.track + " " + dv.block_id + " " + dv.time + " current:" + current_trains
+                   + " Route Departs:" +    route.departture_time + ", " + route.departure_time_as_date + " DV Time:" + tm);
             } catch (Exception e) {
                e.printStackTrace();
            }
+
             if( !dv.track.isEmpty()) {
                 try {
                     if( current_trains) {
@@ -243,7 +256,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
                         { // more than x minutes
                             // check the creation time
                             long cdiff = now.getTime() - dv.createTime.getTime();
-                            if (cdiff > 10 * 1000 * 60) {
+                            if (cdiff > TimeUnit.MINUTES.toMillis((10))) {
                                 holder.track_number.setBackgroundResource(resid_round_gray);
                                 oldEntry = true;
                                 holder.details_line_layout.setVisibility(View.GONE);

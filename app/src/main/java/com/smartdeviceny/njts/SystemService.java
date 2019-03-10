@@ -1,9 +1,6 @@
 package com.smartdeviceny.njts;
 
 import android.app.DownloadManager;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -17,11 +14,15 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.smartdeviceny.njts.parser.DepartureVisionData;
+import com.smartdeviceny.njts.parser.DepartureVisionParser;
+import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.DownloadFile;
+import com.smartdeviceny.njts.utils.NotificationChannels;
+import com.smartdeviceny.njts.utils.NotificationGroup;
 import com.smartdeviceny.njts.utils.SQLHelper;
 import com.smartdeviceny.njts.utils.SQLiteLocalDatabase;
 import com.smartdeviceny.njts.utils.SqlUtils;
@@ -32,61 +33,42 @@ import com.smartdeviceny.njts.values.Config;
 import com.smartdeviceny.njts.values.ConfigDefault;
 import com.smartdeviceny.njts.values.NotificationValues;
 
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 public class SystemService extends Service {
 
     boolean checkingVersion;
-    DownloadFile downloader;
     SQLiteLocalDatabase sql;
     SharedPreferences config;
     HashSet<String> favorites = new HashSet<>();
-
-    DownloadFile.Callback callback = new DownloadFile.Callback() {
-        @Override
-        public void downloadFailed(DownloadFile d, long id, String url) {
-            checkingVersion = false;
-            // we need to redo again.
-        }
-
-        @Override
-        public boolean downloadComplete(DownloadFile d, long id, String url, File file) {
-            checkingVersion = false;
-            return true; // remove the file.
-        }
-    };
+    DepartureVisionParser parser = new DepartureVisionParser();
 
     public SystemService() {
+
     }
 
     @Override
     public void onCreate() {
+        super.onCreate();
+
+
         config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Set<String> tmp = config.getStringSet(Config.FAVORITES, favorites);
-        favorites = new HashSet<>(tmp);
+        favorites = new HashSet<>(tmp); // re-init the data structures
 
-        for (String f : favorites) {
-            Log.d("SVC", "read current fav " + f);
-        }
-        downloader = new DownloadFile(this.getApplicationContext(), callback);
-        super.onCreate();
         IntentFilter filter = new IntentFilter();
         filter.addAction(NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
         filter.addAction(NotificationValues.BROADCAT_CHECK_FOR_UPDATE);
@@ -98,9 +80,6 @@ public class SystemService extends Service {
 
     @Override
     public void onDestroy() {
-        if (downloader != null) {
-            downloader.cleanup();
-        }
         if (sql != null) {
             sql.close();
             sql = null;
@@ -109,12 +88,31 @@ public class SystemService extends Service {
     }
 
     public boolean checkForUpdate(boolean silent) {
+        dumpDownload();
         if (checkingVersion) {
             Log.d("SVC", "update already running");
             return false; // already running.
         }
+
         _checkRemoteDBUpdate(silent);
+        dumpDownload();
         return checkingVersion;
+    }
+
+    public void dumpDownload() {
+        DownloadManager manager = (DownloadManager) getApplicationContext().getSystemService(Context.DOWNLOAD_SERVICE);
+        DownloadManager.Query query = new DownloadManager.Query();
+        Cursor c = manager.query(query);
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+            int ID = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_ID));
+
+            String url = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
+            if( status == DownloadManager.STATUS_FAILED || status == DownloadManager.STATUS_SUCCESSFUL) {
+                continue;
+            }
+            Log.d("DNLD", "DUMP Pending ID " + ID + " url:" + url + " Status:" + status);
+        } // for loop
     }
 
     public boolean isUpdateRunning() {
@@ -122,7 +120,7 @@ public class SystemService extends Service {
     }
 
 
-    void _checkRemoteDBUpdate(boolean silent) {
+    public void _checkRemoteDBUpdate(boolean silent) {
         Log.d("SVC", "checking for updated schedule db");
         File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
         sql = UtilsDBVerCheck.getSQLDatabase(getApplicationContext(), f);
@@ -173,14 +171,14 @@ public class SystemService extends Service {
             Log.d("DBSVC", "system schedule db is up-todate " + version_str);
             sendCheckcomplete();
             if (!silent) {
-                notify_user_of_upgrade("Schedule Database", "No Update Required, version " + getDBVersion());
+                notify_user_of_upgrade("No Update Required, version " + getDBVersion());
             }
             return;
         }
         final DownloadFile d = new DownloadFile(getApplicationContext(), new DownloadFile.Callback() {
             @Override
             public boolean downloadComplete(DownloadFile d, long id, String url, File file) {
-                notify_user_of_upgrade("Schedule Database", "Download Complete");
+                notify_user_of_upgrade("Download Complete");
                 checkingVersion = false;
                 File dbFilePath = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
                 File tmpFilename = null;
@@ -216,13 +214,10 @@ public class SystemService extends Service {
                             SqlUtils.create_user_pref_table(sql.getWritableDatabase());
                             SqlUtils.update_user_pref(sql.getWritableDatabase(), "version", version_str, new Date());
                             // let the user know we have upgraded.
-                            notify_user_of_upgrade("Schedule Database", "upgraded to " + version_str);
+                            notify_user_of_upgrade("upgraded to " + version_str);
                             break;
                         } catch (Exception e) {
-                            try {
-                                Thread.sleep(100);
-                            } catch (Exception e1) {
-                            }
+                            Utils.sleep(100);
                             Log.d("SVC", "failed to get sql retries:" + retries);
                             // check sql
                             if (sql != null) {
@@ -348,81 +343,10 @@ public class SystemService extends Service {
         }
     }
 
-    private void notify_user_of_upgrade(@NonNull String title, @NonNull String msg) {
-        Utils.notify_user(this.getApplicationContext(), "NJTS", title, msg, 2);
+    private void notify_user_of_upgrade(@NonNull String msg) {
+        Utils.notify_user(this.getApplicationContext(), NotificationGroup.DATABASE_UPGRADE, msg, NotificationGroup.UPDATE.getID() + 1);
     }
 
-    HashMap<String, DepartureVisionData> parseDepartureVision(String station, Document doc) {
-        //Log.d("DV", "parsing Departure vision Doc");
-        HashMap<String, DepartureVisionData> result = new HashMap<>();
-        try {
-            Element table = doc.getElementById("GridView1");
-            Node node = table;
-            List<Node> child = node.childNodes().get(1).childNodes();
-            String header_string = "";
-            if (child.size() > 0) {
-                // discard the frist 3
-                //Log.d("DV", "child ===================== Size:" + child.size());
-                Node header = child.get(1);
-                List<Node> header_elements = header.childNodes();
-                Element h = (Element) header_elements.get(0);
-                header_string = h.child(0).html().toString() + " " + h.child(1).html().toString().replace("&nbsp; &nbsp; Select a train to view station stops", "");
-                //System.out.println(header_string);
-            }
-
-
-            // discard the frist 3
-            //Log.d("DV", "child ===================== Size:" + child.size());
-            for (int i = 3; i < child.size(); i++) {
-                Node tr = child.get(i);
-                List<Node> td = tr.childNodes();
-                //Log.d("DV", "childNodes(td) ===================== Size:" + td.size());
-
-                if (td.size() < 4) {
-                    continue;
-                }
-                HashMap<String, Object> data = new HashMap<>();
-                HashMap<String, String> stylemap = new HashMap<>();
-
-                try {
-                    String style[] = ((Element) tr).attr("style").split(";");
-                    for (String s : style) {
-                        String nvp[] = s.split(":");
-                        stylemap.put(nvp[0], nvp[1]);
-                    }
-                } catch (Exception e) {
-
-                }
-
-                String time = ((Element) td.get(1)).html().toString();
-                String to = ((Element) td.get(3)).html().toString();
-                String track = ((Element) td.get(5)).html().toString();
-                String line = ((Element) td.get(7)).html().toString();
-                String train = ((Element) td.get(9)).html().toString();
-                String status = ((Element) td.get(11)).html().toString();
-                String background = stylemap.get("background-color");
-                String foreground = stylemap.get("color");
-
-                data.put("time", time);
-                data.put("to", to);
-                data.put("track", track);
-                data.put("line", line);
-                data.put("status", status);
-                data.put("train", train);
-                data.put("station", station);
-                data.put("background", background);
-                data.put("foreground", foreground);
-                //Log.d("DV", "details time:" + time +  " to:" + to + " track:" + track + " line:" + line + " status:" + status + " train:" + train + " station:" + station );
-                DepartureVisionData dv = new DepartureVisionData(data);
-                result.put(dv.block_id, dv);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        //Log.d("DV", "result=" + result.size());
-        return result;
-    }
 
     HashMap<String, HashMap<String, DepartureVisionData>> status = new HashMap<>();
     Integer lock_status_by_trip = new Integer(0);
@@ -448,6 +372,7 @@ public class SystemService extends Service {
                             dd.favorite = false;
                             if (favorites.contains(dd.block_id)) {
                                 dd.favorite = true;
+                                Log.d("FAV", "found fav " + dd.block_id);
                             }
                         }
 
@@ -505,6 +430,7 @@ public class SystemService extends Service {
         HashMap<String, DepartureVisionData> byBlock = status.get(station);
         byBlock = (byBlock == null) ? new HashMap<>() : byBlock;
         HashMap<String, DepartureVisionData> byTrack = new HashMap<>();
+        //Log.d("DVUPD", "departure vision updates for station:" + station);
         for (DepartureVisionData dv : byBlock.values()) {
             if (dv.track.isEmpty()) {
                 continue; // remove empty tracks from the old entries.
@@ -525,25 +451,52 @@ public class SystemService extends Service {
                 old.status = ""; // clear the status but keep the track.
             }
             byBlock.put(dv.block_id, dv);
+            //Log.d("DVUPD", "departure vision added entry track:" + dv.track + " #" + dv.block_id + " " + dv.favorite + " " + dv.createTime.getTime());
         }
         HashMap<String, DepartureVisionData> cleanEntries = new HashMap<>();
         Date now = new Date();
         for (DepartureVisionData dv : byBlock.values()) {
             // now trim any old entries if we the size is too big.
-            if ((now.getTime() - dv.createTime.getTime()) < (8 * 60 * 60 * 1000)) {
+            if ((now.getTime() - dv.createTime.getTime()) < TimeUnit.HOURS.toMillis(8)) {
                 cleanEntries.put(dv.block_id, dv);
             }
         }
+        Log.d("DVUPD", "departure vision total entries " + cleanEntries.size() + " " + byBlock.size());
         status.put(station, cleanEntries);
+    }
+
+    int checkPendingForUri(String url) {
+        DownloadManager manager = (DownloadManager) getApplicationContext().getSystemService(Context.DOWNLOAD_SERVICE);
+        DownloadManager.Query query = new DownloadManager.Query();
+        Cursor c = manager.query(query);
+        int count=0;
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+            if( status == DownloadManager.STATUS_FAILED || status == DownloadManager.STATUS_SUCCESSFUL) {
+                continue;
+            }
+            //int ID = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_ID));
+
+            String pendingUrl = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
+
+            if (pendingUrl.equals(url)) {
+                count++;
+            }
+        }
+        return count;
+
     }
 
     public void _getDepartureVision(String station, @Nullable Integer check_lastime) {
         String url = "http://dv.njtransit.com/mobile/tid-mobile.aspx?sid=" + station;
 
-        if (dvPendingRequests.getPending(station) > 0) {
-            Log.d("SVC", "we already have a pending request for this station dv " + station);
+        int pending = checkPendingForUri(url);
+        // check more expensive pending
+        if (pending>2 || dvPendingRequests.getPending(station) > 0) {
+            Log.d("SVC", "we already have a pending request for this station dv " + station + " pending:" + pending + " " + url);
             return;
         }
+
         Date lastRequesTime = dvPendingRequests.getLastRequestTime(station);
         Date now = new Date();
 
@@ -565,7 +518,15 @@ public class SystemService extends Service {
                     //Log.d("DV", "File Content\n" + Utils.getEntireFileContent(file));
                     Log.d("SVC", "DV download complete for " + url);
                     Document doc = Jsoup.parse(file, null, "http://dv.njtransit.com");
-                    HashMap<String, DepartureVisionData> result = parseDepartureVision(code, doc);
+                    String encoded = Utils.encodeToString(file);
+                    JSONObject json = new JSONObject();
+                    json.put("time", new Date().getTime());
+                    json.put("url", url);
+                    json.put("data", encoded);
+                    json.put("code", code);
+                    Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
+
+                    HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, doc);
                     updateDepartureVision(code, result);
                     // we should use only the active stations
                     HashMap<String, DepartureVisionData> tmp_trip = new HashMap<>();
@@ -623,67 +584,7 @@ public class SystemService extends Service {
 
     }
 
-    public class Route {
-        public String station_code;
-        public String departture_time;
-        public String arrival_time;
-        public String block_id;
-        public String route_name;
-        public String trip_id;
 
-        public String date;
-        public String header;
-        public String from;
-        public String to;
-        public boolean favorite = false;
-
-        public Date date_as_date;
-        public Date departure_time_as_date;
-        public Date arrival_time_as_date;
-
-        public Route(String station_code, String date, String from, String to, HashMap<String, Object> data) {
-            this.station_code = station_code;
-            departture_time = data.get("departure_time").toString();
-            arrival_time = data.get("destination_time").toString();
-            block_id = data.get("block_id").toString();
-            route_name = data.get("route_long_name").toString();
-            trip_id = data.get("trip_id").toString();
-            this.from = from;
-            this.to = to;
-            if (favorites != null) {
-                this.favorite = favorites.contains(this.block_id);
-            }
-            try {
-                // remember hours are more than 24 hrs here to represent the next day.
-                this.departure_time_as_date = dateTim24HrFmt.parse(date + " " + departture_time);
-                this.arrival_time_as_date = dateTim24HrFmt.parse(date + " " + arrival_time);
-
-                this.date = dateFmt.format(departure_time_as_date);
-                this.date_as_date = dateFmt.parse(this.date);
-
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            this.date = "" + this.date;
-            this.header = this.date + " " + from + " => " + to;
-
-        }
-
-
-        public Date getDate(String time) throws ParseException {
-            DateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
-            Date tm = dateTimeFormat.parse(date + " " + time);
-            return tm;
-        }
-
-        public String getPrintableTime(String time) throws ParseException {
-            SimpleDateFormat printFormat = new SimpleDateFormat("hh:mm a");
-            return printFormat.format(getDate(time));
-        }
-    }
-
-    final DateFormat dateTim24HrFmt = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
-    final DateFormat time24HFmt = new SimpleDateFormat("HH:mm:ss");
     final DateFormat dateFmt = new SimpleDateFormat("yyyyMMdd");
 
     // this is a syncronous call TODO: make async implementation.
@@ -712,7 +613,7 @@ public class SystemService extends Service {
                 ArrayList<HashMap<String, Object>> routes = Utils.parseCursor(SQLHelper.getRoutes(db, from, to, Integer.parseInt(dateFmt.format(stDate))));
                 Log.d("SVC", "route " + stDate + " " + from + " to " + to);
                 for (HashMap<String, Object> rt : routes) {
-                    r.add(new Route(station_code, dateFmt.format(stDate), from, to, rt));
+                    r.add(new Route(station_code, dateFmt.format(stDate), from, to, rt, favorites.contains(rt.get("block_id").toString())));
                 }
             }
         } catch (Exception e) {
@@ -721,79 +622,14 @@ public class SystemService extends Service {
         return r;
     }
 
-    public class DepartureVisionData {
-        public String header = "";
-        public String time = "";
-        public String to = "";
-        public String track = "";
-        public String line = "";
-        public String status = "";
-        public String block_id = "";
-        public String station = "";
-        public Date createTime = new Date(); // time this object was created
-        public boolean stale = false;
-        public boolean favorite = false;
-
-        public DepartureVisionData() {
-        }
-
-        public DepartureVisionData(HashMap<String, Object> data) {
-            time = data.get("time").toString();
-            to = data.get("to").toString();
-            track = data.get("track").toString();
-            line = data.get("line").toString();
-            status = data.get("status").toString();
-            block_id = data.get("train").toString();
-            station = data.get("station").toString();
-            favorite = false;
-            header = " " + createTime + " " + to;
-            createTime = new Date();
-
-
-        }
-
-
-        public DepartureVisionData clone() {
-            DepartureVisionData obj = new DepartureVisionData();
-            // TODO not sure how to clone strings ..
-            obj.time = "" + this.time;
-            obj.to = "" + this.to;
-            obj.track = "" + this.track;
-            obj.line = "" + this.line;
-            obj.status = "" + this.status;
-            obj.block_id = "" + this.block_id;
-            obj.station = "" + this.station;
-            obj.favorite = this.favorite;
-            obj.createTime = this.createTime;
-            obj.header = this.header;
-
-            return obj;
-        }
-
-        public String toString() {
-            StringBuffer str = new StringBuffer();
-            str.append("time=" + time);
-            str.append(" to=" + to);
-            str.append(" track=" + track);
-            str.append(" line=" + line);
-            str.append(" status=" + status);
-            str.append(" block_id=" + block_id);
-            str.append(" station=" + station);
-            str.append(" favorite=" + favorite);
-            str.append(" createTime=" + createTime);
-            str.append(" header=" + header);
-            return str.toString();
-
-        }
-    }
 
     public HashMap<String, DepartureVisionData> getCachedDepartureVisionStatus_byTrip() {
         HashMap<String, DepartureVisionData> data = new HashMap<>();
         synchronized (lock_status_by_trip) {
             //data = status_by_trip.entrySet().stream().collect(Collectors.toMap(e -> (String)e.getKey()), e -> (Dee.clone() ));
             // make an copy
-            for (Map.Entry entry: status_by_trip.entrySet()) {
-                data.put( (String)entry.getKey(), ((DepartureVisionData)entry.getValue()).clone());
+            for (Map.Entry entry : status_by_trip.entrySet()) {
+                data.put((String) entry.getKey(), ((DepartureVisionData) entry.getValue()).clone());
             }
             //return (HashMap<String, DepartureVisionData>) status_by_trip.clone();
             return data;
