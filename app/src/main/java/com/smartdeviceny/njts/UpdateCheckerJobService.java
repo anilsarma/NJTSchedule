@@ -155,10 +155,10 @@ public class UpdateCheckerJobService extends JobService {
                 wrapper.open();
                 String startStation = wrapper.getConfig().getString(Config.START_STATION, ConfigDefault.START_STATION);
                 String stopStation = wrapper.getConfig().getString(Config.STOP_STATION, ConfigDefault.STOP_STATION);
-
+                int ID = 1; // use the ID instead of the Block id so that we don't have an infinite number of notifications.
                 // do that for all routes configured in the system.
-                updateCurrentRoutes(wrapper, history, dv, startStation, stopStation);
-                updateCurrentRoutes(wrapper, history, dv, stopStation, startStation);
+                ID = updateCurrentRoutes(ID, wrapper, history, dv, startStation, stopStation);
+                ID = updateCurrentRoutes(ID, wrapper, history, dv, stopStation, startStation);
 
             } catch (Exception e) {
 
@@ -168,12 +168,12 @@ public class UpdateCheckerJobService extends JobService {
         }
     }
 
-    void updateCurrentRoutes(SQLWrapper wrapper, HashMap<String, Date> history,HashMap<String, DepartureVisionData> dv,  String startStation, String stopStation) {
+    int  updateCurrentRoutes(int ID, SQLWrapper wrapper, HashMap<String, Date> history,HashMap<String, DepartureVisionData> dv,  String startStation, String stopStation) {
         ArrayList<Route> routes = wrapper.getRoutes(startStation, stopStation, null, null);
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         Date now = new Date();
-        int ID = 1; // use the ID instead of the Block id so that we don't have an infinite number of notifications.
+
         for (Route info : routes) {
             String key = startStation + "." + info.block_id;
             if (!info.favorite) {
@@ -205,6 +205,7 @@ public class UpdateCheckerJobService extends JobService {
                 history.put(key, now);
             }
         }
+        return ID;
     }
 
     boolean isSystemServiceRunning() {
