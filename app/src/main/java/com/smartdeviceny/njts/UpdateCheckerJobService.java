@@ -33,6 +33,7 @@ import org.jsoup.Jsoup;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -72,15 +73,18 @@ public class UpdateCheckerJobService extends JobService {
             if ((now.getTime() - dataTime.getTime()) > TimeUnit.HOURS.toMillis(6)) {
                 return code;
             }
+            JSONObject history = (JSONObject) json.get("history");
+            Iterator<String> keys = history.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                long value = history.getLong(key);
 
-            HashMap<String, Long> history = (HashMap<String, Long>) json.get("history");
-            for (Map.Entry<String, Long> e : history.entrySet()) {
-                Date dt = new Date(e.getValue());
+                Date dt = new Date(value);
                 // drop old entries, more than 6 hours.
                 if ((now.getTime() - dt.getTime()) > TimeUnit.HOURS.toMillis(6)) {
                     continue;
                 }
-                code.put(e.getKey(), dt);
+                code.put(key, dt);
             }
 
         } catch (Exception e) {
@@ -113,7 +117,7 @@ public class UpdateCheckerJobService extends JobService {
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         HashMap<String, DepartureVisionData> dv = new HashMap<>();
-        if(!config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION) ) {
+        if (!config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION)) {
             return;
         }
         try {
@@ -121,8 +125,7 @@ public class UpdateCheckerJobService extends JobService {
             String data = (String) json.get("data");
             String code = (String) json.get("code");
             long time = json.getLong("time");
-//            Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, Read Json " + data,
-//                    NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 4);
+
             if (data.length() > 0) {
                 data = Utils.decodeToString(data);
                 DepartureVisionParser parser = new DepartureVisionParser();
@@ -152,54 +155,54 @@ public class UpdateCheckerJobService extends JobService {
                 wrapper.open();
                 String startStation = wrapper.getConfig().getString(Config.START_STATION, ConfigDefault.START_STATION);
                 String stopStation = wrapper.getConfig().getString(Config.STOP_STATION, ConfigDefault.STOP_STATION);
-                ArrayList<Route> routes = wrapper.getRoutes(startStation, stopStation, null, null);
 
-                StringBuffer str = new StringBuffer();
-                str.append("[\n");
-                Date now = new Date();
+                // do that for all routes configured in the system.
+                updateCurrentRoutes(wrapper, history, dv, startStation, stopStation);
+                updateCurrentRoutes(wrapper, history, dv, stopStation, startStation);
 
-                for (Route info : routes) {
-                    String key =   startStation + "." + info.block_id;
-                    if (!info.favorite) {
-                        continue;
-                    }
-
-                    if (history.keySet().contains(key)) {
-                        long diff = now.getTime() - history.get(key).getTime();
-                        int duration = config.getInt(Config.NOTIFICATION_DELAY, ConfigDefault.NOTIFICATION_DELAY);
-                        if (diff < TimeUnit.MINUTES.toMillis(duration)) {
-                            Log.d("UPD", key + " Filtered by time " + TimeUnit.MILLISECONDS.toMinutes(diff) + " minutes, period:" + duration + " minutes");
-                            continue;
-                        }
-                    }
-                    long diff = (info.departure_time_as_date.getTime() - now.getTime());
-                    // if after 12 we need to make an adjustment to the time in the departure vision.
-//                    if (now.getHours() > 12) {
-//                        diff += TimeUnit.HOURS.toMillis(12);
-//                    }
-
-                    if (diff > 0 && diff < TimeUnit.MINUTES.toMillis(60)) {
-                        String msg = info.block_id + " departs " + Utils.formatPrintableTime(info.departure_time_as_date, null) + " from " + info.station_code;
-                        DepartureVisionData entry = dv.get(info.block_id);
-                        if (entry != null) {
-                            // make sure we don't use stale data.
-                            if (Utils.getTodayYYYYMMDD(now).equals(Utils.getTodayYYYYMMDD(entry.createTime))) {
-                                msg += " Track " + entry.track + " " + entry.status + " ";
-                            }
-                        }
-                        str.append(msg + "\n");
-                        Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPCOMING, msg,
-                                NotificationGroup.UPCOMING.getID() + 10000 + Integer.parseInt(info.block_id));
-                        history.put(key, now);
-                    }
-                }
-                str.append("]");
-//                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Stations:" + str.toString(),
-//                        NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 3);
             } catch (Exception e) {
 
             } finally {
                 save(history);
+            }
+        }
+    }
+
+    void updateCurrentRoutes(SQLWrapper wrapper, HashMap<String, Date> history,HashMap<String, DepartureVisionData> dv,  String startStation, String stopStation) {
+        ArrayList<Route> routes = wrapper.getRoutes(startStation, stopStation, null, null);
+        SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        Date now = new Date();
+        int ID = 1; // use the ID instead of the Block id so that we don't have an infinite number of notifications.
+        for (Route info : routes) {
+            String key = startStation + "." + info.block_id;
+            if (!info.favorite) {
+                continue;
+            }
+
+            if (history.keySet().contains(key)) {
+                long diff = now.getTime() - history.get(key).getTime();
+                int duration = config.getInt(Config.NOTIFICATION_DELAY, ConfigDefault.NOTIFICATION_DELAY);
+                if (diff < TimeUnit.MINUTES.toMillis(duration)) {
+                    Log.d("UPD", key + " Filtered by time " + TimeUnit.MILLISECONDS.toMinutes(diff) + " minutes, period:" + duration + " minutes");
+                    continue;
+                }
+            }
+            long diff = (info.departure_time_as_date.getTime() - now.getTime());
+
+
+            if (diff > 0 && diff < TimeUnit.MINUTES.toMillis(60)) {
+                String msg = info.block_id + " departs " + Utils.formatPrintableTime(info.departure_time_as_date, null) + " from " + info.station_code;
+                DepartureVisionData entry = dv.get(info.block_id);
+                if (entry != null) {
+                    // make sure we don't use stale data.
+                    if (Utils.getTodayYYYYMMDD(now).equals(Utils.getTodayYYYYMMDD(entry.createTime))) {
+                        msg += " Track " + entry.track + " " + entry.status + " ";
+                    }
+                }
+                //str.append(msg + "\n");
+                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPCOMING, msg, NotificationGroup.UPCOMING.getID() + 10000 + (ID++ % 5)); // no more than 5
+                history.put(key, now);
             }
         }
     }

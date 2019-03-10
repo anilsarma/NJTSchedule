@@ -571,6 +571,7 @@ public class Utils {
 
         final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationCompat.Builder mBuilder = makeNotificationBuilder(context, group,  group.getDescription(), msg);
+        mBuilder.setAutoCancel(true);
         Notification notification = mBuilder.build();
 
         notification.flags |= Notification.FLAG_AUTO_CANCEL;
@@ -590,6 +591,7 @@ public class Utils {
         final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationCompat.Builder mBuilder = makeNotificationBuilder(context, group,  group.getDescription(), msg);
         mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(msg));
+        mBuilder.setAutoCancel(true);
         Notification notification = mBuilder.build();
 
 
