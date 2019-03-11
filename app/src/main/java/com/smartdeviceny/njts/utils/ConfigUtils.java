@@ -34,4 +34,9 @@ public class ConfigUtils {
         editor.putInt(name, value);
         editor.commit();
     }
+    static public void setLong(SharedPreferences config, String name, long value) {
+        SharedPreferences.Editor editor  = config.edit();
+        editor.putLong(name, value);
+        editor.commit();
+    }
 }
