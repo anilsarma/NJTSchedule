@@ -24,6 +24,11 @@ public class ConfigUtils {
         editor.putString(name, value);
         editor.commit();
     }
+    static public void setBoolean(SharedPreferences config, String name, boolean value) {
+        SharedPreferences.Editor editor  = config.edit();
+        editor.putBoolean(name, value);
+        editor.commit();
+    }
     static public void setInt(SharedPreferences config, String name, int value) {
         SharedPreferences.Editor editor  = config.edit();
         editor.putInt(name, value);

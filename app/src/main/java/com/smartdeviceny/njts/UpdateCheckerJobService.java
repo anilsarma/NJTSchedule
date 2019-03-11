@@ -115,6 +115,7 @@ public class UpdateCheckerJobService extends JobService {
 
     void periodicCheck(JobParameters jobParameters) {
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
 
         HashMap<String, DepartureVisionData> dv = new HashMap<>();
         if (!config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION)) {
@@ -141,13 +142,27 @@ public class UpdateCheckerJobService extends JobService {
             Log.d("UPD", e.toString());
 
         }
-//        if (isSystemServiceRunning()) {
-//            Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, System Service running",
-//                    NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
-//        } else {
-//            Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, System Service not running",
-//                    NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
-//        }
+        if (isSystemServiceRunning()) {
+
+            long lastTime = config.getLong(Config.LAST_UPDATE_CHECK, ConfigDefault.LAST_UPDATE_CHECK);
+            Date now = new Date();
+            Date last = new Date(lastTime);
+            long diff = now.getTime() - last.getTime();
+            if (diff > TimeUnit.HOURS.toMillis(2)) {
+
+                oneTimeCheck();
+            }
+            if (debug) {
+                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE,
+                        "Job Checker, System Service running, last check:" + last + " diff:" + TimeUnit.MILLISECONDS.toMinutes(diff) + " minutes ago",
+                        NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
+            }
+        } else {
+            if (debug) {
+                Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, System Service not running",
+                        NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
+            }
+        }
         {
 
             HashMap<String, Date> history = getHistory();
@@ -168,7 +183,7 @@ public class UpdateCheckerJobService extends JobService {
         }
     }
 
-    int  updateCurrentRoutes(int ID, SQLWrapper wrapper, HashMap<String, Date> history,HashMap<String, DepartureVisionData> dv,  String startStation, String stopStation) {
+    int updateCurrentRoutes(int ID, SQLWrapper wrapper, HashMap<String, Date> history, HashMap<String, DepartureVisionData> dv, String startStation, String stopStation) {
         ArrayList<Route> routes = wrapper.getRoutes(startStation, stopStation, null, null);
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
@@ -197,7 +212,10 @@ public class UpdateCheckerJobService extends JobService {
                 if (entry != null) {
                     // make sure we don't use stale data.
                     if (Utils.getTodayYYYYMMDD(now).equals(Utils.getTodayYYYYMMDD(entry.createTime))) {
-                        msg += " Track " + entry.track + " " + entry.status + " ";
+                        if (!entry.track.isEmpty()) {
+                            msg += " Track " + entry.track;
+                        }
+                        msg += " " + entry.status;
                     }
                 }
                 //str.append(msg + "\n");

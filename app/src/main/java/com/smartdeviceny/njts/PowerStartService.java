@@ -17,7 +17,7 @@ public class PowerStartService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        PowerStartServiceReceiver.schdeulJob(getApplicationContext());
+        PowerStartServiceReceiver.scheduleJob(getApplicationContext(), null);
         return super.onStartCommand(intent, flags, startId);
     }
 }

@@ -214,7 +214,10 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
 
         Button debugUpgrade = view.findViewById(R.id.debugForceUpgrade);
         debugUpgrade.setVisibility(checkBox_debug.isChecked() ? View.VISIBLE : View.INVISIBLE);
-        debugUpgrade.setOnClickListener(v -> ((MainActivity) getActivity()).doForceCheckUpgrade(getActivity()));
+        debugUpgrade.setOnClickListener(v -> {
+            ((MainActivity) getActivity()).doForceCheckUpgrade(getActivity());
+            ConfigUtils.setBoolean( config, Config.DEBUG, ConfigDefault.DEBUG);
+        });
 
         return view;
         //return super.onCreateView(inflater, container, savedInstanceState);
