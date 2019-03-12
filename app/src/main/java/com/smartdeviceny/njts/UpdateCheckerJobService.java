@@ -15,7 +15,6 @@ import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionParser;
 import com.smartdeviceny.njts.parser.Route;
@@ -39,6 +38,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class UpdateCheckerJobService extends JobService {
+
     public UpdateCheckerJobService() {
         super();
     }
@@ -282,5 +282,4 @@ public class UpdateCheckerJobService extends JobService {
         Intent intent = new Intent(NotificationValues.BROADCAT_CHECK_FOR_UPDATE);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
-
 }

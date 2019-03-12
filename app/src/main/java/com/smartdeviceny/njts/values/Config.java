@@ -8,6 +8,7 @@ public interface Config {
     String ROUTE = "CONFIG_ROUTE";
     String DELTA_DAYS = "CONFIG_DELTA_DAYS";
     String DV_STATION = "CONFIG_DV_STATION";
+
     String POLLING_TIME = "CONFIG_POLLING_TIME_NEW_ENTRY";
 
     String DEBUG = "CONFIG_DEBUG";
@@ -18,9 +19,5 @@ public interface Config {
     String DEPARTURE_VISION = "CONFIG_DEPARTURE_VISION";
     String DEPARTURE_VISION_HISTORY = "CONFIG_DEPARTURE_VISION_HISTORY";
     String LAST_UPDATE_CHECK = "CONFIG_LAST_UPDATE_CHECK";
-
-
-
-
 
 }

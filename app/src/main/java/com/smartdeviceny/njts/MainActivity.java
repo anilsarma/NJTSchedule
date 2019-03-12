@@ -304,7 +304,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public String getStationCode() {
-
         return ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
     }
 
@@ -355,7 +354,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
     // Our handler for received Intents. This will be called whenever an Intent
     private BroadcastReceiver mMessageReceiver = new LocalBcstReceiver();
 }

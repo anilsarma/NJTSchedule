@@ -242,6 +242,7 @@
                 app:layout_constraintStart_toStartOf="@+id/guideline_left"
                 app:layout_constraintTop_toBottomOf="@+id/textView" />
 
+
             <EditText
                 android:id="@+id/edit_text_polling_frequency"
                 android:layout_width="64dp"
@@ -340,6 +341,7 @@
                 android:text="5"
                 app:layout_constraintBottom_toBottomOf="@+id/textView"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right" />
+
         </android.support.constraint.ConstraintLayout>
     </android.support.v4.widget.NestedScrollView>
 

@@ -16,6 +16,4 @@ public interface ConfigDefault {
     String DEPARTURE_VISION_HISTORY = "{'time':0, 'history':{}}";
 
     long LAST_UPDATE_CHECK = 0;
-
-
 }

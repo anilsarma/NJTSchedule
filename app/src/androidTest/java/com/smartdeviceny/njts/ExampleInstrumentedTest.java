@@ -13,7 +13,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
-
 import static org.junit.Assert.*;
 
 /**
@@ -23,7 +22,6 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class ExampleInstrumentedTest {
-
     @Test
     public void useAppContext() {
         // Context of the app under test.
@@ -35,7 +33,5 @@ public class ExampleInstrumentedTest {
         assertNotEquals(null, sql);
         assertEquals("NY", SqlUtils.getStationCode(sql.getReadableDatabase(), "New york Penn Station"));
     }
-
-
 
 }

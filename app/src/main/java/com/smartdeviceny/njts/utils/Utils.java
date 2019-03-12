@@ -21,7 +21,6 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.smartdeviceny.njts.R;
-
 import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedReader;
@@ -351,7 +350,6 @@ public class Utils {
            builder.setExtras(bundle);
        }
 
-
         //builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED); // require unmetered network
         //builder.setRequiresDeviceIdle(true); // device should be idle
         //builder.setRequiresCharging(true); // we don't care if the device is charging or not
@@ -483,6 +481,7 @@ public class Utils {
             notificationManager.createNotificationChannel(channel);
         }
     }
+
 //    private static NotificationCompat.Builder createNotificationGroup(Context context, String channelID, String group, String title, String msg) {
 //        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelID);
 //        mBuilder.setSmallIcon(R.mipmap.app_njs_icon);

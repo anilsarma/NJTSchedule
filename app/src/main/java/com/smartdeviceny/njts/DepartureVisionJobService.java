@@ -11,16 +11,12 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.smartdeviceny.njts.utils.JobID;
-import com.smartdeviceny.njts.utils.NotificationChannels;
-import com.smartdeviceny.njts.utils.NotificationGroup;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
 import com.smartdeviceny.njts.values.ConfigDefault;
 import com.smartdeviceny.njts.values.NotificationValues;
 
 import java.util.Date;
-import java.util.List;
 
 public class DepartureVisionJobService extends JobService {
 
@@ -81,7 +77,6 @@ public class DepartureVisionJobService extends JobService {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         //Log.d("JOB", "sending " + NotificationValues.BROADCAT_PERIODIC_TIMER);
     }
-
     public void sendDepartureVisionPings() {
         Intent intent = new Intent(NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);

@@ -9,6 +9,7 @@
         android:visible="false"
         app:showAsAction="always"></item>
     <item
+
         android:id="@+id/menu_reverse"
         android:titleCondensed="Reverse"
         android:title="Reverse"

@@ -57,7 +57,6 @@ public class SystemService extends Service {
     DepartureVisionParser parser = new DepartureVisionParser();
 
     public SystemService() {
-
     }
 
     @Override
@@ -68,7 +67,6 @@ public class SystemService extends Service {
         config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Set<String> tmp = config.getStringSet(Config.FAVORITES, favorites);
         favorites = new HashSet<>(tmp); // re-init the data structures
-
         IntentFilter filter = new IntentFilter();
         filter.addAction(NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
         filter.addAction(NotificationValues.BROADCAT_CHECK_FOR_UPDATE);
@@ -602,7 +600,6 @@ public class SystemService extends Service {
 
     }
 
-
     final DateFormat dateFmt = new SimpleDateFormat("yyyyMMdd");
 
     // this is a syncronous call TODO: make async implementation.
@@ -639,7 +636,6 @@ public class SystemService extends Service {
         }
         return r;
     }
-
 
     public HashMap<String, DepartureVisionData> getCachedDepartureVisionStatus_byTrip() {
         HashMap<String, DepartureVisionData> data = new HashMap<>();

@@ -33,7 +33,6 @@ import com.smartdeviceny.njts.values.ConfigDefault;
 import java.util.ArrayList;
 
 public class FragmentSettings extends Fragment implements ServiceConnected {
-
     ArrayAdapter<CharSequence> routes_adapter;
     ArrayAdapter<CharSequence> start_adapter;
     ArrayAdapter<CharSequence> stop_adapter;
@@ -92,7 +91,6 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
         });
         Button sqlButton = view.findViewById(R.id.button_schedule_update);
         sqlButton.setOnClickListener(v -> ((MainActivity) getActivity()).doCheckForUpdate(getActivity()));
-
         edittext_app_version = view.findViewById(R.id.edittext_app_version);
         edittext_view_db_version = view.findViewById(R.id.edittext_db_version);
         edittext_view_db_version.setText("TBD");
@@ -137,10 +135,10 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
         edit_text_polling_frequency.setText("10");
         int time = config.getInt(Config.POLLING_TIME, ConfigDefault.POLLING_TIME) / 1000;
         edit_text_polling_frequency.setText("" + time);
+
         edit_text_polling_frequency.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
             @Override
@@ -198,7 +196,6 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
             edit.putBoolean(Config.TRAIN_NOTIFICTION, b);
             edit.apply();
         });
-
         checkBox_debug = view.findViewById(R.id.checkbox_debug);
         checkBox_debug.setChecked(config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG));
         checkBox_debug.setOnCheckedChangeListener((compoundButton, b) -> {
@@ -251,7 +248,6 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
         config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         systemService.get_values("select * from routes", "route_long_name");
         String values[] = systemService.get_values("select * from routes", "route_long_name");
-
         edittext_view_db_version.setText(systemService.getDBVersion());
         edittext_app_version.setText(getActivity().getString(R.string.app_version));
 
@@ -276,7 +272,6 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
         stop_adapter.notifyDataSetChanged();
 
         String rt = Utils.getConfig(config, Config.ROUTE, ConfigDefault.ROUTE);
-
         String start = Utils.getConfig(config, Config.START_STATION, ConfigDefault.START_STATION);
         String stop = Utils.getConfig(config, Config.STOP_STATION, ConfigDefault.STOP_STATION);
 

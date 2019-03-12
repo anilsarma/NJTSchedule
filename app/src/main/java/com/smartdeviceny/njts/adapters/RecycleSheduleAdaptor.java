@@ -109,7 +109,6 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
 
     }
     public HashMap<String, DepartureVisionData> departureVision = new HashMap<>();
-
     String make_key(String station, String block_id) {
         return station + "::" + block_id;
     }
@@ -239,7 +238,6 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
             } catch (Exception e) {
                e.printStackTrace();
            }
-
             if( !dv.track.isEmpty()) {
                 try {
                     if( current_trains) {
