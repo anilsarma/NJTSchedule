@@ -30,8 +30,8 @@ public class SQLWrapper implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
-        if(sql !=null) {
+    public void close()  {
+        if (sql != null) {
             sql.close();
         }
     }
@@ -43,6 +43,7 @@ public class SQLWrapper implements Closeable {
     public SharedPreferences getConfig() {
         return config;
     }
+
     public SQLiteLocalDatabase getSql() {
         return sql;
     }
@@ -85,7 +86,7 @@ public class SQLWrapper implements Closeable {
 
     public ArrayList<Route> getRoutes(String from, String to, @Nullable Integer date, @Nullable Integer delta) {
         ArrayList<Route> r = new ArrayList<>();
-        SQLiteDatabase db = null;
+
         if (sql == null) {
             return r;
         }
@@ -96,26 +97,24 @@ public class SQLWrapper implements Closeable {
         if (date == null) {
             date = Integer.parseInt(Utils.getLocaDate(0));
         }
-        try {
-            db = sql.getReadableDatabase();
+        try  {
+            SQLiteDatabase db = sql.getReadableDatabase();
+            HashSet<String> favorites = getFavortes();
+            String station_code = getStationCode(from);
+            delta = Math.max(1, delta);
+            for (int i = -delta; i < delta; i++) {
+                try {
+                    Date stDate = DateFormatCont.yyyyMMddFmt.parse("" + date);
+                    stDate = Utils.adddays(stDate, i);
+                    ArrayList<HashMap<String, Object>> routes = Utils.parseCursor(SQLHelper.getRoutes(db, from, to, Integer.parseInt(DateFormatCont.yyyyMMddFmt.format(stDate))));
+                    for (HashMap<String, Object> rt : routes) {
+                        r.add(new Route(station_code, DateFormatCont.yyyyMMddFmt.format(stDate), from, to, rt, favorites.contains(rt.get("block_id").toString())));
+                    }
+                } catch (Exception e) {
+                }
+            }
         } catch (Exception e) {
             return r;
-        }
-
-        HashSet<String> favorites = getFavortes();
-        String station_code = getStationCode(from);
-        delta = Math.max(1, delta);
-        for (int i = -delta; i < delta; i++) {
-            try {
-                Date stDate = DateFormatCont.yyyyMMddFmt.parse("" + date);
-                stDate = Utils.adddays(stDate, i);
-                ArrayList<HashMap<String, Object>> routes = Utils.parseCursor(SQLHelper.getRoutes(db, from, to, Integer.parseInt(DateFormatCont.yyyyMMddFmt.format(stDate))));
-                for (HashMap<String, Object> rt : routes) {
-                    r.add(new Route(station_code, DateFormatCont.yyyyMMddFmt.format(stDate), from, to, rt, favorites.contains(rt.get("block_id").toString())));
-                }
-            } catch (Exception e) {
-
-            }
         }
         return r;
     }

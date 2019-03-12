@@ -95,14 +95,18 @@ public class SystemService extends Service {
         }
 
         _checkRemoteDBUpdate(silent);
-        dumpDownload();
+        //dumpDownload();
         return checkingVersion;
     }
 
     public void dumpDownload() {
         DownloadManager manager = (DownloadManager) getApplicationContext().getSystemService(Context.DOWNLOAD_SERVICE);
         DownloadManager.Query query = new DownloadManager.Query();
+
         Cursor c = manager.query(query);
+        if(c ==null) {
+            return;
+        }
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
             int ID = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_ID));
@@ -178,7 +182,10 @@ public class SystemService extends Service {
         final DownloadFile d = new DownloadFile(getApplicationContext(), new DownloadFile.Callback() {
             @Override
             public boolean downloadComplete(DownloadFile d, long id, String url, File file) {
-                notify_user_of_upgrade("Download Complete");
+                boolean debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
+                if(debug) {
+                    notify_user_of_upgrade("Download Complete");
+                }
                 checkingVersion = false;
                 File dbFilePath = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
                 File tmpFilename = null;
@@ -469,9 +476,14 @@ public class SystemService extends Service {
         DownloadManager manager = (DownloadManager) getApplicationContext().getSystemService(Context.DOWNLOAD_SERVICE);
         DownloadManager.Query query = new DownloadManager.Query();
         Cursor c = manager.query(query);
+        if(c ==null) {
+            return 0;
+        }
         int count=0;
+        int entries = 0;
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+            entries ++;
             if( status == DownloadManager.STATUS_FAILED || status == DownloadManager.STATUS_SUCCESSFUL) {
                 continue;
             }
@@ -483,6 +495,7 @@ public class SystemService extends Service {
                 count++;
             }
         }
+        Log.d("SVC", "total pending entries in table " + entries);
         return count;
 
     }
@@ -490,13 +503,18 @@ public class SystemService extends Service {
     public void _getDepartureVision(String station, @Nullable Integer check_lastime) {
         String url = "http://dv.njtransit.com/mobile/tid-mobile.aspx?sid=" + station;
 
+
+        // check more expensive pending
+        if ( dvPendingRequests.getPending(station) > 0) {
+            Log.d("SVC", "we already have a pending request for this station dv " + station  + " " + url);
+            return;
+        }
         int pending = checkPendingForUri(url);
         // check more expensive pending
-        if (pending>2 || dvPendingRequests.getPending(station) > 0) {
+        if (pending>2 ) {
             Log.d("SVC", "we already have a pending request for this station dv " + station + " pending:" + pending + " " + url);
             return;
         }
-
         Date lastRequesTime = dvPendingRequests.getLastRequestTime(station);
         Date now = new Date();
 
