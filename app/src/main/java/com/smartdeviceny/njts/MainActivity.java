@@ -33,6 +33,8 @@ import com.smartdeviceny.njts.values.Config;
 import com.smartdeviceny.njts.values.ConfigDefault;
 import com.smartdeviceny.njts.values.NotificationValues;
 
+import java.util.concurrent.TimeUnit;
+
 public class MainActivity extends AppCompatActivity {
     boolean mIsBound = false;
     public SystemService systemService;
@@ -294,6 +296,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+        Utils.scheduleJob(getApplicationContext(), JobID.UpdateCheckerJobService, UpdateCheckerJobService.class, (int) TimeUnit.SECONDS.toMillis(10), false, null);
     }
 
     private void sendNotifyConfigChanged() {

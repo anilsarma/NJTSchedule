@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
 import com.smartdeviceny.njts.values.ConfigDefault;

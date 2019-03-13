@@ -18,8 +18,10 @@ import android.widget.TextView;
 import com.smartdeviceny.njts.MainActivity;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.SystemService;
+import com.smartdeviceny.njts.UpdateCheckerJobService;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.Route;
+import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.Utils;
 
 import java.text.SimpleDateFormat;
@@ -135,6 +137,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
                 holder.route.favorite = !holder.route.favorite;
                 ((MainActivity)RecycleSheduleAdaptor.this.mInflater.getContext()).updateFavorite( holder.route.favorite, holder.route.block_id);
                 RecycleSheduleAdaptor.this.notifyItemChanged(holder.position);
+                Utils.scheduleJob(RecycleSheduleAdaptor.this.mInflater.getContext().getApplicationContext(), JobID.UpdateCheckerJobService, UpdateCheckerJobService.class, (int) TimeUnit.SECONDS.toMillis(10), false, null);
             }
             return false;
         });

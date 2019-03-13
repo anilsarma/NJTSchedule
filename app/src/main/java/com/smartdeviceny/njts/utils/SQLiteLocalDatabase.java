@@ -32,7 +32,18 @@ public class SQLiteLocalDatabase extends SQLiteOpenHelper {
         //System.out.println("checking for file " + databaseFullPath);
         if (checkdatabase(new File(databaseFullPath))) {
             //System.out.println(databaseFullPath + "length " + new File(databaseFullPath).length());
-            opendatabase();
+            int count =0;
+            while (count < 5 ) {
+                // retry
+                try {
+                    opendatabase();
+                    break;
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+                try { Thread.sleep(10); } catch(Exception e) {}
+                count ++;
+            }
         } else {
             try {
                 createdatabase();

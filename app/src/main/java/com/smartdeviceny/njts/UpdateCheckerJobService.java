@@ -15,9 +15,11 @@ import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionParser;
 import com.smartdeviceny.njts.parser.Route;
+import com.smartdeviceny.njts.utils.IDGenerator;
 import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.NotificationGroup;
 import com.smartdeviceny.njts.utils.SQLWrapper;
@@ -46,17 +48,18 @@ public class UpdateCheckerJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
         //Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, in Start", NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
+        long nextTime = -1;
         try {
             PersistableBundle bundle = jobParameters.getExtras();
             if (bundle == null || bundle.getBoolean("periodic", false)) {
                 oneTimeCheck();
             }
-            periodicCheck(jobParameters);
+            nextTime = periodicCheck(jobParameters);
         } catch (Exception e) {
             e.printStackTrace();
 
         } finally {
-            scheduleJob();
+            scheduleJob(nextTime);
             jobFinished(jobParameters, true);
         }
         return false; // let the system know we have no job running ..
@@ -113,13 +116,17 @@ public class UpdateCheckerJobService extends JobService {
         }
     }
 
-    void periodicCheck(JobParameters jobParameters) {
+    long periodicCheck(JobParameters jobParameters) {
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
 
+        long nextTime = -1;
         HashMap<String, DepartureVisionData> dv = new HashMap<>();
         if (!config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION)) {
-            return;
+            if (debug) {
+                Log.d("UPD", "Job Checker, train notification turned off next in 10 minutes");
+            }
+            return TimeUnit.MINUTES.toMillis(10);
         }
         try {
             JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
@@ -170,10 +177,19 @@ public class UpdateCheckerJobService extends JobService {
                 wrapper.open();
                 String startStation = wrapper.getConfig().getString(Config.START_STATION, ConfigDefault.START_STATION);
                 String stopStation = wrapper.getConfig().getString(Config.STOP_STATION, ConfigDefault.STOP_STATION);
-                int ID = 1; // use the ID instead of the Block id so that we don't have an infinite number of notifications.
+                // use the ID instead of the Block id so that we don't have an infinite number of notifications.
+                IDGenerator ID = new IDGenerator(1);
                 // do that for all routes configured in the system.
-                ID = updateCurrentRoutes(ID, wrapper, history, dv, startStation, stopStation);
-                ID = updateCurrentRoutes(ID, wrapper, history, dv, stopStation, startStation);
+                long earliestEvent = updateCurrentRoutes(ID, wrapper, history, dv, startStation, stopStation);
+                if (earliestEvent > 0) {
+                    nextTime = (nextTime == -1) ? earliestEvent : nextTime;
+                    nextTime = Math.min(nextTime, earliestEvent);
+                }
+                earliestEvent = updateCurrentRoutes(ID, wrapper, history, dv, stopStation, startStation);
+                if (earliestEvent > 0) {
+                    nextTime = (nextTime == -1) ? earliestEvent : nextTime;
+                    nextTime = Math.min(nextTime, earliestEvent);
+                }
 
             } catch (Exception e) {
 
@@ -181,20 +197,27 @@ public class UpdateCheckerJobService extends JobService {
                 save(history);
             }
         }
+        return nextTime;
     }
 
-    int updateCurrentRoutes(int ID, SQLWrapper wrapper, HashMap<String, Date> history, HashMap<String, DepartureVisionData> dv, String startStation, String stopStation) {
+    long updateCurrentRoutes(IDGenerator ID, SQLWrapper wrapper, HashMap<String, Date> history, HashMap<String, DepartureVisionData> dv, String startStation, String stopStation) {
         ArrayList<Route> routes = wrapper.getRoutes(startStation, stopStation, null, null);
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         Date now = new Date();
-
+        long nextTime = -1;
         for (Route info : routes) {
             String key = startStation + "." + info.block_id;
             if (!info.favorite) {
                 continue;
             }
-
+            boolean inFuture = info.departure_time_as_date.getTime() > now.getTime();
+            if (inFuture) {
+                if (nextTime <= 0) {
+                    nextTime = info.departure_time_as_date.getTime();
+                }
+                nextTime = Math.min(info.departure_time_as_date.getTime(), nextTime);
+            }
             if (history.keySet().contains(key)) {
                 long diff = now.getTime() - history.get(key).getTime();
                 int duration = config.getInt(Config.NOTIFICATION_DELAY, ConfigDefault.NOTIFICATION_DELAY);
@@ -219,11 +242,12 @@ public class UpdateCheckerJobService extends JobService {
                     }
                 }
                 //str.append(msg + "\n");
-                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPCOMING, msg, NotificationGroup.UPCOMING.getID() + 10000 + (ID++ % 5)); // no more than 5
+                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPCOMING, msg,
+                        NotificationGroup.UPCOMING.getID() + 10000 + (ID.getNext() % 5)); // no more than 5
                 history.put(key, now);
             }
         }
-        return ID;
+        return nextTime;
     }
 
     boolean isSystemServiceRunning() {
@@ -248,15 +272,34 @@ public class UpdateCheckerJobService extends JobService {
         return false;
     }
 
-    void scheduleJob() {
-        int polling_time = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getInt(Config.POLLING_TIME, ConfigDefault.POLLING_TIME);
-        polling_time = Math.max(10000, polling_time);
+    void scheduleJob(long scheduleTime) {
         Date now = new Date();
         long epoch_time = now.getTime();
-        epoch_time += polling_time; // next polling time
-        epoch_time = (epoch_time / polling_time) * polling_time; // to the next clock time.
-        long diff = epoch_time - now.getTime();
-
+        long polling_time = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getInt(Config.POLLING_TIME, ConfigDefault.POLLING_TIME); // config has micros.
+        if (scheduleTime > 0) {
+            // get the complicated schedule time, if the time is far far away
+            //
+            long diff = scheduleTime - epoch_time;
+            if (diff > 0) {
+                long computed_polling;
+                if (diff > TimeUnit.MINUTES.toMillis(30)) {
+                    computed_polling = TimeUnit.MINUTES.toMillis(15);
+                } else if (diff > TimeUnit.MINUTES.toMillis(20)) {
+                    computed_polling = TimeUnit.MINUTES.toMillis(5);
+                } else if (diff > TimeUnit.MINUTES.toMillis(10)) {
+                    computed_polling = TimeUnit.MINUTES.toMillis(2);
+                } else {
+                    computed_polling = TimeUnit.MINUTES.toMillis(1);
+                }
+                polling_time = Math.max(polling_time, computed_polling);
+            }
+        } else {
+            polling_time = Math.max(polling_time, TimeUnit.MINUTES.toMillis(30));
+        }
+        long diff = Utils.alignTime(polling_time);
+        Log.d("UPDJOB", "Next Wake up time in diff:" + diff + " " + TimeUnit.MILLISECONDS.toMinutes(diff) + " (minutes)" + TimeUnit.MILLISECONDS.toSeconds(
+                diff % (60000)) + " seconds" + " Polling:" + TimeUnit.MILLISECONDS.toMinutes(polling_time) + " (minutes)" + TimeUnit.MILLISECONDS.toSeconds(
+                polling_time % (60000)) + " seconds" + " Schedule Time:" + new Date(scheduleTime) + " (" + scheduleTime + ")");
         PersistableBundle bundle = new PersistableBundle();
         bundle.putBoolean("periodic", true);
         Utils.scheduleJob(this.getApplicationContext(), JobID.UpdateCheckerJobService, UpdateCheckerJobService.class, (int) diff, false, bundle);

@@ -17,17 +17,23 @@ public class UtilsDBVerCheck {
         if (!dbFilePath.exists()) {
             return null;
         }
-        SQLiteLocalDatabase sql = new SQLiteLocalDatabase(appContext, dbFilePath.getName(), dbFilePath.getParent());
-        sql.getWritableDatabase();
         try {
-            sql.getWritableDatabase(); // force and open
-        } catch (Exception e) {
-            Log.d("SQL", "get routes failed need to download");
-            sql.close();
-            Utils.delete(dbFilePath);
-            sql = null;
+            SQLiteLocalDatabase sql = new SQLiteLocalDatabase(appContext, dbFilePath.getName(), dbFilePath.getParent());
+
+            sql.getWritableDatabase();
+            try {
+                sql.getWritableDatabase(); // force and open
+            } catch (Exception e) {
+                Log.d("SQL", "get routes failed need to download");
+                sql.close();
+                Utils.delete(dbFilePath);
+                sql = null;
+            }
+
+            return sql;
+        }catch(Exception e) {
+            return null; // is this a case of access i.e someone else has it open
         }
-        return sql;
     }
 
     // extract the specified name to a temp file.

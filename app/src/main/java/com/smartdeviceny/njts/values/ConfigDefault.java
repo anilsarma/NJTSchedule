@@ -7,7 +7,7 @@ public interface ConfigDefault {
     String ROUTE = "Northeast Corridor";
     String DELTA_DAYS = "1";
     String DV_STATION = "NY";
-    int POLLING_TIME = 30000;
+    int POLLING_TIME = 30000; // store micros, config display is in milli
 
     boolean DEBUG=false;
     boolean TRAIN_NOTIFICTION = true;

@@ -86,36 +86,18 @@ public class SystemService extends Service {
     }
 
     public boolean checkForUpdate(boolean silent) {
-        dumpDownload();
         if (checkingVersion) {
             Log.d("SVC", "update already running");
             return false; // already running.
         }
-
-        _checkRemoteDBUpdate(silent);
-        //dumpDownload();
+        try {
+            _checkRemoteDBUpdate(silent);
+        } catch(Exception e) {
+            e.printStackTrace();;
+        }
         return checkingVersion;
     }
 
-    public void dumpDownload() {
-        DownloadManager manager = (DownloadManager) getApplicationContext().getSystemService(Context.DOWNLOAD_SERVICE);
-        DownloadManager.Query query = new DownloadManager.Query();
-
-        Cursor c = manager.query(query);
-        if(c ==null) {
-            return;
-        }
-        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
-            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
-            int ID = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_ID));
-
-            String url = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
-            if( status == DownloadManager.STATUS_FAILED || status == DownloadManager.STATUS_SUCCESSFUL) {
-                continue;
-            }
-            Log.d("DNLD", "DUMP Pending ID " + ID + " url:" + url + " Status:" + status);
-        } // for loop
-    }
 
     public boolean isUpdateRunning() {
         return checkingVersion;

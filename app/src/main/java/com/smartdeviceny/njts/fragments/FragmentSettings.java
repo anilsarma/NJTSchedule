@@ -23,14 +23,17 @@ import android.widget.Toast;
 import com.smartdeviceny.njts.MainActivity;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.SystemService;
+import com.smartdeviceny.njts.UpdateCheckerJobService;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
 import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.ConfigUtils;
+import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
 import com.smartdeviceny.njts.values.ConfigDefault;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class FragmentSettings extends Fragment implements ServiceConnected {
     ArrayAdapter<CharSequence> routes_adapter;
@@ -301,6 +304,8 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
                     Utils.setConfig(config, Config.ROUTE, route);
                     Utils.setConfig(config, Config.START_STATION, start1);
                     Utils.setConfig(config, Config.STOP_STATION, stop1);
+
+                    Utils.scheduleJob(getMainActivity(), JobID.UpdateCheckerJobService, UpdateCheckerJobService.class, (int) TimeUnit.SECONDS.toMillis(10), false, null);
                 }
             }
         });
