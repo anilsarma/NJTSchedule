@@ -13,10 +13,14 @@ import java.util.zip.ZipInputStream;
 // server.
 public class UtilsDBVerCheck {
 
-    static public SQLiteLocalDatabase getSQLDatabase(Context appContext, File dbFilePath) {
-        if (!dbFilePath.exists()) {
+    static public SQLiteLocalDatabase getSQLDatabase(Context appContext, File dbMasterFilePath, File dbFilePath) {
+        if (!dbMasterFilePath.exists()) {
             return null;
         }
+        if(Utils.copyFileIfNewer(dbMasterFilePath, dbFilePath)) {
+            return null;
+        }
+
         try {
             SQLiteLocalDatabase sql = new SQLiteLocalDatabase(appContext, dbFilePath.getName(), dbFilePath.getParent());
 
@@ -80,7 +84,6 @@ public class UtilsDBVerCheck {
             Log.e("DBU", "matchDBVersion failed" + e.getMessage());
         }
         return "";
-
     }
 
 

@@ -29,6 +29,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -297,7 +299,52 @@ public class Utils {
         }
         return null;
     }
+    public static boolean copyFileIfNewer(File src, File dest) {
+        if( dest ==null) {
+            return src!=null;
+        }
+        if( src.getAbsolutePath().equals(dest.getAbsolutePath())) {
+            return true;
+        }
 
+        if( !src.exists()) {
+            return false;
+        }
+        if( src.exists()) {
+            if( src.lastModified() < dest.lastModified()) {
+                if( src.length()  == dest.length()) {
+                    return true;
+                }
+            }
+        }
+        // need to copy src to file.
+        try {
+            FileUtils.copyFile(src, dest);
+            return true;
+        } catch(Exception e) {
+            try {
+                dest.delete();
+            } catch(Exception ee) {
+
+            }
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+    public static boolean copyFileIfNewer(String src, String dest) {
+        if( dest ==null) {
+            return src!=null;
+        }
+        if( src.equals(dest)) {
+            return true;
+        }
+
+        File srcFile = new File(src);
+        File destFile = new File(dest);
+        return copyFileIfNewer(srcFile, destFile);
+
+    }
     public static String convertStreamToString(InputStream is) {
         return new Scanner(is).useDelimiter("\\A").next();
     }
@@ -491,12 +538,17 @@ public class Utils {
 //        mBuilder.setGroupSummary(true);
 //        return mBuilder;
 //    }
-    private static NotificationCompat.Builder createNotificationGroup(Context context, NotificationGroup group) {
+    private static NotificationCompat.Builder createNotificationGroup(Context context, NotificationGroup group, @Nullable String group_title) {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, group.getChannel().getUniqueID());
         mBuilder.setSmallIcon(R.mipmap.app_njs_icon);
         mBuilder.setGroup(group.getUniqueID());
-        mBuilder.setContentTitle(group.getName()).setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-        mBuilder.setContentText(group.getDescription());
+
+        group_title=(group_title==null|| group_title.isEmpty())?group.getDescription():group_title;
+        mBuilder.setContentTitle(group_title);
+        mBuilder.setContentText(group_title);// API < 24
+
+        mBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
         mBuilder.setGroupSummary(true);
         return mBuilder;
     }
@@ -565,7 +617,7 @@ public class Utils {
 //    }
 
 
-    public static void notify_user(Context context, NotificationGroup group, String msg, @Nullable Integer id) {
+    public static void notify_user(Context context, NotificationGroup group, @Nullable String group_title,  String msg, @Nullable Integer id) {
         createNotificationChannel(context, group.getChannel());
 
         final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -580,15 +632,16 @@ public class Utils {
         if (id == null) {
             id = group.getID() + 1;
         }
-        mNotificationManager.notify(group.getID(), createNotificationGroup(context, group).build());
+        mNotificationManager.notify(group.getID(), createNotificationGroup(context, group, group_title).build());
         mNotificationManager.notify(id, notification);
     }
 
-    public static void notify_user_big_text(Context context, NotificationGroup group, String msg, @Nullable Integer id) {
+    public static void notify_user_big_text(Context context, NotificationGroup group,@Nullable String group_title, String msg, @Nullable Integer id) {
         createNotificationChannel(context, group.getChannel());
 
         final NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationCompat.Builder mBuilder = makeNotificationBuilder(context, group,  group.getDescription(), msg);
+        group_title = (group_title ==null || group_title.isEmpty())?group.getDescription():group_title;
+        NotificationCompat.Builder mBuilder = makeNotificationBuilder(context, group,  group_title, msg);
         mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(msg));
         mBuilder.setAutoCancel(true);
         Notification notification = mBuilder.build();
@@ -602,7 +655,7 @@ public class Utils {
             id = group.getID() + 1;
         }
         //mNotificationManager.notify(id, notification);
-        mNotificationManager.notify(group.getID(), createNotificationGroup(context, group).build());
+        mNotificationManager.notify(group.getID(), createNotificationGroup(context, group, group_title).build());
         mNotificationManager.notify(id, notification);
     }
 

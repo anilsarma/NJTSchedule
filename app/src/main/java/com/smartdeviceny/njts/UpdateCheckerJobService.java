@@ -1,16 +1,14 @@
 package com.smartdeviceny.njts;
 
 import android.app.ActivityManager;
+import android.app.NotificationManager;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
@@ -31,6 +29,8 @@ import com.smartdeviceny.njts.values.NotificationValues;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -47,7 +47,11 @@ public class UpdateCheckerJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-        //Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, in Start", NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
+        SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
+        if (debug) {
+            Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, null, "Job Checker, in Start", NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
+        }
         long nextTime = -1;
         try {
             PersistableBundle bundle = jobParameters.getExtras();
@@ -57,6 +61,14 @@ public class UpdateCheckerJobService extends JobService {
             nextTime = periodicCheck(jobParameters);
         } catch (Exception e) {
             e.printStackTrace();
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            nextTime = new Date().getTime() + TimeUnit.SECONDS.toMillis(30);
+            if (debug) {
+                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, null, "Job Checker, in Start Exception \n" + sw.toString(),
+                        NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 100);
+            }
 
         } finally {
             scheduleJob(nextTime);
@@ -65,8 +77,8 @@ public class UpdateCheckerJobService extends JobService {
         return false; // let the system know we have no job running ..
     }
 
-    HashMap<String, Date> getHistory() {
-        HashMap<String, Date> code = new HashMap<>();
+    HashMap<String, HistoryData> getHistory() {
+        HashMap<String, HistoryData> code = new HashMap<>();
         try {
             SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION_HISTORY, ConfigDefault.DEPARTURE_VISION_HISTORY));
@@ -80,14 +92,16 @@ public class UpdateCheckerJobService extends JobService {
             Iterator<String> keys = history.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                long value = history.getLong(key);
+                JSONObject data = history.getJSONObject(key);
+                Date dt = new Date(data.getLong("time"));
+                String message = data.getString("message");
 
-                Date dt = new Date(value);
+                HistoryData entry = new HistoryData(dt, message);
                 // drop old entries, more than 6 hours.
                 if ((now.getTime() - dt.getTime()) > TimeUnit.HOURS.toMillis(6)) {
                     continue;
                 }
-                code.put(key, dt);
+                code.put(key, entry);
             }
 
         } catch (Exception e) {
@@ -96,12 +110,27 @@ public class UpdateCheckerJobService extends JobService {
         return code;
     }
 
-    void save(HashMap<String, Date> history) {
+    class HistoryData {
+        public Date date;
+        public String msg;
+
+        public HistoryData(Date date, String msg) {
+            this.date = date;
+            this.msg = msg;
+        }
+    }
+
+    ;
+
+    void save(HashMap<String, HistoryData> history) {
         JSONObject container = new JSONObject();
         JSONObject hist = new JSONObject();
-        for (Map.Entry<String, Date> e : history.entrySet()) {
+        for (Map.Entry<String, HistoryData> e : history.entrySet()) {
+            JSONObject data = new JSONObject();
             try {
-                hist.put(e.getKey(), e.getValue().getTime());
+                data.put("time", e.getValue().date.getTime());
+                data.put("message", e.getValue().msg);
+                hist.put(e.getKey(), data);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -150,7 +179,7 @@ public class UpdateCheckerJobService extends JobService {
 
         }
         if (isSystemServiceRunning()) {
-
+            //
             long lastTime = config.getLong(Config.LAST_UPDATE_CHECK, ConfigDefault.LAST_UPDATE_CHECK);
             Date now = new Date();
             Date last = new Date(lastTime);
@@ -160,39 +189,39 @@ public class UpdateCheckerJobService extends JobService {
                 oneTimeCheck();
             }
             if (debug) {
-                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE,
+                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, null,
                         "Job Checker, System Service running, last check:" + last + " diff:" + TimeUnit.MILLISECONDS.toMinutes(diff) + " minutes ago",
-                        NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
+                        NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 101);
             }
         } else {
             if (debug) {
-                Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, "Job Checker, System Service not running",
+                Utils.notify_user(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, null, "Job Checker, System Service not running",
                         NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 1);
             }
         }
         {
-
-            HashMap<String, Date> history = getHistory();
-            try (SQLWrapper wrapper = new SQLWrapper(getApplicationContext())) {
+            HashMap<String, HistoryData> history = getHistory();
+            try (SQLWrapper wrapper = new SQLWrapper(getApplicationContext(), "rails_checker_db.sql")) {
                 wrapper.open();
                 String startStation = wrapper.getConfig().getString(Config.START_STATION, ConfigDefault.START_STATION);
                 String stopStation = wrapper.getConfig().getString(Config.STOP_STATION, ConfigDefault.STOP_STATION);
                 // use the ID instead of the Block id so that we don't have an infinite number of notifications.
                 IDGenerator ID = new IDGenerator(1);
                 // do that for all routes configured in the system.
-                long earliestEvent = updateCurrentRoutes(ID, wrapper, history, dv, startStation, stopStation);
+                long earliestEvent = updateCurrentRoutes(wrapper, history, dv, startStation, stopStation);
                 if (earliestEvent > 0) {
                     nextTime = (nextTime == -1) ? earliestEvent : nextTime;
                     nextTime = Math.min(nextTime, earliestEvent);
                 }
-                earliestEvent = updateCurrentRoutes(ID, wrapper, history, dv, stopStation, startStation);
+                earliestEvent = updateCurrentRoutes(wrapper, history, dv, stopStation, startStation);
                 if (earliestEvent > 0) {
                     nextTime = (nextTime == -1) ? earliestEvent : nextTime;
                     nextTime = Math.min(nextTime, earliestEvent);
                 }
 
             } catch (Exception e) {
-
+                e.printStackTrace();
+                throw new RuntimeException(e);
             } finally {
                 save(history);
             }
@@ -200,7 +229,7 @@ public class UpdateCheckerJobService extends JobService {
         return nextTime;
     }
 
-    long updateCurrentRoutes(IDGenerator ID, SQLWrapper wrapper, HashMap<String, Date> history, HashMap<String, DepartureVisionData> dv, String startStation, String stopStation) {
+    long updateCurrentRoutes(SQLWrapper wrapper, HashMap<String, HistoryData> history, HashMap<String, DepartureVisionData> dv, String startStation, String stopStation) {
         ArrayList<Route> routes = wrapper.getRoutes(startStation, stopStation, null, null);
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
@@ -208,6 +237,7 @@ public class UpdateCheckerJobService extends JobService {
         long nextTime = -1;
         for (Route info : routes) {
             String key = startStation + "." + info.block_id;
+            String message = "";
             if (!info.favorite) {
                 continue;
             }
@@ -219,32 +249,51 @@ public class UpdateCheckerJobService extends JobService {
                 nextTime = Math.min(info.departure_time_as_date.getTime(), nextTime);
             }
             if (history.keySet().contains(key)) {
-                long diff = now.getTime() - history.get(key).getTime();
+                message = history.get(key).msg;
+                long diff = now.getTime() - history.get(key).date.getTime();
                 int duration = config.getInt(Config.NOTIFICATION_DELAY, ConfigDefault.NOTIFICATION_DELAY);
-                if (diff < TimeUnit.MINUTES.toMillis(duration)) {
-                    Log.d("UPD", key + " Filtered by time " + TimeUnit.MILLISECONDS.toMinutes(diff) + " minutes, period:" + duration + " minutes");
-                    continue;
+                if (diff > TimeUnit.MINUTES.toMillis(duration)) {
+                    message = ""; // force publish.
                 }
             }
             long diff = (info.departure_time_as_date.getTime() - now.getTime());
 
 
             if (diff > 0 && diff < TimeUnit.MINUTES.toMillis(60)) {
-                String msg = info.block_id + " departs " + Utils.formatPrintableTime(info.departure_time_as_date, null) + " from " + info.station_code;
+                String msg =
+                        info.route_name + "\n" + info.from + " \u279F " + info.to
+                        + "\nTravel time " + TimeUnit.MILLISECONDS.toMinutes(info.arrival_time_as_date.getTime() - info.departure_time_as_date.getTime()) + " minutes"
+                        ;
+
+                String subject = "#" + info.block_id + " " + info.station_code + " " + Utils.formatPrintableTime(info.departure_time_as_date, null);
                 DepartureVisionData entry = dv.get(info.block_id);
                 if (entry != null) {
                     // make sure we don't use stale data.
                     if (Utils.getTodayYYYYMMDD(now).equals(Utils.getTodayYYYYMMDD(entry.createTime))) {
                         if (!entry.track.isEmpty()) {
-                            msg += " Track " + entry.track;
+                            msg += "\nTrack " + entry.track;
+                            subject += " Track " + entry.track;
                         }
                         msg += " " + entry.status;
+                        // filter status that contains time.
+                        if (!entry.status.contains("in")) {
+                            subject += " " + entry.status;
+                        }
                     }
                 }
                 //str.append(msg + "\n");
-                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPCOMING, msg,
-                        NotificationGroup.UPCOMING.getID() + 10000 + (ID.getNext() % 5)); // no more than 5
-                history.put(key, now);
+
+                if (!message.equals(msg)) {
+                    Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPCOMING, subject, msg,
+                            NotificationGroup.UPCOMING.getID() + 1000 + Integer.parseInt(info.block_id)); // no more than 5
+                    history.put(key, new HistoryData(now, msg));
+                }
+            } else {
+                // clear any pending notifications, if diff is negative i.e in the past.
+                if (-diff > TimeUnit.MINUTES.toMillis(15)) {
+                    final NotificationManager mNotificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    mNotificationManager.cancel(NotificationGroup.UPCOMING.getID() + 1000 + Integer.parseInt(info.block_id));
+                }
             }
         }
         return nextTime;
@@ -321,8 +370,8 @@ public class UpdateCheckerJobService extends JobService {
         sendCheckForUpdate();
     }
 
-    public void sendCheckForUpdate() {
-        Intent intent = new Intent(NotificationValues.BROADCAT_CHECK_FOR_UPDATE);
+    private void sendCheckForUpdate() {
+        Intent intent = new Intent(NotificationValues.BROADCAT_CHECK_FOR_UPDATE_NO_FILTER);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 }

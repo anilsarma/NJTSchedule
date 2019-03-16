@@ -221,8 +221,10 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         String stationCode = systemService!=null?systemService.getStationCode(startStation):"";
 
         // is this train status in the correct i.e does i
+
         if (diff > 0 && stationCode.equals(dv.station)) {  // other checks needed.
             String msg  = "Train " + dv.block_id + " departs " + dv.time + " from " + dv.station;
+            String subject= msg;
             if( !dv.track.isEmpty()) {
                 msg += " Track " + dv.track;
             }
@@ -230,7 +232,7 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
                 msg += " " + dv.status;
             }
             Log.d(NotificationGroup.UPCOMING.getName(), msg);
-            Utils.notify_user(this.getActivity(),  NotificationGroup.UPCOMING, msg, NotificationGroup.UPCOMING.getID() + 10000 + Integer.parseInt(dv.block_id));
+            //Utils.notify_user(this.getActivity(),  NotificationGroup.UPCOMING, subject,  msg, NotificationGroup.UPCOMING.getID() + 10000 + Integer.parseInt(dv.block_id));
             //Toast.makeText(getActivity().getApplicationContext(), (String) "sent notification ", Toast.LENGTH_SHORT).show();
             return true;
             //notification = true;

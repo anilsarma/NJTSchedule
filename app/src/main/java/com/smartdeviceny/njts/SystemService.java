@@ -20,6 +20,7 @@ import android.util.Log;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionParser;
 import com.smartdeviceny.njts.parser.Route;
+import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.DownloadFile;
 import com.smartdeviceny.njts.utils.NotificationChannels;
 import com.smartdeviceny.njts.utils.NotificationGroup;
@@ -55,8 +56,16 @@ public class SystemService extends Service {
     SharedPreferences config;
     HashSet<String> favorites = new HashSet<>();
     DepartureVisionParser parser = new DepartureVisionParser();
+    final String LOCAL_DB_NAME = "rails_service_db.sql";
 
     public SystemService() {
+    }
+
+    SQLiteLocalDatabase createSQLDB(String name, @Nullable  String db) {
+        db = (db==null)?db:name;
+        Utils.copyFileIfNewer(getApplicationContext().getApplicationInfo().dataDir + File.separator + name, getApplicationContext().getApplicationInfo().dataDir + File.separator  + db );
+
+        return new SQLiteLocalDatabase(getApplicationContext(), db, null);
     }
 
     @Override
@@ -106,8 +115,11 @@ public class SystemService extends Service {
 
     public void _checkRemoteDBUpdate(boolean silent) {
         Log.d("SVC", "checking for updated schedule db");
-        File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
-        sql = UtilsDBVerCheck.getSQLDatabase(getApplicationContext(), f);
+        File src = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
+        File dest = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + LOCAL_DB_NAME);
+        if (sql == null) {
+            sql = UtilsDBVerCheck.getSQLDatabase(getApplicationContext(), src, dest);
+        }
         checkingVersion = true;
         if (sql == null) {
             _checkRemoteDBZipUpdate(silent, ""); // download it anyway we dont have a valid database.
@@ -125,6 +137,7 @@ public class SystemService extends Service {
                     _checkRemoteDBZipUpdate(silent, version_str);
                     Utils.delete(file);
                     Utils.cleanFiles(file.getParentFile(), "version");
+                    ConfigUtils.setLong( config, Config.LAST_UPDATE_CHECK, ConfigDefault.LAST_UPDATE_CHECK);
                 } finally {
                     versionPendingRequests.updatePending("version.txt", -1, null);
                 }
@@ -146,10 +159,11 @@ public class SystemService extends Service {
                 DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI, null);
     }
 
-    // never call this directly shold be called via _checkRemoteDBUpdate
+    // never call this directly should be called via _checkRemoteDBUpdate
     private void _checkRemoteDBZipUpdate(boolean silent, String version_str) {
-        File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
-        sql = UtilsDBVerCheck.getSQLDatabase(getApplicationContext(), f);
+        File src = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
+        File dest = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + LOCAL_DB_NAME);
+        sql = UtilsDBVerCheck.getSQLDatabase(getApplicationContext(), src, dest);
         if (UtilsDBVerCheck.matchDBVersion(sql, version_str)) {
             checkingVersion = false;
             Log.d("DBSVC", "system schedule db is up-todate " + version_str);
@@ -189,17 +203,26 @@ public class SystemService extends Service {
                         Log.d("SQL", "renamed file " + tmpFilename.getAbsolutePath() + " to " + dbFilePath.getAbsolutePath());
                     }
 
+                    try( SQLiteLocalDatabase tmphandle = new SQLiteLocalDatabase(getApplicationContext(), tmpFilename.getName(), tmpFilename.getParent())) {
+                        //write the version to the master.
+                        SqlUtils.create_user_pref_table(tmphandle.getWritableDatabase());
+                        SqlUtils.update_user_pref(tmphandle.getWritableDatabase(), "version", version_str, new Date());
+                    } catch(Exception ce) {
+
+                    }
                     Log.d("SQL", "renamed file " + tmpFilename.getAbsolutePath() + " to " + dbFilePath.getAbsolutePath());
                     tmpFilename.renameTo(dbFilePath);
+
                     tmpFilename = null;
                     //dbFilePath = new File(dbFilePath.getAbsolutePath());
                     int retries = 0;
                     while (retries < 5) {
                         retries++;
                         try {
-                            sql = new SQLiteLocalDatabase(getApplicationContext(), dbFilePath.getName(), null);
-                            SqlUtils.create_user_pref_table(sql.getWritableDatabase());
-                            SqlUtils.update_user_pref(sql.getWritableDatabase(), "version", version_str, new Date());
+                            if(sql !=null) {
+                                try { sql.close(); } catch(Exception ee){}
+                            }
+                            sql = createSQLDB(dbFilePath.getName(), LOCAL_DB_NAME);
                             // let the user know we have upgraded.
                             notify_user_of_upgrade("upgraded to " + version_str);
                             break;
@@ -315,7 +338,7 @@ public class SystemService extends Service {
         if (sql == null) {
             File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
             if (f.exists()) {
-                sql = new SQLiteLocalDatabase(getApplicationContext(), f.getName(), null);
+                sql = createSQLDB(f.getName(), LOCAL_DB_NAME);
             }
         }
         if (sql != null) {
@@ -331,7 +354,7 @@ public class SystemService extends Service {
     }
 
     private void notify_user_of_upgrade(@NonNull String msg) {
-        Utils.notify_user(this.getApplicationContext(), NotificationGroup.DATABASE_UPGRADE, msg, NotificationGroup.UPDATE.getID() + 1);
+        Utils.notify_user(this.getApplicationContext(), NotificationGroup.DATABASE_UPGRADE, null, msg, NotificationGroup.UPDATE.getID() + 1);
     }
 
 
@@ -716,17 +739,21 @@ public class SystemService extends Service {
         public void onReceive(Context context, Intent intent) {
             // TODO Auto-generated method stub
             //Log.d("MAIN", "onReceive " + intent.getAction());
-            if (intent.getAction().equals(NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING)) {
-                SystemService.this.sendDepartureVisionPings();
-            } else if (intent.getAction().equals(NotificationValues.BROADCAT_CHECK_FOR_UPDATE)) {
-                Date now = new Date();
-                Date d = new Date(config.getLong(Config.UPDATE_LAST_CHECK_TIME, Utils.adddays(new Date(), -1).getTime()));
-                // every hour.
-                if ((now.getTime() - d.getTime()) > 1 * 60 * 1000) {
-                    SystemService.this.checkForUpdate(true);
+            try {
+                if (intent.getAction().equals(NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING)) {
+                    SystemService.this.sendDepartureVisionPings();
+                } else if (intent.getAction().equals(NotificationValues.BROADCAT_CHECK_FOR_UPDATE) || intent.getAction().equals(NotificationValues.BROADCAT_CHECK_FOR_UPDATE_NO_FILTER)) {
+                    Date now = new Date();
+                    Date d = new Date(config.getLong(Config.UPDATE_LAST_CHECK_TIME, Utils.adddays(new Date(), -1).getTime()));
+                    // every hour.
+                    if (((now.getTime() - d.getTime()) > 1 * 60 * 1000) || intent.getAction().equals(NotificationValues.BROADCAT_CHECK_FOR_UPDATE_NO_FILTER)) {
+                        SystemService.this.checkForUpdate(true);
+                    }
+                } else {
+                    Log.d("receiver", "got something not sure what " + intent.getAction());
                 }
-            } else {
-                Log.d("receiver", "got something not sure what " + intent.getAction());
+            } catch(Exception e) {
+                e.printStackTrace();
             }
         }
     }

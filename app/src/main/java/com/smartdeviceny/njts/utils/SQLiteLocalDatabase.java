@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.Nullable;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.ZipInputStream;
 
-public class SQLiteLocalDatabase extends SQLiteOpenHelper {
+public class SQLiteLocalDatabase extends SQLiteOpenHelper implements Closeable {
     private String databaseDir =null; // "/data/data/"+BuildConfig.APPLICATION_ID+"/databases/";
     private String databaseFullPath =null;
     private final Context mContext;
@@ -52,6 +53,7 @@ public class SQLiteLocalDatabase extends SQLiteOpenHelper {
             }
         }
     }
+
 
     public void reopen(InputStream src) throws IOException
     {
@@ -147,6 +149,8 @@ public class SQLiteLocalDatabase extends SQLiteOpenHelper {
         to.close();
         from.close();
     }
+
+    @Override
     public synchronized void close() {
         if (myDataBase != null) {
             myDataBase.close();

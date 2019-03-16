@@ -22,11 +22,23 @@ import java.util.Set;
 public class SQLWrapper implements Closeable {
     SQLiteLocalDatabase sql;
     Context context;
+
+    String  masterFile=  "rails_db.sql";
+    String  sqlFileName = "rails_checker_db.sql";
     SharedPreferences config;
 
-    public SQLWrapper(Context context) {
+    public SQLWrapper(Context context, String dbName) {
         this.context = context;
+        sqlFileName = dbName;
         config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+    }
+
+    public void setSqlFileName(String sqlFileName) {
+        this.sqlFileName = sqlFileName;
+    }
+
+    public String getSqlFileName() {
+        return sqlFileName;
     }
 
     @Override
@@ -48,8 +60,14 @@ public class SQLWrapper implements Closeable {
         return sql;
     }
 
+    public String makeFullPath(String path) {
+        return context.getApplicationContext().getApplicationInfo().dataDir + File.separator + path;
+    }
     public void open() {
-        File f = new File(context.getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
+        if(!Utils.copyFileIfNewer(makeFullPath(masterFile), makeFullPath(sqlFileName))) {
+            throw new RuntimeException("cannot create " + sqlFileName + " from " + masterFile);
+        }
+        File f = new File(context.getApplicationContext().getApplicationInfo().dataDir + File.separator + getSqlFileName());
         if (f.exists()) {
             if (sql != null) {
                 try {
