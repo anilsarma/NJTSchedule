@@ -267,7 +267,7 @@ public class UpdateCheckerJobService extends JobService {
 
                 String subject = "#" + info.block_id + " " + info.station_code + " " + Utils.formatPrintableTime(info.departure_time_as_date, null);
                 DepartureVisionData entry = dv.get(info.block_id);
-                if (entry != null) {
+                if (entry != null && entry.station_code.equals(info.station_code)) {
                     // make sure we don't use stale data.
                     if (Utils.getTodayYYYYMMDD(now).equals(Utils.getTodayYYYYMMDD(entry.createTime))) {
                         if (!entry.track.isEmpty()) {

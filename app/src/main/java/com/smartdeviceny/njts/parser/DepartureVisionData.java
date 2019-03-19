@@ -12,7 +12,7 @@ public class DepartureVisionData {
     public String line = "";
     public String status = "";
     public String block_id = "";
-    public String station = "";
+    public String station_code = "";
     public Date createTime = new Date(); // time this object was created
     public boolean stale = false;
     public boolean favorite = false;
@@ -27,7 +27,7 @@ public class DepartureVisionData {
         line = data.get("line").toString();
         status = data.get("status").toString();
         block_id = data.get("train").toString();
-        station = data.get("station").toString();
+        station_code = data.get("station").toString();
         favorite = false;
         header = " " + createTime + " " + to;
         createTime = new Date();
@@ -43,7 +43,7 @@ public class DepartureVisionData {
         obj.line = "" + this.line;
         obj.status = "" + this.status;
         obj.block_id = "" + this.block_id;
-        obj.station = "" + this.station;
+        obj.station_code = "" + this.station_code;
         obj.favorite = this.favorite;
         obj.createTime = this.createTime;
         obj.header = this.header;
@@ -59,7 +59,7 @@ public class DepartureVisionData {
         str.append(" line=" + line);
         str.append(" status=" + status);
         str.append(" block_id=" + block_id);
-        str.append(" station=" + station);
+        str.append(" station=" + station_code);
         str.append(" favorite=" + favorite);
         str.append(" createTime=" + createTime);
         str.append(" header=" + header);

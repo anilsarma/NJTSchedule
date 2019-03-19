@@ -222,8 +222,8 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
 
         // is this train status in the correct i.e does i
 
-        if (diff > 0 && stationCode.equals(dv.station)) {  // other checks needed.
-            String msg  = "Train " + dv.block_id + " departs " + dv.time + " from " + dv.station;
+        if (diff > 0 && stationCode.equals(dv.station_code)) {  // other checks needed.
+            String msg  = "Train " + dv.block_id + " departs " + dv.time + " from " + dv.station_code;
             String subject= msg;
             if( !dv.track.isEmpty()) {
                 msg += " Track " + dv.track;

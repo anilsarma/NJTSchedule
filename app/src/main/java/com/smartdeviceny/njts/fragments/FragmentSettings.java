@@ -249,7 +249,7 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
             return; // system not initalized
         }
         config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-        systemService.get_values("select * from routes", "route_long_name");
+        //systemService.get_values("select * from routes", "route_long_name");
         String values[] = systemService.get_values("select * from routes", "route_long_name");
         edittext_view_db_version.setText(systemService.getDBVersion());
         edittext_app_version.setText(getActivity().getString(R.string.app_version));

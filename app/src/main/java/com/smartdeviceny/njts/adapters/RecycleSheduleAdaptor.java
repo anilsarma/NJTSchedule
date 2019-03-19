@@ -117,7 +117,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
     public void updateDepartureVision(@Nullable HashMap<String, DepartureVisionData> departureVision) {
         HashMap<String, DepartureVisionData> data = new HashMap<>();
         for(DepartureVisionData dv:departureVision.values()) {
-            data.put(make_key(dv.station, dv.block_id), dv);
+            data.put(make_key(dv.station_code, dv.block_id), dv);
         }
         this.departureVision = data;
         Log.d("REC", "DV Size:" + departureVision.size());
