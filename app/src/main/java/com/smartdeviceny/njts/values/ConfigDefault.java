@@ -8,6 +8,7 @@ public interface ConfigDefault {
     String DELTA_DAYS = "1";
     String DV_STATION = "NY";
     int POLLING_TIME = 30000; // store micros, config display is in milli
+    int ALERT_POLLING_TIME = 30000; // store micros, config display is in milli
 
     boolean DEBUG=false;
     boolean TRAIN_NOTIFICTION = true;
@@ -16,4 +17,5 @@ public interface ConfigDefault {
     String DEPARTURE_VISION_HISTORY = "{'time':0, 'history':{}}";
 
     long LAST_UPDATE_CHECK = 0;
+    long LAST_ALERT_TIME = 0;
 }

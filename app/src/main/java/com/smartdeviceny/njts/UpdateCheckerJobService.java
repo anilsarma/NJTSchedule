@@ -2,7 +2,9 @@ package com.smartdeviceny.njts;
 
 import android.app.ActivityManager;
 import android.app.NotificationManager;
+import android.app.job.JobInfo;
 import android.app.job.JobParameters;
+import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.Context;
 import android.content.Intent;
@@ -95,8 +97,9 @@ public class UpdateCheckerJobService extends JobService {
                 JSONObject data = history.getJSONObject(key);
                 Date dt = new Date(data.getLong("time"));
                 String message = data.getString("message");
+                String subject = data.getString("subject");
 
-                HistoryData entry = new HistoryData(dt, message);
+                HistoryData entry = new HistoryData(dt, message, subject);
                 // drop old entries, more than 6 hours.
                 if ((now.getTime() - dt.getTime()) > TimeUnit.HOURS.toMillis(6)) {
                     continue;
@@ -113,10 +116,12 @@ public class UpdateCheckerJobService extends JobService {
     class HistoryData {
         public Date date;
         public String msg;
+        public String subject;
 
-        public HistoryData(Date date, String msg) {
+        public HistoryData(Date date, String msg, String subject) {
             this.date = date;
             this.msg = msg;
+            this.subject = msg;
         }
     }
 
@@ -130,6 +135,7 @@ public class UpdateCheckerJobService extends JobService {
             try {
                 data.put("time", e.getValue().date.getTime());
                 data.put("message", e.getValue().msg);
+                data.put("subject", e.getValue().subject);
                 hist.put(e.getKey(), data);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -236,7 +242,7 @@ public class UpdateCheckerJobService extends JobService {
         Date now = new Date();
         long nextTime = -1;
         for (Route info : routes) {
-            String key = startStation + "." + info.block_id;
+            String key = info.station_code + "." + info.block_id;
             String message = "";
             if (!info.favorite) {
                 continue;
@@ -276,23 +282,34 @@ public class UpdateCheckerJobService extends JobService {
                         }
                         msg += " " + entry.status;
                         // filter status that contains time.
-                        if (!entry.status.contains("in")) {
+                        if (entry.status.toLowerCase().contains(" min") && entry.status.contains(" in ")) {
+                            subject += " '" + entry.status + "'";
+                        } else {
                             subject += " " + entry.status;
                         }
                     }
                 }
-                //str.append(msg + "\n");
+                    //str.append(msg + "\n");
 
                 if (!message.equals(msg)) {
-                    Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPCOMING, subject, msg,
-                            NotificationGroup.UPCOMING.getID() + 1000 + Integer.parseInt(info.block_id)); // no more than 5
-                    history.put(key, new HistoryData(now, msg));
+                    boolean skip = false;
+                    // some times the track info gets cleared, retain the old value
+                    if( message.contains("Track") && !msg.contains("Track")) {
+                        skip = true;
+                    }
+                    if(!skip) {
+                        int id = Integer.parseInt(info.block_id) * 10 + info.station_code.getBytes()[0] * 10 + info.station_code.getBytes()[1];
+                        Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPCOMING, subject, msg, NotificationGroup.UPCOMING.getID() + 1000 + id); // no more than 5
+                        history.put(key, new HistoryData(now, subject, msg));
+                    }
                 }
+
             } else {
                 // clear any pending notifications, if diff is negative i.e in the past.
                 if (-diff > TimeUnit.MINUTES.toMillis(15)) {
+                    int id =  Integer.parseInt(info.block_id) *10 +   info.station_code.getBytes()[0] *10 + info.station_code.getBytes()[1];
                     final NotificationManager mNotificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                    mNotificationManager.cancel(NotificationGroup.UPCOMING.getID() + 1000 + Integer.parseInt(info.block_id));
+                    mNotificationManager.cancel(NotificationGroup.UPCOMING.getID() + 1000 + id);
                 }
             }
         }
@@ -322,6 +339,9 @@ public class UpdateCheckerJobService extends JobService {
     }
 
     void scheduleJob(long scheduleTime) {
+        SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
+
         Date now = new Date();
         long epoch_time = now.getTime();
         long polling_time = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getInt(Config.POLLING_TIME, ConfigDefault.POLLING_TIME); // config has micros.
@@ -331,12 +351,12 @@ public class UpdateCheckerJobService extends JobService {
             long diff = scheduleTime - epoch_time;
             if (diff > 0) {
                 long computed_polling;
-                if (diff > TimeUnit.MINUTES.toMillis(30)) {
+                if (diff > TimeUnit.MINUTES.toMillis(60)) {
+                    computed_polling = TimeUnit.MINUTES.toMillis(30);
+                } else  if (diff > TimeUnit.MINUTES.toMillis(30)) {
                     computed_polling = TimeUnit.MINUTES.toMillis(15);
-                } else if (diff > TimeUnit.MINUTES.toMillis(20)) {
-                    computed_polling = TimeUnit.MINUTES.toMillis(5);
                 } else if (diff > TimeUnit.MINUTES.toMillis(10)) {
-                    computed_polling = TimeUnit.MINUTES.toMillis(2);
+                    computed_polling = TimeUnit.MINUTES.toMillis(5);
                 } else {
                     computed_polling = TimeUnit.MINUTES.toMillis(1);
                 }
@@ -351,7 +371,20 @@ public class UpdateCheckerJobService extends JobService {
                 polling_time % (60000)) + " seconds" + " Schedule Time:" + new Date(scheduleTime) + " (" + scheduleTime + ")");
         PersistableBundle bundle = new PersistableBundle();
         bundle.putBoolean("periodic", true);
+
+        //jobScheduler.cancelAll();
         Utils.scheduleJob(this.getApplicationContext(), JobID.UpdateCheckerJobService, UpdateCheckerJobService.class, (int) diff, false, bundle);
+//        if(debug) {
+//            JobScheduler jobScheduler = getApplicationContext().getSystemService(JobScheduler.class);
+//            List<JobInfo> jobs = jobScheduler.getAllPendingJobs();
+//            StringBuffer buffer = new StringBuffer();
+//            for(JobInfo info:jobs) {
+//                buffer.append(info.getId() + " " + info.getService().getClassName() +  " time:" + info.getIntervalMillis() + " \n");
+//            }
+//            Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.UPDATE_CHECK_SERVICE, null,
+//                    "Job Checker scheduled jobs \n" + buffer.toString(),
+//                    NotificationGroup.UPDATE_CHECK_SERVICE.getID() + 200);
+//        }
     }
 
     @Override

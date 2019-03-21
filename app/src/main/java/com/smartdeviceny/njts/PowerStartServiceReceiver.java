@@ -54,6 +54,7 @@ public class PowerStartServiceReceiver extends BroadcastReceiver {
             //Utils.notify_user(context, NotificationGroup.POWER_SERVICE, "system up, scheduling process succedeed", NotificationGroup.POWER_SERVICE.getID() +2);
 
         }
+        Utils.scheduleJob(context.getApplicationContext(), JobID.NJTAlertJobService, NJTAlertJobService.class, (int) diff, false, null);
     }
 
 

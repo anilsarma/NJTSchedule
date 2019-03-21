@@ -197,48 +197,6 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         }
         return index;
     }
-    boolean notifyUser( DepartureVisionData dv) throws ParseException
-    {
-        // do this for favs only.
-        if (dv == null) {
-            return false;
-        }
-        if(!dv.favorite || dv.stale) {
-            return false;
-        }
-        if( dv.status.isEmpty() && dv.track.isEmpty()) {
-            return false;
-        }
-        // need to check of the current train in the current route.
-        Date now = new Date();
-        long diff = Utils.makeDate(Utils.getTodayYYYYMMDD(null),  dv.time, "yyyyMMdd HH:mm").getTime() - now.getTime();
-        // if after 12 we need to make an adjustment to the time in the departure vision.
-        if( now.getHours()>12) {
-            diff += TimeUnit.HOURS.toMillis(12);
-        }
-        String startStation = getConfig(config, Config.START_STATION,  ConfigDefault.START_STATION);
-        SystemService systemService = ((MainActivity)getActivity()).systemService;
-        String stationCode = systemService!=null?systemService.getStationCode(startStation):"";
-
-        // is this train status in the correct i.e does i
-
-        if (diff > 0 && stationCode.equals(dv.station_code)) {  // other checks needed.
-            String msg  = "Train " + dv.block_id + " departs " + dv.time + " from " + dv.station_code;
-            String subject= msg;
-            if( !dv.track.isEmpty()) {
-                msg += " Track " + dv.track;
-            }
-            if( !dv.status.isEmpty()) {
-                msg += " " + dv.status;
-            }
-            Log.d(NotificationGroup.UPCOMING.getName(), msg);
-            //Utils.notify_user(this.getActivity(),  NotificationGroup.UPCOMING, subject,  msg, NotificationGroup.UPCOMING.getID() + 10000 + Integer.parseInt(dv.block_id));
-            //Toast.makeText(getActivity().getApplicationContext(), (String) "sent notification ", Toast.LENGTH_SHORT).show();
-            return true;
-            //notification = true;
-        }
-        return  false;
-    }
 
 
     final DateFormat printableDateFmt = new SimpleDateFormat("EEE, MMM d, yyyy");
