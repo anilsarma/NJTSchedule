@@ -11,6 +11,7 @@ import android.util.Log;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.DownloadFile;
 import com.smartdeviceny.njts.utils.Feed;
+import com.smartdeviceny.njts.utils.IDCache;
 import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.NotificationGroup;
 import com.smartdeviceny.njts.utils.RailAlertDetails;
@@ -24,17 +25,21 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class NJTAlertJobService extends JobService {
     SharedPreferences config = null;
     boolean debug = false;
+    IDCache idCache;
 
     @Override
     public boolean onStartJob(JobParameters params) {
         config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
+        idCache = new IDCache(getApplicationContext(), "ids");
 
         if (debug) {
             Utils.notify_user(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null, "Alert Checker, in Start", NotificationGroup.ALERT_CHECK_SERVICE.getID() + 1);
@@ -98,7 +103,8 @@ public class NJTAlertJobService extends JobService {
                 debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
 
                 if (debug) {
-                    Utils.notify_user(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null, "Alert Checker, download complete ",
+                    Utils.notify_user(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null,
+                            "Alert Checker, download complete ",
                             NotificationGroup.ALERT_CHECK_SERVICE.getID() + 2);
                 }
 
@@ -111,15 +117,17 @@ public class NJTAlertJobService extends JobService {
 
                     RssFeedCategorise.Category cat = new RssFeedCategorise().categorize(feed, 0);
                     cat.sort();
+                    //ConfigUtils.setLong(config, Config.LAST_ALERT_TIME, 0);
                     long lastPubTime = config.getLong(Config.LAST_ALERT_TIME, ConfigDefault.LAST_ALERT_TIME);
                     long maxPubTime = lastPubTime;
                     int index = 1;
                     for (RailAlertDetails detail : cat.train) {
                         if (detail.getTimeDate().getTime() > lastPubTime) {
                             maxPubTime = Math.max(maxPubTime, detail.getTimeDate().getTime());
-                            Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT, "Alert NJT Route " + detail.getLong_name(),
-                                    "Alert Time:" + detail.getTimeDate() + "\n" + detail.getAlertText(),
-                                    NotificationGroup.ALERT.getID() + index + detail.getTimeDate().getHours() * 1000 + detail.getTimeDate().getMinutes() * 10);
+                            Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT,
+                                    "Train " + detail.getLong_name(),
+                                    detail.getTimeDate() + "\n\n" + detail.getAlertText(),
+                                    NotificationGroup.ALERT.getID() + idCache.getID(detail.getShort_code()));
                         }
                         index++;
                     }
@@ -129,7 +137,12 @@ public class NJTAlertJobService extends JobService {
                     }
 
                 } catch (Exception e) {
-                    Utils.notify_user(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null, "Alert Checker, download complete, failed parsing ",
+                    StringWriter sw = new StringWriter();
+                    PrintWriter pw = new PrintWriter(sw);
+                    e.printStackTrace(pw);
+
+                    Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null, "Alert Checker, download complete, " +
+                                    "failed parsing \n" + sw,
                             NotificationGroup.ALERT_CHECK_SERVICE.getID() + 3);
                 }
                 Utils.delete(file);

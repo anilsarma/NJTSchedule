@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 import com.smartdeviceny.njts.fragments.FragmentAlertWeb;
+import com.smartdeviceny.njts.fragments.FragmentDepartureViewNewOne;
 import com.smartdeviceny.njts.fragments.FragmentDepartureVisionWeb;
 import com.smartdeviceny.njts.fragments.FragmentRouteSchedule;
 import com.smartdeviceny.njts.fragments.FragmentSettings;
@@ -23,6 +24,7 @@ public class FragmentPagerMainPageAdaptor extends FragmentPagerAdapter {
             case 1: return new FragmentRouteSchedule();
             case 2: return new FragmentAlertWeb();
             case 3: return new FragmentSettings();
+            case 4: return new FragmentDepartureViewNewOne();
             //case 4: return new FragmentSettings2();
         }
       return null;
@@ -36,6 +38,7 @@ public class FragmentPagerMainPageAdaptor extends FragmentPagerAdapter {
             case 1: return "Schedule";
             case 2: return "Alerts";
             case 3: return "Settings";
+            case 4: return "Vison - Debug";
             //case 4: return "Settings Experiment";
         }
         return "";
@@ -43,6 +46,6 @@ public class FragmentPagerMainPageAdaptor extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 4;
+        return 5;
     }
 }

@@ -20,4 +20,11 @@
         \nWhen enabled a notification will be sent to the notification bar about upcoming trains in the favorite list, note that this can get noisy.
     \nA favorite train can be selected, by \'long pressing\' a train in the Schedule Tab.</string>
     <string name="notification_delay"><b>Notification Delay minutes</b>\nThis is delay in of minutes between notifications for upcoming trains.(experimental)</string>
+
+
+
+    <string name="title_activity_recycler_view">RecyclerView</string>
+    <string name="tv_recycler_item_1">Swipe down to refresh</string>
+    <string name="tv_recycler_item_2">Swipe left or right to dismiss it</string>
+    <string name="tv_recycler_item_3">Drag up or down to move it</string>
 </resources>

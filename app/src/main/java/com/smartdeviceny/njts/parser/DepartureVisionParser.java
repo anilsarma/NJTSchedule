@@ -2,6 +2,7 @@ package com.smartdeviceny.njts.parser;
 
 import com.smartdeviceny.njts.utils.Utils;
 
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -40,6 +41,7 @@ public class DepartureVisionParser {
             }
             // discard the frist 3
             //Log.d("DV", "child ===================== Size:" + child.size());
+            int index = 0;
             for (int i = 3; i < child.size(); i++) {
                 Node tr = child.get(i);
                 List<Node> td = tr.childNodes();
@@ -62,11 +64,11 @@ public class DepartureVisionParser {
                 }
 
                 String time = ((Element) td.get(1)).html().toString();
-                String to = ((Element) td.get(3)).html().toString();
+                String to = Jsoup.parse(td.get(3).toString()).text();
                 String track = ((Element) td.get(5)).html().toString();
                 String line = ((Element) td.get(7)).html().toString();
                 String train = ((Element) td.get(9)).html().toString();
-                String status = ((Element) td.get(11)).html().toString();
+                String status = Jsoup.parse(td.get(11).toString()).text();
                 String background = stylemap.get("background-color");
                 String foreground = stylemap.get("color");
 
@@ -79,6 +81,7 @@ public class DepartureVisionParser {
                 data.put("station", station_code);
                 data.put("background", background);
                 data.put("foreground", foreground);
+                data.put("index", index++);
                 //Log.d("DV", "details time:" + time +  " to:" + to + " track:" + track + " line:" + line + " status:" + status + " train:" + train + " station:" + station );
                 DepartureVisionData dv = new DepartureVisionData(data);
                 dv.tableTime = tableTime;

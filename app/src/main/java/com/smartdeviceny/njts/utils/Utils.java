@@ -275,7 +275,11 @@ public class Utils {
         outs.close();
         in.close();
     }
-
+    public static void writeStringToFile(String in, OutputStream outs) throws IOException {
+        outs.write(in.getBytes(), 0, in.length());
+        outs.flush();
+        outs.close();
+    }
     // assumes that there is only one entry in the file.
     public static ZipInputStream getFileFromZip(InputStream zipFileStream) throws IOException {
         ZipInputStream zis = new ZipInputStream(zipFileStream);

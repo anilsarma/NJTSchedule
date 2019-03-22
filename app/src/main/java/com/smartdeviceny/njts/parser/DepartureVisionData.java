@@ -17,6 +17,10 @@ public class DepartureVisionData {
     public boolean stale = false;
     public boolean favorite = false;
 
+    public String background;
+    public String foreground;
+    public int     index;
+
     public DepartureVisionData() {
     }
 
@@ -28,6 +32,10 @@ public class DepartureVisionData {
         status = data.get("status").toString();
         block_id = data.get("train").toString();
         station_code = data.get("station").toString();
+        background = data.get("background").toString();
+        foreground = data.get("foreground").toString();
+
+        index  = Integer.parseInt(data.get("index").toString());
         favorite = false;
         header = " " + createTime + " " + to;
         createTime = new Date();
