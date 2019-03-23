@@ -42,28 +42,28 @@ public class RecyclerRouteDecoration extends RecyclerView.ItemDecoration {
     @Override
     public void onDrawOver(Canvas c, RecyclerView parent, RecyclerView.State state) {
         super.onDrawOver(c, parent, state);
-        if (headerView == null) {
-            headerView = inflateHeaderView(parent);
-            header_date = headerView.findViewById(R.id.list_item_section_date);
-            header = headerView.findViewById(R.id.list_item_section_text);
-            fixLayoutSize(headerView, parent);
-        }
+//        if (headerView == null) {
+//            headerView = inflateHeaderView(parent);
+//            header_date = headerView.findViewById(R.id.list_item_section_date);
+//            header = headerView.findViewById(R.id.list_item_section_text);
+//            fixLayoutSize(headerView, parent);
+//        }
 
-        CharSequence previousHeader = "";
-        for (int i = 0; i < parent.getChildCount(); i++) {
-            View child = parent.getChildAt(i);
-            final int position = parent.getChildAdapterPosition(child);
-
-            CharSequence s_date = sectionCallback.getSectionDate(position);
-            header_date.setText(s_date);
-
-            CharSequence title = sectionCallback.getSectionHeader(position);
-            header.setText(title);
-            if (!previousHeader.equals(title) || sectionCallback.isSection(position)) {
-                drawHeader(c, child, headerView);
-                previousHeader = title;
-            }
-        }
+//        CharSequence previousHeader = "";
+//        for (int i = 0; i < parent.getChildCount(); i++) {
+//            View child = parent.getChildAt(i);
+//            final int position = parent.getChildAdapterPosition(child);
+//
+//            CharSequence s_date = sectionCallback.getSectionDate(position);
+//            header_date.setText(s_date);
+//
+//            CharSequence title = sectionCallback.getSectionHeader(position);
+//            header.setText(title);
+//            if (!previousHeader.equals(title) || sectionCallback.isSection(position)) {
+//                drawHeader(c, child, headerView);
+//                previousHeader = title;
+//            }
+//        }
     }
 
     private void drawHeader(Canvas c, View child, View headerView) {

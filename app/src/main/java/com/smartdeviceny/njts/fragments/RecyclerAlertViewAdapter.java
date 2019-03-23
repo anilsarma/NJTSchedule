@@ -185,18 +185,18 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
                 recyclerViewHolder.tv_recycler_item_1.setTextColor(Color.BLACK);
                 recyclerViewHolder.tv_recycler_item_2.setTextColor(Color.BLACK);
                 recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.BLACK);
-                recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.BLACK);
+                //recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.BLACK);
             } else {
                 recyclerViewHolder.tv_recycler_item_1.setTextColor(Color.WHITE);
                 recyclerViewHolder.tv_recycler_item_2.setTextColor(Color.WHITE);
                 recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.WHITE);
-                recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.WHITE);
+               // recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.WHITE);
             }
             int color = Color.parseColor(getFromHtmlColor(stop.stop.foreground));
             recyclerViewHolder.tv_recycler_item_1.setTextColor(color);
             recyclerViewHolder.tv_recycler_item_2.setTextColor(color);
             recyclerViewHolder.tv_recycler_item_3.setTextColor(color);
-            recyclerViewHolder.tv_recycler_item_4.setTextColor(color);
+           // recyclerViewHolder.tv_recycler_item_4.setTextColor(color);
 
             recyclerViewHolder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -231,15 +231,15 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
 
     @Override
     public boolean onItemMove(int fromPosition, int toPosition) {
-        Collections.swap(mItems, fromPosition, toPosition);
+        //Collections.swap(mItems, fromPosition, toPosition);
         notifyItemMoved(fromPosition, toPosition);
         return true;
     }
 
     @Override
     public void onItemDismiss(final int position) {
-        mItems.remove(position);
-        notifyItemRemoved(position);
+       // mItems.remove(position);
+       // notifyItemRemoved(position);
 
 //        Snackbar.make(parentView, context.getString(R.string.item_swipe_dismissed), Snackbar.LENGTH_SHORT)
 //                .setAction(context.getString(R.string.item_swipe_undo), new View.OnClickListener() {
