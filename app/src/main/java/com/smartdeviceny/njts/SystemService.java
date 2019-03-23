@@ -17,8 +17,10 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionParser;
+import com.smartdeviceny.njts.parser.DepartureVisionWrapper;
 import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.DownloadFile;
@@ -545,7 +547,7 @@ public class SystemService extends Service {
                     json.put("url", url);
                     json.put("data", encoded);
                     json.put("code", code);
-                    Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
+                   // Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
 
                     HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, doc);
                     updateDepartureVision(code, result);
@@ -556,9 +558,13 @@ public class SystemService extends Service {
                         activeList.add(code);// just so that things are not empty.
                     }
 
-
+                    DepartureVisionWrapper wrapper = new DepartureVisionWrapper();
+                    wrapper.time = new Date();
+                    wrapper.url = url;
+                    wrapper.code = code;
                     for (String key : activeList) {
                         for (DepartureVisionData dd : status.get(key).values()) {
+                            wrapper.entries.add(dd);
                             dd.favorite = false;
                             if (favorites.contains(dd.block_id)) {
                                 dd.favorite = true;
@@ -567,6 +573,7 @@ public class SystemService extends Service {
                             //Log.d("SVC", "entry code=" + code + " key=" + key + " " + dd.createTime + " " + dd.time + " train:" + dd.block_id + " " + dd.station  + " track#" + dd.track + " stale:" + dd.stale);
                         }
                     }
+                    Utils.setConfig(config,Config.DEPARTURE_VISION, JSONObjectSerializer.marshall(wrapper).toString());
                     synchronized (lock_status_by_trip) {
                         status_by_trip = tmp_trip;
                     }

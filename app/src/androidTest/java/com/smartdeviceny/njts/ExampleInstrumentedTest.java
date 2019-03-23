@@ -29,9 +29,9 @@ public class ExampleInstrumentedTest {
 
         assertEquals("com.smartdeviceny.njts", appContext.getPackageName());
         File f = new File(appContext.getApplicationInfo().dataDir + File.separator + "rails_db.sql");
-        SQLiteLocalDatabase sql = UtilsDBVerCheck.getSQLDatabase(appContext, f);
-        assertNotEquals(null, sql);
-        assertEquals("NY", SqlUtils.getStationCode(sql.getReadableDatabase(), "New york Penn Station"));
+        //SQLiteLocalDatabase sql = UtilsDBVerCheck.getSQLDatabase(appContext, f);
+        //assertNotEquals(null, sql);
+        //assertEquals("NY", SqlUtils.getStationCode(sql.getReadableDatabase(), "New york Penn Station"));
     }
 
 }

@@ -15,7 +15,7 @@
   <dimen name="card_margin_horizontal">8dp</dimen>
   <dimen name="card_margin_vertical">8dp</dimen>
   <dimen name="card_margin_horizontal_big_activity">0dp</dimen>
-  <dimen name="card_margin_vertical_big_activity">1sp</dimen>
+  <dimen name="card_margin_vertical_big_activity">1px</dimen>
   <dimen name="card_recycler_corner_radius">2dp</dimen>
   <dimen name="card_recycler_elevation">2dp</dimen>
 

@@ -31,8 +31,10 @@ import com.smartdeviceny.njts.MainActivity;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.SystemService;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
+import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionParser;
+import com.smartdeviceny.njts.parser.DepartureVisionWrapper;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
@@ -82,17 +84,18 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
         try {
             JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
+            DepartureVisionWrapper wrapper =(DepartureVisionWrapper) JSONObjectSerializer.unmarshall(DepartureVisionWrapper.class, json);
+//            String data = (String) json.get("data");
+//            String code = (String) json.get("code");
+//            long time = json.getLong("time");
 
-            String data = (String) json.get("data");
-            String code = (String) json.get("code");
-            long time = json.getLong("time");
-
-            if (data.length() > 0) {
-                data = Utils.decodeToString(data);
-                DepartureVisionParser parser = new DepartureVisionParser();
-                HashMap<String, DepartureVisionData> dv = parser.parseDepartureVision(code, Jsoup.parse(data));
-                for (Map.Entry<String, DepartureVisionData> entry : dv.entrySet()) {
-                    DepartureVisionData v = entry.getValue();
+            String code = wrapper.code;
+            long time = wrapper.time.getTime();
+            {
+                //data = Utils.decodeToString(data);
+                //DepartureVisionParser parser = new DepartureVisionParser();
+                //HashMap<String, DepartureVisionData> dv = parser.parseDepartureVision(code, Jsoup.parse(data));
+                for (DepartureVisionData v: wrapper.entries) {
                     Date dt = new Date(time);
                     v.createTime = Utils.makeDate(Utils.getTodayYYYYMMDD(dt), v.tableTime, "yyyyMMdd HH:mm a");
                     this.data.add(v);

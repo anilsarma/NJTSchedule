@@ -3,6 +3,7 @@ package com.smartdeviceny.njts.fragments;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -163,13 +164,17 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
                 recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_red)));
             } else {
                 //recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.gray)));
-                recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
+               // recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
             }
             recyclerViewHolder.rela_round.setVisibility(View.INVISIBLE);
             recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
-            recyclerViewHolder.tv_recycler_item_1.setText(stop.stop.station_code + " #" + stop.stop.block_id + " " + stop.stop.time + " " + stop.stop.line + " " + stop.stop.to  );
-            recyclerViewHolder.tv_recycler_item_2.setText( " " + stop.stop.status);
-            recyclerViewHolder.tv_recycler_item_3.setText(" refreshed " + stop.stop.tableTime);
+            recyclerViewHolder.tv_recycler_item_1.setText(stop.stop.station_code + " #" + stop.stop.block_id + " " + stop.stop.time );
+            recyclerViewHolder.tv_recycler_item_2.setText( stop.stop.line + " \u279F " + stop.stop.to  );
+            recyclerViewHolder.tv_recycler_item_3.setText( stop.stop.status  );
+
+            recyclerViewHolder.tv_recycler_item_4.setText("refreshed " + stop.stop.tableTime);
+            recyclerViewHolder.tv_recycler_item_1.setTypeface(Typeface.DEFAULT_BOLD);
+
             recyclerViewHolder.rela_round.startAnimation(aa);
             recyclerViewHolder.tv_round_track.setText(stop.stop.track );
             if(!stop.stop.track.isEmpty()) {
@@ -180,11 +185,19 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
                 recyclerViewHolder.tv_recycler_item_1.setTextColor(Color.BLACK);
                 recyclerViewHolder.tv_recycler_item_2.setTextColor(Color.BLACK);
                 recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.BLACK);
+                recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.BLACK);
             } else {
                 recyclerViewHolder.tv_recycler_item_1.setTextColor(Color.WHITE);
                 recyclerViewHolder.tv_recycler_item_2.setTextColor(Color.WHITE);
                 recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.WHITE);
+                recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.WHITE);
             }
+            int color = Color.parseColor(getFromHtmlColor(stop.stop.foreground));
+            recyclerViewHolder.tv_recycler_item_1.setTextColor(color);
+            recyclerViewHolder.tv_recycler_item_2.setTextColor(color);
+            recyclerViewHolder.tv_recycler_item_3.setTextColor(color);
+            recyclerViewHolder.tv_recycler_item_4.setTextColor(color);
+
             recyclerViewHolder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

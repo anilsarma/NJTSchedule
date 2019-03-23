@@ -16,8 +16,10 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionParser;
+import com.smartdeviceny.njts.parser.DepartureVisionWrapper;
 import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.IDGenerator;
 import com.smartdeviceny.njts.utils.JobID;
@@ -164,19 +166,18 @@ public class UpdateCheckerJobService extends JobService {
             return TimeUnit.MINUTES.toMillis(10);
         }
         try {
+            //JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
             JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
-            String data = (String) json.get("data");
-            String code = (String) json.get("code");
-            long time = json.getLong("time");
+            DepartureVisionWrapper wrapper =(DepartureVisionWrapper) JSONObjectSerializer.unmarshall(DepartureVisionWrapper.class, json);
+//
 
-            if (data.length() > 0) {
-                data = Utils.decodeToString(data);
-                DepartureVisionParser parser = new DepartureVisionParser();
-                dv = parser.parseDepartureVision(code, Jsoup.parse(data));
-                for (Map.Entry<String, DepartureVisionData> entry : dv.entrySet()) {
-                    DepartureVisionData v = entry.getValue();
+            String code = wrapper.code;
+            long time =wrapper.time.getTime();
+            {
+                for ( DepartureVisionData v : wrapper.entries) {
                     Date dt = new Date(time);
                     v.createTime = Utils.makeDate(Utils.getTodayYYYYMMDD(dt), v.tableTime, "yyyyMMdd HH:mm a");
+                    dv.put(v.block_id, v);
                 }
             }
         } catch (Exception e) {
