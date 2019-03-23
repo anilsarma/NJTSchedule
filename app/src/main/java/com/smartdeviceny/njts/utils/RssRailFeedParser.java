@@ -89,9 +89,10 @@ public class RssRailFeedParser {
                     f.author = escape(item.get("author"));
                     f.guid = escape(item.get("guid")); //pubDate
                     f.pubDate = escape(item.get("pubDate")); //
-                    if(!DateUtils.isToday(dt.getTime())) {
-                        continue;
-                    }
+
+//                    if(!DateUtils.isToday(dt.getTime())) {
+//                        continue;
+//                    }
                     array.add(f);
                 }
             }

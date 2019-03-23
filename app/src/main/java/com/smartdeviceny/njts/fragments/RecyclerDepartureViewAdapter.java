@@ -2,9 +2,9 @@ package com.smartdeviceny.njts.fragments;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v7.widget.RecyclerView;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,26 +13,24 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
 import com.smartdeviceny.njts.R;
-import com.smartdeviceny.njts.utils.RailAlertDetails;
+import com.smartdeviceny.njts.parser.DepartureVisionData;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements onMoveAndSwipedListener {
+public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements onMoveAndSwipedListener {
 
     class StopHolder {
-        public String item = "";
-        public RailAlertDetails stop;
-        public double miles = 0;
+      public String item="";
+      public DepartureVisionData stop;
+      public double miles = 0;
 
-        public StopHolder(String item, RailAlertDetails stop) {
-            this.stop = stop;
-            this.item = item;
-        }
-    }
-
-    ;
+      public StopHolder(String item, DepartureVisionData stop) {
+          this.stop = stop;
+          this.item = item;
+      }
+    };
     private Context context;
     private List<StopHolder> mItems;
     private int color = 0;
@@ -44,16 +42,16 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
 //    private final String FOOTER = "footer";
 //    private final String HEADER = "header";
 
-    public RecyclerAlertViewAdapter(Context context) {
+    public RecyclerDepartureViewAdapter(Context context) {
         this.context = context;
         mItems = new ArrayList();
     }
 
-    public void setItems(List<RailAlertDetails> data) {
+    public void setItems(List<DepartureVisionData> data) {
         this.mItems.clear();
         ArrayList<StopHolder> sh = new ArrayList<>();
 
-        for (RailAlertDetails s : data) {
+        for(DepartureVisionData s:data) {
             StopHolder h = new StopHolder("", s);
             sh.add(h);
         }
@@ -111,27 +109,18 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
     }
 
     String getFromHtmlColor(String color) {
-        switch (color.toLowerCase()) {
-            case "cornflowerblue":
-                return "#6495ed";
-            case "white":
-                return "#ffffff";
-            case "red":
-                return "#ff0000";
-            case "blue":
-                return "#0000ff";
-            case "green":
-                return "#008000";
-            case "black":
-                return "#000000";
-            case "brown":
-                return "#a52a2a";
-            case "yellow":
-                return "#ffff00";
+        switch(color.toLowerCase()) {
+            case "cornflowerblue": return "#6495ed";
+            case "white": return "#ffffff";
+            case "red": return "#ff0000";
+            case "blue": return "#0000ff";
+            case "green": return "#008000";
+            case "black": return "#000000";
+            case "brown": return "#a52a2a";
+            case "yellow": return "#ffff00";
         }
-        return "#008000";
+        return  "#008000";
     }
-
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
         StopHolder stop = mItems.get(position);
@@ -168,37 +157,25 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
 //            }
             recyclerViewHolder.rela_round.setVisibility(View.INVISIBLE);
             recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
-            recyclerViewHolder.tv_dv_item_train_name.setText(stop.stop.getLong_name() + " Line"); //stop.stop.station_code + " #" + stop.stop.block_id + " " + stop.stop.time );
-            recyclerViewHolder.tv_dv_block_id.setText("");
-
-            recyclerViewHolder.tv_recycler_item_2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
-            recyclerViewHolder.tv_recycler_item_2.setText("" + stop.stop.getTimeDate() + "\n");
-            recyclerViewHolder.tv_recycler_item_2.setTypeface(Typeface.DEFAULT_BOLD);
-
-            recyclerViewHolder.card_view_backgroup_layout.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
-            recyclerViewHolder.mView.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.app_blue_dark)));
-
-            //recyclerViewHolder.tv_recycler_item_2.setVisibility(View.GONE);
-
-            //recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.B);
-            recyclerViewHolder.tv_recycler_item_3.setText(stop.stop.getAlertText());
-            recyclerViewHolder.tv_recycler_item_3.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
-
-            if (stop.stop.getAlertText().isEmpty()) {
+            recyclerViewHolder.tv_dv_item_train_name.setText(stop.stop.line); //stop.stop.station_code + " #" + stop.stop.block_id + " " + stop.stop.time );
+            recyclerViewHolder.tv_dv_block_id.setText("#" + stop.stop.block_id  + " Departs " + stop.stop.time);
+            recyclerViewHolder.tv_recycler_item_2.setText( stop.stop.station_long_name + " \u279F " + stop.stop.to  );
+            recyclerViewHolder.tv_recycler_item_3.setText( stop.stop.status  );
+            if( stop.stop.status.isEmpty()) {
                 recyclerViewHolder.tv_recycler_item_3.setVisibility(View.GONE);
             } else {
                 recyclerViewHolder.tv_recycler_item_3.setVisibility(View.VISIBLE);
             }
             recyclerViewHolder.tv_recycler_item_4.setVisibility(View.GONE);
-            //recyclerViewHolder.tv_recycler_item_4.setText("refreshed " + stop.stop.tableTime);
+            recyclerViewHolder.tv_recycler_item_4.setText("refreshed " + stop.stop.tableTime);
             recyclerViewHolder.tv_dv_item_train_name.setTypeface(Typeface.DEFAULT_BOLD);
             recyclerViewHolder.tv_dv_live.startAnimation(AnimationUtils.loadAnimation(parentView.getContext(), R.anim.bounce));
             recyclerViewHolder.rela_round.startAnimation(aa);
-            recyclerViewHolder.tv_round_track.setText("");
-
-            recyclerViewHolder.rela_round.setVisibility(View.GONE);
-
-            recyclerViewHolder.card_view_backgroup_layout.setBackgroundColor(context.getResources().getColor(R.color.google_green));
+            recyclerViewHolder.tv_round_track.setText(stop.stop.track );
+            if(!stop.stop.track.isEmpty()) {
+                recyclerViewHolder.rela_round.setVisibility(View.VISIBLE);
+            }
+            recyclerViewHolder.card_view_backgroup_layout.setBackgroundColor(Color.parseColor(getFromHtmlColor(stop.stop.background)));
 //            if( stop.stop.background.toLowerCase().equals("yellow")) {
 //                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.BLACK);
 //                recyclerViewHolder.tv_recycler_item_2.setTextColor(Color.BLACK);
@@ -210,17 +187,17 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
 //                recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.WHITE);
 //               // recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.WHITE);
 //            }
-//            int color = Color.parseColor(getFromHtmlColor(stop.stop.foreground));
-//            if( stop.stop.background.toLowerCase().equals("yellow")) {
-//                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.BLACK);
-//            } else {
-//                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.parseColor(getFromHtmlColor(stop.stop.background)));
-//            }
-//            recyclerViewHolder.tv_recycler_item_2.setTextColor(color);
-//            recyclerViewHolder.tv_recycler_item_3.setTextColor(color);
-//            recyclerViewHolder.tv_dv_block_id.setTextColor(color);
+            int color = Color.parseColor(getFromHtmlColor(stop.stop.foreground));
+            if( stop.stop.background.toLowerCase().equals("yellow")) {
+                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.BLACK);
+            } else {
+                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.parseColor(getFromHtmlColor(stop.stop.background)));
+            }
+            recyclerViewHolder.tv_recycler_item_2.setTextColor(color);
+            recyclerViewHolder.tv_recycler_item_3.setTextColor(color);
+            recyclerViewHolder.tv_dv_block_id.setTextColor(color);
 
-            // recyclerViewHolder.tv_recycler_item_4.setTextColor(color);
+           // recyclerViewHolder.tv_recycler_item_4.setTextColor(color);
 
             recyclerViewHolder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -262,9 +239,9 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
 
     @Override
     public void onItemDismiss(final int position) {
-        // mItems.remove(position);
-        //notifyItemRemoved(position);
-        this.notifyDataSetChanged();
+       // mItems.remove(position);
+       //notifyItemRemoved(position);
+       this.notifyDataSetChanged();
 
 //        Snackbar.make(parentView, context.getString(R.string.item_swipe_dismissed), Snackbar.LENGTH_SHORT)
 //                .setAction(context.getString(R.string.item_swipe_undo), new View.OnClickListener() {

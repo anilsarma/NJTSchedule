@@ -187,7 +187,7 @@ public class UpdateCheckerJobService extends JobService {
         }
         if (isSystemServiceRunning()) {
             //
-            long lastTime = config.getLong(Config.LAST_UPDATE_CHECK, ConfigDefault.LAST_UPDATE_CHECK);
+            long lastTime = 0; // TODO:: config.getLong(Config.LAST_UPDATE_CHECK, ConfigDefault.LAST_UPDATE_CHECK);
             Date now = new Date();
             Date last = new Date(lastTime);
             long diff = now.getTime() - last.getTime();

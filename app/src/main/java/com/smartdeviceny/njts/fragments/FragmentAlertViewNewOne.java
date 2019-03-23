@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,38 +22,36 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.smartdeviceny.njts.MainActivity;
+import com.smartdeviceny.njts.NJTAlertJobService;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.SystemService;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
 import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
-import com.smartdeviceny.njts.parser.DepartureVisionData;
-import com.smartdeviceny.njts.parser.DepartureVisionWrapper;
 import com.smartdeviceny.njts.utils.ConfigUtils;
+import com.smartdeviceny.njts.utils.Feed;
+import com.smartdeviceny.njts.utils.JobID;
+import com.smartdeviceny.njts.utils.RailAlertDetails;
+import com.smartdeviceny.njts.utils.RssFeedCategorise;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
-import com.smartdeviceny.njts.values.ConfigDefault;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-public class FragmentDepartureViewNewOne extends Fragment implements ServiceConnected {
-    private List<DepartureVisionData> data;
+public class FragmentAlertViewNewOne extends Fragment implements ServiceConnected {
+    private List<RailAlertDetails> data;
     private FloatingActionButton fab;
     private RecyclerView mRecyclerView;
-    private RecyclerDepartureViewAdapter adapter;
+    private RecyclerAlertViewAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     SystemService systemService;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view= inflater.inflate(R.layout.activity_recycler_view, container, false);
-
-
-
+        View view = inflater.inflate(R.layout.activity_recycler_view, container, false);
         initData(inflater.getContext());
 
         //return super.onCreateView(inflater, container, savedInstanceState);
@@ -63,21 +62,19 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
         data = new ArrayList<>();
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
         try {
-            JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
-            DepartureVisionWrapper wrapper =(DepartureVisionWrapper) JSONObjectSerializer.unmarshall(DepartureVisionWrapper.class, json);
-            long time = wrapper.time.getTime();
-            {
-                for (DepartureVisionData v: wrapper.entries) {
-                    Date dt = new Date(time);
-                    v.createTime = Utils.makeDate(Utils.getTodayYYYYMMDD(dt), v.tableTime, "yyyyMMdd HH:mm a");
-                    this.data.add(v);
-                }
+            JSONObject json = new JSONObject(Utils.getConfig(config, Config.ALERT_JSON, "{}"));
+            Feed wrapper = (Feed) JSONObjectSerializer.unmarshall(Feed.class, json);
+            RssFeedCategorise.Category cat = new RssFeedCategorise().categorize(wrapper, 0);
+            cat.sort();
+
+            for (RailAlertDetails v :cat.train) {
+                this.data.add(v);
             }
-            this.data.sort((d0, d1) -> Integer.compare(d0.index, d1.index) );
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
     private int getScreenWidthDp() {
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         return (int) (displayMetrics.widthPixels / displayMetrics.density);
@@ -85,7 +82,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        systemService = ((MainActivity)getActivity()).systemService;
+        systemService = ((MainActivity) getActivity()).systemService;
 
         initView(view);
 
@@ -113,7 +110,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
             mRecyclerView.setLayoutManager(linearLayoutManager);
         }
 
-        adapter = new RecyclerDepartureViewAdapter(activity_recycler_view.getContext());
+        adapter = new RecyclerAlertViewAdapter(activity_recycler_view.getContext());
         mRecyclerView.setAdapter(adapter);
         adapter.setItems(data);
 
@@ -137,10 +134,15 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
                 new AsyncTask<String, Void, String>() {
                     @Override
                     protected String doInBackground(String... strings) {
-                        if(systemService !=null ) {
+                        if (systemService != null) {
                             SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
-                            String departureVisionCode = ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
-                            systemService.schdeuleDepartureVision(departureVisionCode, 5000);
+                            ConfigUtils.setLong(config, Config.LAST_ALERT_TIME, 0);
+
+                            // send a broad cast out
+
+                            PersistableBundle bundle = new PersistableBundle();
+                            bundle.putBoolean("periodic", true);
+                            Utils.scheduleJob(getContext().getApplicationContext(), JobID.NJTAlertJobService, NJTAlertJobService.class, (int) 2, false, bundle);
                         }
                         new Handler(getContext().getMainLooper()).post(new Runnable() {
                             @Override
@@ -156,6 +158,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
             }
         });
     }
+
     @Override
     public void onTimerEvent(SystemService systemService) {
 
@@ -163,9 +166,9 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
 
     @Override
     public void onDepartureVisionUpdated(SystemService systemService) {
-        initData(systemService.getApplicationContext());
-        adapter.setItems(data);
-        adapter.notifyDataSetChanged();
+//        initData(systemService.getApplicationContext());
+//        adapter.setItems(data);
+//        adapter.notifyDataSetChanged();
     }
 
     @Override

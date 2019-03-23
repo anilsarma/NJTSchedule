@@ -38,6 +38,9 @@ public class DepartureVisionData {
     @Persist
     public int     index;
 
+    @Persist
+    public String station_long_name;
+
     public DepartureVisionData() {
     }
 
@@ -51,6 +54,7 @@ public class DepartureVisionData {
         station_code = data.get("station").toString();
         background = data.get("background").toString();
         foreground = data.get("foreground").toString();
+        station_long_name = data.get("station_long_name").toString();
 
         index  = Integer.parseInt(data.get("index").toString());
         favorite = false;
@@ -69,6 +73,7 @@ public class DepartureVisionData {
         obj.status = "" + this.status;
         obj.block_id = "" + this.block_id;
         obj.station_code = "" + this.station_code;
+        obj.station_long_name =  this.station_long_name;
         obj.favorite = this.favorite;
         obj.createTime = this.createTime;
         obj.header = this.header;

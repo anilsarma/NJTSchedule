@@ -5,11 +5,11 @@
     android:id="@+id/card_view_item_recycler_viev"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/card_margin_vertical_big_activity"
-    android:layout_marginEnd="@dimen/card_margin_horizontal_big_activity"
     android:layout_marginStart="@dimen/card_margin_horizontal_big_activity"
     android:layout_marginTop="@dimen/card_margin_vertical_big_activity"
-    android:background="@color/white"
+    android:layout_marginEnd="@dimen/card_margin_horizontal_big_activity"
+    android:layout_marginBottom="@dimen/card_margin_vertical_big_activity"
+    android:background="@color/black"
     android:foreground="?attr/selectableItemBackground"
     card_view:cardCornerRadius="@dimen/card_recycler_corner_radius"
     card_view:cardElevation="@dimen/card_recycler_elevation">
@@ -22,13 +22,33 @@
         android:padding="@dimen/text_margin">
 
         <android.support.constraint.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:elevation="20dp"
+            android:translationZ="20dp"
+            app:layout_constraintEnd_toStartOf="@+id/guideline"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tv_dv_live"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:background="@drawable/live_background"
+                android:text="Live"
+                android:textColor="@color/activity_background"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent" />
+        </android.support.constraint.ConstraintLayout>
+
+        <android.support.constraint.ConstraintLayout
             android:id="@+id/rela_round"
-            android:layout_width="49dp"
-            android:layout_height="50dp"
+            android:layout_width="45dp"
+            android:layout_height="47dp"
             android:layout_centerVertical="true"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
             android:background="@drawable/round"
             android:backgroundTint="@color/gray_light"
             android:transitionName="shareView"
@@ -59,31 +79,35 @@
         </android.support.constraint.ConstraintLayout>
 
         <TextView
-            android:id="@+id/tv_recycler_item_1"
+            android:id="@+id/tv_dv_item_train_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
+            android:layout_marginTop="3dp"
             android:layout_toEndOf="@id/rela_round"
-            android:fontFamily="sans-serif"
+            android:autoText="true"
+            android:background="@drawable/train_background"
+            android:fontFamily="sans-serif-black"
             android:text="@string/tv_recycler_item_1"
-            android:textColor="@color/white"
-            android:textSize="20dp"
+            android:textAllCaps="false"
+            android:textColor="@color/app_green_dark"
+            android:textSize="10sp"
             android:translationZ="10dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tv_recycler_item_2"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
 
 
             android:layout_toEndOf="@id/rela_round"
             android:text="@string/tv_recycler_item_2"
             android:textColor="@color/white"
-            android:textSize="18sp"
-            app:layout_constraintStart_toStartOf="@+id/tv_recycler_item_1"
-            app:layout_constraintTop_toBottomOf="@+id/tv_recycler_item_1" />
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@+id/tv_dv_item_train_name"
+            app:layout_constraintTop_toBottomOf="@+id/tv_dv_item_train_name" />
 
         <TextView
             android:id="@+id/tv_recycler_item_3"
@@ -93,7 +117,7 @@
             android:layout_toEndOf="@id/rela_round"
             android:text="@string/tv_recycler_item_3"
             android:textColor="@android:color/white"
-            android:textSize="18dp"
+            android:textSize="14sp"
             app:layout_constraintStart_toStartOf="@+id/tv_recycler_item_2"
             app:layout_constraintTop_toBottomOf="@+id/tv_recycler_item_2" />
 
@@ -102,11 +126,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
 
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="8sp"
             android:layout_toEndOf="@id/rela_round"
             android:text="@string/tv_recycler_item_3"
             android:textColor="@color/design_default_color_primary_dark"
-            android:textSize="8dp"
+            android:textSize="8sp"
             app:layout_constraintStart_toStartOf="@+id/tv_recycler_item_3"
             app:layout_constraintTop_toBottomOf="@+id/tv_recycler_item_3" />
 
@@ -115,7 +139,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_end="63dp" />
+            app:layout_constraintGuide_end="56dp" />
+
+
+        <TextView
+            android:id="@+id/tv_dv_block_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Block ID"
+            app:layout_constraintStart_toEndOf="@+id/tv_dv_item_train_name"
+            app:layout_constraintTop_toTopOf="@+id/tv_dv_item_train_name" />
 
         <!--RelativeLayout
             android:layout_width="match_parent"
@@ -128,33 +162,33 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="8sp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_share_black_24dp" />
+                android:padding="8sp"
+                android:src="@drawable/ic_share_black_24sp" />
 
             <ImageView
                 android:id="@+id/img_main_card2_bookmark"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="8sp"
                 android:layout_toStartOf="@id/img_main_card2_share"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_bookmark_border_black_24dp" />
+                android:padding="8sp"
+                android:src="@drawable/ic_bookmark_border_black_24sp" />
 
             <ImageView
                 android:id="@+id/img_main_card2_favorite"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="8sp"
                 android:layout_toStartOf="@id/img_main_card2_bookmark"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_favorite_border_black_24dp" />
+                android:padding="8sp"
+                android:src="@drawable/ic_favorite_border_black_24sp" />
         </RelativeLayout-->
     </android.support.constraint.ConstraintLayout>
 </android.support.v7.widget.CardView>

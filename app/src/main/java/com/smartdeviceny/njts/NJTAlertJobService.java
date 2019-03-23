@@ -6,8 +6,10 @@ import android.app.job.JobService;
 import android.content.SharedPreferences;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
+import android.text.format.DateUtils;
 import android.util.Log;
 
+import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.DownloadFile;
 import com.smartdeviceny.njts.utils.Feed;
@@ -46,7 +48,8 @@ public class NJTAlertJobService extends JobService {
         }
         try {
             Date now = new Date();
-            if (now.getHours() >=4) {
+            //if (now.getHours() >= 4)
+            {
                 downloadAlert();
             }
         } finally {
@@ -103,18 +106,16 @@ public class NJTAlertJobService extends JobService {
                 debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
 
                 if (debug) {
-                    Utils.notify_user(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null,
-                            "Alert Checker, download complete ",
+                    Utils.notify_user(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null, "Alert Checker, download complete ",
                             NotificationGroup.ALERT_CHECK_SERVICE.getID() + 2);
                 }
 
                 RssRailFeedParser parser = new RssRailFeedParser();
                 try {
                     Feed feed = parser.parse(new FileInputStream(file));
-                    JSONObject obj = new JSONObject();
-                    feed.marshall(obj);
+                    JSONObject obj = JSONObjectSerializer.marshall(feed);
+                    Utils.setConfig(config, Config.ALERT_JSON, obj.toString());
                     Log.d("ALERT", "object ... " + obj.toString());
-
                     RssFeedCategorise.Category cat = new RssFeedCategorise().categorize(feed, 0);
                     cat.sort();
                     //ConfigUtils.setLong(config, Config.LAST_ALERT_TIME, 0);
@@ -122,12 +123,13 @@ public class NJTAlertJobService extends JobService {
                     long maxPubTime = lastPubTime;
                     int index = 1;
                     for (RailAlertDetails detail : cat.train) {
+                        if (!DateUtils.isToday(detail.getTime())) {
+                            continue;
+                        }
                         if (detail.getTimeDate().getTime() > lastPubTime) {
                             maxPubTime = Math.max(maxPubTime, detail.getTimeDate().getTime());
-                            Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT,
-                                    "Train " + detail.getLong_name(),
-                                    detail.getTimeDate() + "\n\n" + detail.getAlertText(),
-                                    NotificationGroup.ALERT.getID() + idCache.getID(detail.getShort_code()));
+                            Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT, "Train " + detail.getLong_name(),
+                                    detail.getTimeDate() + "\n\n" + detail.getAlertText(), NotificationGroup.ALERT.getID() + idCache.getID(detail.getShort_code()));
                         }
                         index++;
                     }
@@ -141,9 +143,8 @@ public class NJTAlertJobService extends JobService {
                     PrintWriter pw = new PrintWriter(sw);
                     e.printStackTrace(pw);
 
-                    Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null, "Alert Checker, download complete, " +
-                                    "failed parsing \n" + sw,
-                            NotificationGroup.ALERT_CHECK_SERVICE.getID() + 3);
+                    Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null,
+                            "Alert Checker, download complete, " + "failed parsing \n" + sw, NotificationGroup.ALERT_CHECK_SERVICE.getID() + 3);
                 }
                 Utils.delete(file);
                 Utils.cleanFiles(file.getParentFile(), "RailAdvisories_feed.xml");

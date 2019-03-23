@@ -549,7 +549,7 @@ public class SystemService extends Service {
                     json.put("code", code);
                    // Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
 
-                    HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, doc);
+                    HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, getStationNameFromCode(code), doc);
                     updateDepartureVision(code, result);
                     // we should use only the active stations
                     HashMap<String, DepartureVisionData> tmp_trip = new HashMap<>();
@@ -694,7 +694,17 @@ public class SystemService extends Service {
         }
         return value;
     }
+     public String getStationNameFromCode(String code) {
+         if (sql == null) {
+             return code;
+         }
+         String value = SqlUtils.getStationNameFromCode(sql.getReadableDatabase(), code);
 
+         if (value == null || value.isEmpty()) {
+             return code;
+         }
+         return value;
+    }
     public ArrayList<HashMap<String, Object>> getTripStops(String trip_id) {
         SQLiteDatabase db = null;
         ArrayList<HashMap<String, Object>> tripStops = new ArrayList<>();

@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class DepartureVisionParser {
-    public HashMap<String, DepartureVisionData> parseDepartureVision(String station_code, Document doc) {
+    public HashMap<String, DepartureVisionData> parseDepartureVision(String station_code, String long_name, Document doc) {
         //Log.d("DV", "parsing Departure vision Doc");
         HashMap<String, DepartureVisionData> result = new HashMap<>();
         try {
@@ -72,6 +72,7 @@ public class DepartureVisionParser {
                 String background = stylemap.get("background-color");
                 String foreground = stylemap.get("color");
 
+                line = line.replace("Corrdr", "Corridor").replace("-", " ").replace("No J", "North J");
                 data.put("time", time);
                 data.put("to", to);
                 data.put("track", track);
@@ -79,6 +80,7 @@ public class DepartureVisionParser {
                 data.put("status", status);
                 data.put("train", train);
                 data.put("station", station_code);
+                data.put("station_long_name", long_name);
                 data.put("background", background);
                 data.put("foreground", foreground);
                 data.put("index", index++);

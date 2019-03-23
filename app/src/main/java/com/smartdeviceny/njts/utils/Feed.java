@@ -1,5 +1,7 @@
 package com.smartdeviceny.njts.utils;
 
+import com.smartdeviceny.njts.annotations.Persist;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -11,15 +13,23 @@ import java.util.List;
  */
 public class Feed {
 
+    @Persist
     String title;
+    @Persist
     String link;
+    @Persist
     String description;
+    @Persist
     String language;
+    @Persist
     String copyright;
+    @Persist
     String pubDate;
+    @Persist
+    final ArrayList<FeedMessage> entries = new ArrayList<FeedMessage>();
+        public  Feed() {
 
-    final List<FeedMessage> entries = new ArrayList<FeedMessage>();
-
+        }
     public Feed(String title, String link, String description, String language, String copyright, String pubDate) {
         this.title = title;
         this.link = link;
@@ -29,7 +39,7 @@ public class Feed {
         this.pubDate = pubDate;
     }
 
-    public List<FeedMessage> getMessages() {
+    public ArrayList<FeedMessage> getMessages() {
         return entries;
     }
 

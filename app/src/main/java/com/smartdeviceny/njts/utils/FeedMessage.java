@@ -1,5 +1,7 @@
 package com.smartdeviceny.njts.utils;
 
+import com.smartdeviceny.njts.annotations.Persist;
+
 import org.json.JSONObject;
 
 import java.text.DateFormat;
@@ -9,11 +11,17 @@ import java.util.Date;
 public class FeedMessage {
     final static String format = "MMM d, yyyy HH:mm:ss a";
     final static DateFormat dateTimeFormat = new SimpleDateFormat(format);
+    @Persist
     public String title;
+    @Persist
     public String description;
+    @Persist
     public String link;
+    @Persist
     public String author;
+    @Persist
     public String guid;
+    @Persist
     public String pubDate;
 
 
@@ -57,6 +65,9 @@ public class FeedMessage {
         this.guid = guid;
     }
 
+    public FeedMessage() {
+
+    }
     @Override
     public String toString() {
         return "FeedMessage [title=" + title + ", description=" + description + ", link=" + link + ", author=" + author + ", guid=" + guid + "]";

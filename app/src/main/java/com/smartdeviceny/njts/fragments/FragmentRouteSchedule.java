@@ -47,7 +47,7 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         RecyclerView recyclerView = view.findViewById(R.id.schedule_vision_scroll_view);
         // get the departure vision data.
 
-        int height  = (int)(getResources().getDimensionPixelSize(R.dimen.recycler_section_header_height )*2.5); // TODO:: move this to config or something.
+        int height  = (int)(getResources().getDimensionPixelSize(R.dimen.recycler_section_header_height )*2); // TODO:: move this to config or something.
         RecyclerRouteDecoration sectionItemDecoration =new RecyclerRouteDecoration(height,true, getSectionCallback());
         //getResources().getDimensionPixelSize(R.dimen.recycler_section_header_height),true, getSectionCallback());
         recyclerView.addItemDecoration(sectionItemDecoration);

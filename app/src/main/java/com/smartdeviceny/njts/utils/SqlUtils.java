@@ -117,6 +117,21 @@ public class SqlUtils {
         return "";
     }
 
+    static public String getStationNameFromCode(SQLiteDatabase db, String code) {
+        try {
+            String sql = "select station_name  from station_codes where  station_code like '%" + code + "%'";
+            Cursor c = db.rawQuery(sql, null);
+            ArrayList<HashMap<String, Object>> result = Utils.parseCursor(c);
+            if (result.isEmpty()) {
+                return "";
+            }
+            return result.get(0).get("station_name").toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            ;
+        }
+        return "";
+    }
 
     static public ArrayList<HashMap<String, Object>> query(SQLiteDatabase db, String sql) {
         //String sql = "select * from routes";
