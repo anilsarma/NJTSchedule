@@ -16,21 +16,26 @@ import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements onMoveAndSwipedListener {
 
     class StopHolder {
-      public String item="";
-      public DepartureVisionData stop;
-      public double miles = 0;
+        public String item = "";
+        public DepartureVisionData stop;
+        public double miles = 0;
 
-      public StopHolder(String item, DepartureVisionData stop) {
-          this.stop = stop;
-          this.item = item;
-      }
-    };
+        public StopHolder(String item, DepartureVisionData stop) {
+            this.stop = stop;
+            this.item = item;
+        }
+    }
+
+    ;
     private Context context;
     private List<StopHolder> mItems;
     private int color = 0;
@@ -51,7 +56,7 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
         this.mItems.clear();
         ArrayList<StopHolder> sh = new ArrayList<>();
 
-        for(DepartureVisionData s:data) {
+        for (DepartureVisionData s : data) {
             StopHolder h = new StopHolder("", s);
             sh.add(h);
         }
@@ -109,18 +114,27 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
     }
 
     String getFromHtmlColor(String color) {
-        switch(color.toLowerCase()) {
-            case "cornflowerblue": return "#6495ed";
-            case "white": return "#ffffff";
-            case "red": return "#ff0000";
-            case "blue": return "#0000ff";
-            case "green": return "#008000";
-            case "black": return "#000000";
-            case "brown": return "#a52a2a";
-            case "yellow": return "#ffff00";
+        switch (color.toLowerCase()) {
+            case "cornflowerblue":
+                return "#6495ed";
+            case "white":
+                return "#ffffff";
+            case "red":
+                return "#ff0000";
+            case "blue":
+                return "#0000ff";
+            case "green":
+                return "#008000";
+            case "black":
+                return "#000000";
+            case "brown":
+                return "#a52a2a";
+            case "yellow":
+                return "#ffff00";
         }
-        return  "#008000";
+        return "#008000";
     }
+
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
         StopHolder stop = mItems.get(position);
@@ -158,10 +172,12 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
             recyclerViewHolder.rela_round.setVisibility(View.INVISIBLE);
             recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
             recyclerViewHolder.tv_dv_item_train_name.setText(stop.stop.line); //stop.stop.station_code + " #" + stop.stop.block_id + " " + stop.stop.time );
-            recyclerViewHolder.tv_dv_block_id.setText("#" + stop.stop.block_id  + " Departs " + stop.stop.time);
-            recyclerViewHolder.tv_recycler_item_2.setText( stop.stop.station_long_name + " \u279F " + stop.stop.to  );
-            recyclerViewHolder.tv_recycler_item_3.setText( stop.stop.status  );
-            if( stop.stop.status.isEmpty()) {
+            recyclerViewHolder.tv_dv_block_id.setText("#" + stop.stop.block_id + " Departs ");
+            recyclerViewHolder.tv_dv_time.setText(stop.stop.time);
+
+            recyclerViewHolder.tv_recycler_item_2.setText(stop.stop.station_long_name + " \u279F " + stop.stop.to);
+            recyclerViewHolder.tv_recycler_item_3.setText(stop.stop.status);
+            if (stop.stop.status.isEmpty()) {
                 recyclerViewHolder.tv_recycler_item_3.setVisibility(View.GONE);
             } else {
                 recyclerViewHolder.tv_recycler_item_3.setVisibility(View.VISIBLE);
@@ -169,10 +185,30 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
             recyclerViewHolder.tv_recycler_item_4.setVisibility(View.GONE);
             recyclerViewHolder.tv_recycler_item_4.setText("refreshed " + stop.stop.tableTime);
             recyclerViewHolder.tv_dv_item_train_name.setTypeface(Typeface.DEFAULT_BOLD);
+            String status = stop.stop.status.toLowerCase();
+            if (status.contains("cancel") || status.contains("delay")) {
+                recyclerViewHolder.tv_dv_live.setText("Alert");
+                recyclerViewHolder.tv_dv_live.setBackground(context.getResources().getDrawable(R.drawable.alert_background));
+
+            } else {
+                recyclerViewHolder.tv_dv_live.setText("Live");
+                recyclerViewHolder.tv_dv_live.setBackground(context.getResources().getDrawable(R.drawable.live_background));
+            }
+
+            Date now = new Date();
+            if( (now.getTime()-stop.stop.getHackCreateTime().getTime()) > TimeUnit.MINUTES.toMillis(5)) {
+                recyclerViewHolder.tv_dv_live.setBackground(context.getResources().getDrawable(R.drawable.stale_background));
+                recyclerViewHolder.tv_dv_live.setText("Stale");
+            } else {
+                recyclerViewHolder.tv_dv_live.setBackground(context.getResources().getDrawable(R.drawable.live_background));
+                recyclerViewHolder.tv_dv_live.setText("Live");
+            }
+
             recyclerViewHolder.tv_dv_live.startAnimation(AnimationUtils.loadAnimation(parentView.getContext(), R.anim.bounce));
+
             recyclerViewHolder.rela_round.startAnimation(aa);
-            recyclerViewHolder.tv_round_track.setText(stop.stop.track );
-            if(!stop.stop.track.isEmpty()) {
+            recyclerViewHolder.tv_round_track.setText(stop.stop.track);
+            if (!stop.stop.track.isEmpty()) {
                 recyclerViewHolder.rela_round.setVisibility(View.VISIBLE);
             }
             recyclerViewHolder.card_view_backgroup_layout.setBackgroundColor(Color.parseColor(getFromHtmlColor(stop.stop.background)));
@@ -188,7 +224,7 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
 //               // recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.WHITE);
 //            }
             int color = Color.parseColor(getFromHtmlColor(stop.stop.foreground));
-            if( stop.stop.background.toLowerCase().equals("yellow")) {
+            if (stop.stop.background.toLowerCase().equals("yellow")) {
                 recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.BLACK);
             } else {
                 recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.parseColor(getFromHtmlColor(stop.stop.background)));
@@ -196,8 +232,8 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
             recyclerViewHolder.tv_recycler_item_2.setTextColor(color);
             recyclerViewHolder.tv_recycler_item_3.setTextColor(color);
             recyclerViewHolder.tv_dv_block_id.setTextColor(color);
-
-           // recyclerViewHolder.tv_recycler_item_4.setTextColor(color);
+            recyclerViewHolder.tv_dv_time.setTextColor(color);
+            // recyclerViewHolder.tv_recycler_item_4.setTextColor(color);
 
             recyclerViewHolder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -232,16 +268,16 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
 
     @Override
     public boolean onItemMove(int fromPosition, int toPosition) {
-        //Collections.swap(mItems, fromPosition, toPosition);
+        Collections.swap(mItems, fromPosition, toPosition);
         notifyItemMoved(fromPosition, toPosition);
         return true;
     }
 
     @Override
     public void onItemDismiss(final int position) {
-       // mItems.remove(position);
-       //notifyItemRemoved(position);
-       this.notifyDataSetChanged();
+        mItems.remove(position);
+        notifyItemRemoved(position);
+        //this.notifyDataSetChanged();
 
 //        Snackbar.make(parentView, context.getString(R.string.item_swipe_dismissed), Snackbar.LENGTH_SHORT)
 //                .setAction(context.getString(R.string.item_swipe_undo), new View.OnClickListener() {

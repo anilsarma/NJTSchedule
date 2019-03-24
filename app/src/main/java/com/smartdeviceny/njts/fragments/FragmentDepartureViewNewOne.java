@@ -9,6 +9,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
@@ -27,6 +28,7 @@ import com.smartdeviceny.njts.adapters.ServiceConnected;
 import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionWrapper;
+import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
@@ -45,14 +47,14 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
     private RecyclerDepartureViewAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     SystemService systemService;
+    SharedPreferences config;
+    MainActivity mainActivity;
+
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view= inflater.inflate(R.layout.activity_recycler_view, container, false);
-
-
-
+        View view = inflater.inflate(R.layout.activity_recycler_view, container, false);
         initData(inflater.getContext());
 
         //return super.onCreateView(inflater, container, savedInstanceState);
@@ -60,24 +62,31 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
     }
 
     private void initData(Context context) {
-        data = new ArrayList<>();
+        if(data==null) {
+            data = new ArrayList<>();
+        }
+        data.clear();
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
         try {
-            JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
-            DepartureVisionWrapper wrapper =(DepartureVisionWrapper) JSONObjectSerializer.unmarshall(DepartureVisionWrapper.class, json);
-            long time = wrapper.time.getTime();
-            {
-                for (DepartureVisionData v: wrapper.entries) {
-                    Date dt = new Date(time);
-                    v.createTime = Utils.makeDate(Utils.getTodayYYYYMMDD(dt), v.tableTime, "yyyyMMdd HH:mm a");
-                    this.data.add(v);
+            String currentStationCode = ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
+
+            JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION + "." + currentStationCode, ConfigDefault.DEPARTURE_VISION));
+            DepartureVisionWrapper wrapper = JSONObjectSerializer.unmarshall(DepartureVisionWrapper.class, json);
+            //long time = wrapper.time.getTime();
+            for (DepartureVisionData v : wrapper.entries) {
+                //Date dt = new Date(time);
+                if (!currentStationCode.isEmpty() && !v.station_code.equals(currentStationCode)) {
+                    continue;
                 }
+                //v.createTime = Utils.makeDate(Utils.getTodayYYYYMMDD(dt), v.tableTime, "yyyyMMdd HH:mm a");
+                data.add(v);
             }
-            this.data.sort((d0, d1) -> Integer.compare(d0.index, d1.index) );
+            data.sort((d0, d1) -> Integer.compare(d0.index, d1.index));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
     private int getScreenWidthDp() {
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         return (int) (displayMetrics.widthPixels / displayMetrics.density);
@@ -85,7 +94,9 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        systemService = ((MainActivity)getActivity()).systemService;
+        systemService = ((MainActivity) getActivity()).systemService;
+        mainActivity = ((MainActivity) getActivity());
+        config = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
 
         initView(view);
 
@@ -100,6 +111,8 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
 
     private void initView(View activity_recycler_view) {
         fab = activity_recycler_view.findViewById(R.id.fab_recycler_view);
+        fab.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
+
         mRecyclerView = activity_recycler_view.findViewById(R.id.recycler_view_recycler_view);
 
         if (getScreenWidthDp() >= 1200) {
@@ -120,8 +133,14 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                LinearLayoutManager linearLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
-                //adapter.addItem(linearLayoutManager.findFirstVisibleItemPosition() + 1, insertData);
+
+                String departureVisionCode = ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
+                SystemService systemService = mainActivity.systemService;
+                if (systemService != null) {
+                    systemService.schdeuleDepartureVision(departureVisionCode, 30000);
+                    Snackbar.make(view, "Refreshing Departure Vision for " + departureVisionCode, Snackbar.LENGTH_SHORT).show();
+                    adapter.notifyDataSetChanged();
+                }
             }
         });
 
@@ -137,7 +156,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
                 new AsyncTask<String, Void, String>() {
                     @Override
                     protected String doInBackground(String... strings) {
-                        if(systemService !=null ) {
+                        if (systemService != null) {
                             SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
                             String departureVisionCode = ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
                             systemService.schdeuleDepartureVision(departureVisionCode, 5000);
@@ -146,6 +165,8 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
                             @Override
                             public void run() {
                                 swipeRefreshLayout.setRefreshing(false);
+                                FragmentDepartureViewNewOne.this.initData(FragmentDepartureViewNewOne.this.getContext());
+                                adapter.notifyDataSetChanged();
                             }
                         });
 
@@ -156,6 +177,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
             }
         });
     }
+
     @Override
     public void onTimerEvent(SystemService systemService) {
 
@@ -164,8 +186,8 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
     @Override
     public void onDepartureVisionUpdated(SystemService systemService) {
         initData(systemService.getApplicationContext());
-        adapter.setItems(data);
-        adapter.notifyDataSetChanged();
+        adapter.setItems(data); // notify called internally.
+        //adapter.notifyDataSetChanged();
     }
 
     @Override

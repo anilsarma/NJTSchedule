@@ -176,15 +176,15 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar initToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        //getSupportActionBar().setTitle("NJ Transit Schedule");
+        getSupportActionBar().setTitle("NJ Transit Schedule");
         return toolbar;
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_main, menu);
-        Log.d("MA", "menu created");
+        //MenuInflater inflater = getMenuInflater();
+        //inflater.inflate(R.menu.menu_main, menu);
+        //Log.d("MA", "menu created");
         // RecyclerView rv;
         //rv.
         return true;
@@ -299,7 +299,7 @@ public class MainActivity extends AppCompatActivity {
         Utils.scheduleJob(getApplicationContext(), JobID.UpdateCheckerJobService, UpdateCheckerJobService.class, (int) TimeUnit.SECONDS.toMillis(10), false, null);
     }
 
-    private void sendNotifyConfigChanged() {
+    public void sendNotifyConfigChanged() {
         Intent intent = new Intent(NotificationValues.BROADCAT_NOTIFY_CONFIG_CHANGED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         Log.d("MAIN", "sending BROADCAT_NOTIFY_CONFIG_CHANGED");
@@ -329,10 +329,14 @@ public class MainActivity extends AppCompatActivity {
             } else if (intent.getAction().equals(NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED)) {
                 //Log.d("MAIN", NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED);
                 for (Fragment f : getSupportFragmentManager().getFragments()) {
+                    if (!ServiceConnected.class.isAssignableFrom(f.getClass())) {
+                        continue;
+                    }
                     ServiceConnected frag = (ServiceConnected) f;
                     if (systemService != null) {
                         frag.onDepartureVisionUpdated(systemService);
                     }
+
 
                 }
             } else if (intent.getAction().equals(NotificationValues.BROADCAT_PERIODIC_TIMER)) {
@@ -340,6 +344,9 @@ public class MainActivity extends AppCompatActivity {
                 boolean hasfrag = false;
                 for (Fragment f : getSupportFragmentManager().getFragments()) {
                     ServiceConnected frag = (ServiceConnected) f;
+                    if (!ServiceConnected.class.isAssignableFrom(f.getClass())) {
+                        continue;
+                    }
                     if (systemService != null) {
                         frag.onTimerEvent(systemService);
                     }
@@ -348,15 +355,19 @@ public class MainActivity extends AppCompatActivity {
                 //Log.d("MAIN", NotificationValues.BROADCAT_NOTIFY_CONFIG_CHANGED);
                 for (Fragment f : getSupportFragmentManager().getFragments()) {
                     ServiceConnected frag = (ServiceConnected) f;
+                    if (!ServiceConnected.class.isAssignableFrom(f.getClass())) {
+                        continue;
+                    }
                     if (systemService != null) {
                         frag.configChanged(systemService);
                     }
                 }
             } else {
-                Log.d("MAIN", "got omething not sure what " + intent.getAction());
+                Log.d("MAIN", "got something not sure what " + intent.getAction());
             }
         }
     }
+
     // Our handler for received Intents. This will be called whenever an Intent
     private BroadcastReceiver mMessageReceiver = new LocalBcstReceiver();
 }

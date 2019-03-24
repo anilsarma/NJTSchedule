@@ -574,6 +574,7 @@ public class SystemService extends Service {
                         }
                     }
                     Utils.setConfig(config,Config.DEPARTURE_VISION, JSONObjectSerializer.marshall(wrapper).toString());
+                    Utils.setConfig(config,Config.DEPARTURE_VISION + "." + code, JSONObjectSerializer.marshall(wrapper).toString());
                     synchronized (lock_status_by_trip) {
                         status_by_trip = tmp_trip;
                     }

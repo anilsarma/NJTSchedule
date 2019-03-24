@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#424242</color>
-    <color name="colorPrimaryDark">#37474F</color>
+
+    <color name="colorPrimary_old">#424242</color>
+    <color name="colorPrimaryDark_old">#37474F</color>
+
+
+    <color name="colorPrimary">#0B8043</color>
+    <color name="colorPrimaryDark">#032C56</color>
     <color name="colorAccent">#FF4081</color>
     <color name="gray">#E0E0E0</color>
 
@@ -15,10 +20,16 @@
 
     <!-- Google Logo Color -->
     <color name="google_blue">#4285F4</color>
+    <color name="sapphire_blue">#2554C7</color>
+    <color name="orchid_blue"> #00007A</color>
+    <color name="blue_jay_darker">#032C56</color>
+    <color name="blue_jay">#002E77</color>
+
     <color name="google_green">#34a853</color>
     <color name="google_yellow">#FBBC05</color>
     <color name="google_red">#EA4335</color>
 
+    <color name="route_selected">#313171</color>
 
     <!-- Google Apps Color -->
     <color name="app_blue">#4285F4</color>

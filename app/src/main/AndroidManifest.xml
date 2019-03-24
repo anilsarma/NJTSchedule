@@ -16,6 +16,9 @@
             android:value="@string/default_notification_channel_id"/>
 
         <meta-data android:name="com.google.android.backup.api_key" android:value="AEdPqrEAAAAIMHl2ybEZTBQNXceXvzz4dDim2xFAekMFhZZ9bw" />
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
 
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -24,6 +27,8 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".RouteListRecyclerViewActivity">
+        </activity>
 
         <service android:enabled="true" android:name=".SystemService" />
         <service android:enabled="true" android:name=".PowerStartService"/>

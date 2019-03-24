@@ -42,14 +42,18 @@ public class DepartureVisionJobService extends JobService {
         try {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-            boolean isWiFi = activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
-            boolean isMobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
+            if(activeNetwork!=null) {
+                boolean isConnected = activeNetwork.isConnectedOrConnecting();
+                boolean isWiFi = activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
+                boolean isMobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
 
-            Log.d("JOB", "DepartureVisionJobService - isConnected:" + isConnected + " wifi:" + isWiFi + " isMobile:" + isMobile + " ");
-            if (isConnected) {
-                sendDepartureVisionPings();
-                // Utils.notify_user(this.getApplicationContext(), "NJTS", "NJTS", "Ping Sent " + new Date(), 1);
+                Log.d("JOB", "DepartureVisionJobService - isConnected:" + isConnected + " wifi:" + isWiFi + " isMobile:" + isMobile + " ");
+                if (isConnected) {
+                    sendDepartureVisionPings();
+                    // Utils.notify_user(this.getApplicationContext(), "NJTS", "NJTS", "Ping Sent " + new Date(), 1);
+                }
+            } else {
+                sendFakeDepartureVisionPings(); // notify the systems that are awake;
             }
             sendTimerEvent();
         } catch (Exception e) {
@@ -80,6 +84,12 @@ public class DepartureVisionJobService extends JobService {
     }
     public void sendDepartureVisionPings() {
         Intent intent = new Intent(NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        //Log.d("JOB", "sending " + NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
+    }
+
+    public void sendFakeDepartureVisionPings() {
+        Intent intent = new Intent(NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         //Log.d("JOB", "sending " + NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
     }

@@ -17,6 +17,7 @@ import com.smartdeviceny.njts.utils.IDCache;
 import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.NotificationGroup;
 import com.smartdeviceny.njts.utils.RailAlertDetails;
+import com.smartdeviceny.njts.utils.RailDetailsContainer;
 import com.smartdeviceny.njts.utils.RssFeedCategorise;
 import com.smartdeviceny.njts.utils.RssRailFeedParser;
 import com.smartdeviceny.njts.utils.Utils;
@@ -48,8 +49,7 @@ public class NJTAlertJobService extends JobService {
         }
         try {
             Date now = new Date();
-            //if (now.getHours() >= 4)
-            {
+            if ((now.getHours() >= 4) && config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION))  {
                 downloadAlert();
             }
         } finally {
@@ -105,6 +105,7 @@ public class NJTAlertJobService extends JobService {
                 config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
 
+
                 if (debug) {
                     Utils.notify_user(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null, "Alert Checker, download complete ",
                             NotificationGroup.ALERT_CHECK_SERVICE.getID() + 2);
@@ -112,17 +113,16 @@ public class NJTAlertJobService extends JobService {
 
                 RssRailFeedParser parser = new RssRailFeedParser();
                 try {
-                    Feed feed = parser.parse(new FileInputStream(file));
-                    JSONObject obj = JSONObjectSerializer.marshall(feed);
+                    RailDetailsContainer cat = parser.parse(new FileInputStream(file));
+                    JSONObject obj = JSONObjectSerializer.marshall(cat);
                     Utils.setConfig(config, Config.ALERT_JSON, obj.toString());
                     Log.d("ALERT", "object ... " + obj.toString());
-                    RssFeedCategorise.Category cat = new RssFeedCategorise().categorize(feed, 0);
-                    cat.sort();
+
                     //ConfigUtils.setLong(config, Config.LAST_ALERT_TIME, 0);
                     long lastPubTime = config.getLong(Config.LAST_ALERT_TIME, ConfigDefault.LAST_ALERT_TIME);
                     long maxPubTime = lastPubTime;
                     int index = 1;
-                    for (RailAlertDetails detail : cat.train) {
+                    for (RailAlertDetails detail : cat.getTrain()) {
                         if (!DateUtils.isToday(detail.getTime())) {
                             continue;
                         }

@@ -1,5 +1,7 @@
 package com.smartdeviceny.njts.annotations;
 
+import android.os.Build;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -9,7 +11,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class JSONObjectSerializer {
 
@@ -34,7 +39,7 @@ public class JSONObjectSerializer {
                             Array.getLength(values);
                             JSONArray a = new JSONArray();
                             for (int i = 0; i < Array.getLength(values); i++) {
-                                System.out.println(Array.get(object, i));
+                                //System.out.println(Array.get(object, i));
                                 a.put(i, marshall(Array.get(object, i)));
                             }
                             obj.put(fld.getName(), a);
@@ -58,16 +63,16 @@ public class JSONObjectSerializer {
                         }
                     }
                 }
-                System.out.println("persistence " + fld.getName() + " " + annotation.state());
+                //System.out.println("persistence " + fld.getName() + " " + annotation.state());
             }
         }
         return obj;
     }
 
-    static public Object unmarshall(Class<?> type, JSONObject jsonObject) throws Exception {
-        Constructor<?> constructor = type.getConstructor();
+    static public <T> T unmarshall(Class<T> type, JSONObject jsonObject) throws Exception {
+        Constructor<T> constructor = type.getConstructor();
         constructor.setAccessible(true);
-        Object object = constructor.newInstance(); //(new Class[]{}).newInstance();
+        T object = constructor.newInstance(); //(new Class[]{}).newInstance();
 
         Field fields[] = object.getClass().getDeclaredFields();
         for (Field fld : fields) {
@@ -111,7 +116,7 @@ public class JSONObjectSerializer {
                         }
                     }
                 }
-                System.out.println("persistence " + fld.getName() + " " + annotation.state());
+                //System.out.println("persistence " + fld.getName() + " " + annotation.state());
             }
         }
         return object;
@@ -143,6 +148,9 @@ public class JSONObjectSerializer {
         if (type.isAssignableFrom(ArrayList.class)) {
             return true;
         }
+        if (type.isAssignableFrom(HashMap.class)) {
+            return true;
+        }
         return false;
     }
 
@@ -165,7 +173,23 @@ public class JSONObjectSerializer {
             }
             return array;
         }
-
+        if (object.getClass().isAssignableFrom(HashMap.class)) {
+            JSONObject dict = new JSONObject();
+            int i = 0;
+            HashMap hash = (HashMap)object;
+            for (Object tmp : hash.keySet()) {
+                Object obj= hash.get(tmp);
+                if (isSpecial(obj.getClass())) {
+                    dict.put((String)tmp, obj );
+                }
+                if (primitiveType(obj.getClass())) {
+                    dict.put((String)tmp,obj );
+                } else {
+                    dict.put((String)tmp, marshall(obj));
+                }
+            }
+            return dict;
+        }
         return object;
     }
 
@@ -186,9 +210,14 @@ public class JSONObjectSerializer {
             for (int i = 0; i < array.length(); i++) {
                 Object obj = array.get(i);
                 if (fld.getGenericType() instanceof ParameterizedType) {
+                    Class ptype = null;
                     ParameterizedType gtype = (ParameterizedType) fld.getGenericType();
-                    Class ptype = Class.forName(gtype.getActualTypeArguments()[0].getTypeName());
-                    System.out.println(gtype);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        ptype = Class.forName(gtype.getActualTypeArguments()[0].getTypeName());
+                    } else { // older versions
+                        ptype = Class.forName(gtype.getActualTypeArguments()[0].toString().substring("class ".length()));
+                    }
+                    //System.out.println(gtype);
                     try {
                         if (primitiveType(ptype)) {
                             data.add(array.get(i));
@@ -200,18 +229,49 @@ public class JSONObjectSerializer {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-//                    if (primitiveType(tmp.getClass())) {
-//                        array.put(i++, tmp);
-//                    } else {
-//                        array.put(i++, marshall(tmp));
-//                    }
                 }
             }
             return data;
         }
+        if (fld.getType().isAssignableFrom(HashMap.class)) {
+            return _unmarshall_hashmap(fld, object);
+        }
         return object;
     }
-
+private static Object _unmarshall_hashmap(Field fld, Object object) throws Exception {
+    if (fld.getType().isAssignableFrom(HashMap.class)) {
+        JSONObject array = (JSONObject) object;
+        HashMap data = new HashMap();
+        Iterator<String> iter = array.keys();
+        while(iter.hasNext()) {
+            String key = iter.next();
+            Object obj = array.get(key);
+            if (fld.getGenericType() instanceof ParameterizedType) {
+                Class ptype = null;
+                ParameterizedType gtype = (ParameterizedType) fld.getGenericType();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    ptype = Class.forName(gtype.getActualTypeArguments()[1].getTypeName());
+                } else { // older versions
+                    ptype = Class.forName(gtype.getActualTypeArguments()[1].toString().substring("class ".length()));
+                }
+                //System.out.println(gtype);
+                try {
+                    if (primitiveType(ptype)) {
+                        data.put(key, obj);
+                    } else if (isSpecial(ptype)) {
+                        data.put(key, _unmarshall(ptype, obj));
+                    } else {
+                        data.put(key, _unmarshall(ptype, obj));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return data;
+    }
+    return new HashMap<>();
+}
 
     public static String stringify(Object obj) {
         StringBuffer str = new StringBuffer();

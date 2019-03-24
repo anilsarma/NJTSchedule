@@ -35,4 +35,9 @@
   <dimen name="zero_horizontal_margin_big_activity">0dp</dimen>
 
   <dimen name="text_margin_very_small">4dp</dimen>
+
+
+  <dimen name="standard_55">55dp</dimen>
+  <dimen name="standard_105">105dp</dimen>
+  <dimen name="standard_155">155dp</dimen>
 </resources>

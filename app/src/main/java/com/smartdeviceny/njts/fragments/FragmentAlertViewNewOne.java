@@ -28,21 +28,23 @@ import com.smartdeviceny.njts.SystemService;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
 import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.utils.ConfigUtils;
-import com.smartdeviceny.njts.utils.Feed;
 import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.RailAlertDetails;
-import com.smartdeviceny.njts.utils.RssFeedCategorise;
+import com.smartdeviceny.njts.utils.RailDetailsContainer;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class FragmentAlertViewNewOne extends Fragment implements ServiceConnected {
     private List<RailAlertDetails> data;
     private FloatingActionButton fab;
+    //private FloatingActionButton fab1;
+    //private FloatingActionButton fab_manage;
     private RecyclerView mRecyclerView;
     private RecyclerAlertViewAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -63,11 +65,10 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
         try {
             JSONObject json = new JSONObject(Utils.getConfig(config, Config.ALERT_JSON, "{}"));
-            Feed wrapper = (Feed) JSONObjectSerializer.unmarshall(Feed.class, json);
-            RssFeedCategorise.Category cat = new RssFeedCategorise().categorize(wrapper, 0);
-            cat.sort();
+            RailDetailsContainer cat = JSONObjectSerializer.unmarshall(RailDetailsContainer.class, json);
 
-            for (RailAlertDetails v :cat.train) {
+            Collections.reverse(cat.getTrain());
+            for (RailAlertDetails v :cat.getTrain() ) {
                 this.data.add(v);
             }
         } catch (Exception e) {
@@ -94,9 +95,34 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
 
         super.onViewCreated(view, savedInstanceState);
     }
+    boolean isFABOpen = false;
+    private void showFABMenu(){
+        isFABOpen=true;
+        //fab1.show();
+        //fab_manage.show();
+        //fab1.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
+        //fab_manage.animate().translationY(-getResources().getDimension(R.dimen.standard_105));
+        //fab3.animate().translationY(-getResources().getDimension(R.dimen.standard_155));
+    }
 
+    private void closeFABMenu(){
+        isFABOpen=false;
+        //fab1.hide();
+        //fab_manage.hide();
+        //fab.animate().translationY(0);
+        //fab1.animate().translationY(0);
+        //fab_manage.animate().translationY(0);
+    }
     private void initView(View activity_recycler_view) {
         fab = activity_recycler_view.findViewById(R.id.fab_recycler_view);
+        //fab1 = activity_recycler_view.findViewById(R.id.fab1);
+        //fab_manage = activity_recycler_view.findViewById(R.id.fab_manage);
+        fab.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
+
+        isFABOpen = false;
+
+        //fab_manage.hide();
+        //fab1.hide();
         mRecyclerView = activity_recycler_view.findViewById(R.id.recycler_view_recycler_view);
 
         if (getScreenWidthDp() >= 1200) {
@@ -119,6 +145,11 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
             public void onClick(View view) {
                 LinearLayoutManager linearLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
                 //adapter.addItem(linearLayoutManager.findFirstVisibleItemPosition() + 1, insertData);
+                if(!isFABOpen) {
+                    showFABMenu();
+                } else {
+                    closeFABMenu();
+                }
             }
         });
 

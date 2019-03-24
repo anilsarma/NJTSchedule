@@ -46,7 +46,7 @@ public class TestDepartureVision {
         try {
             InputStream is = this.getClass().getClassLoader().getResourceAsStream("ny_depature_vision_ny.old.html");
             String str = Utils.convertStreamToString(is);
-            parser.parseDepartureVision(code, Jsoup.parse(str));
+            parser.parseDepartureVision(code, "New York Penn Station", Jsoup.parse(str));
         } catch (Exception e) {
 
         }
@@ -57,11 +57,11 @@ public class TestDepartureVision {
         String code = "NY";
         try {
             InputStream is = this.getClass().getClassLoader().getResourceAsStream("ny_depature_vision_ny.old.html");
-            parser.parseDepartureVision(code, Jsoup.parse(is, null, "http://dv.njtransit.com"));
+            parser.parseDepartureVision(code, "New York Penn Station",Jsoup.parse(is, null, "http://dv.njtransit.com"));
              is = this.getClass().getClassLoader().getResourceAsStream("ny_depature_vision_ny.html");
             Document doc = Jsoup.parse(is, null, "http://dv.njtransit.com");
 
-            HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, doc);
+            HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, "New York Penn Station", doc);
             for(String key:result.keySet()) {
                 DepartureVisionData data = result.get(key);
                 System.out.println(key +  "=[" + data + "]");

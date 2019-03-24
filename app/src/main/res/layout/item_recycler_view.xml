@@ -22,11 +22,14 @@
         android:padding="@dimen/text_margin">
 
         <android.support.constraint.ConstraintLayout
+            android:id="@+id/round_details_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
             android:elevation="20dp"
             android:translationZ="20dp"
-            app:layout_constraintEnd_toStartOf="@+id/guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/guideline"
             app:layout_constraintTop_toTopOf="parent">
 
             <TextView
@@ -39,43 +42,44 @@
                 android:textColor="@color/activity_background"
                 android:textSize="8sp"
                 android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent" />
-        </android.support.constraint.ConstraintLayout>
-
-        <android.support.constraint.ConstraintLayout
-            android:id="@+id/rela_round"
-            android:layout_width="45dp"
-            android:layout_height="47dp"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/round"
-            android:backgroundTint="@color/gray_light"
-            android:transitionName="shareView"
-            android:translationZ="-10dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/guideline"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/tv_round_track"
-                android:layout_width="28dp"
-                android:layout_height="32dp"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:text="1"
-                android:textAlignment="center"
-                android:textColor="#edf2f7"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/rela_round"
+                android:layout_width="50sp"
+                android:layout_height="50sp"
+                android:layout_centerVertical="true"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/round"
+                android:backgroundTint="@color/gray_light"
+                android:transitionName="shareView"
+                android:translationZ="-10dp"
+                app:layout_constraintEnd_toEndOf="parent"
+
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/tv_round_track"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="12"
+                    android:textAlignment="center"
+                    android:textColor="#edf2f7"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </android.support.constraint.ConstraintLayout>
         </android.support.constraint.ConstraintLayout>
 
         <TextView
@@ -84,14 +88,15 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_marginTop="3dp"
-            android:layout_toEndOf="@id/rela_round"
+
             android:autoText="true"
             android:background="@drawable/train_background"
-            android:fontFamily="sans-serif-black"
+            android:fontFamily="@font/happy_monkey"
             android:text="@string/tv_recycler_item_1"
             android:textAllCaps="false"
             android:textColor="@color/app_green_dark"
             android:textSize="10sp"
+            android:textStyle="bold"
             android:translationZ="10dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -102,7 +107,9 @@
             android:layout_height="wrap_content"
 
 
-            android:layout_toEndOf="@id/rela_round"
+            android:layout_marginTop="8dp"
+            android:layout_toEndOf="@id/round_details_layout"
+            android:fontFamily="@font/happy_monkey"
             android:text="@string/tv_recycler_item_2"
             android:textColor="@color/white"
             android:textSize="14sp"
@@ -114,10 +121,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
 
-            android:layout_toEndOf="@id/rela_round"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_toEndOf="@id/round_details_layout"
+            android:fontFamily="@font/happy_monkey"
             android:text="@string/tv_recycler_item_3"
             android:textColor="@android:color/white"
             android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/tv_recycler_item_2"
             app:layout_constraintTop_toBottomOf="@+id/tv_recycler_item_2" />
 
@@ -127,10 +139,13 @@
             android:layout_height="wrap_content"
 
             android:layout_marginTop="8sp"
-            android:layout_toEndOf="@id/rela_round"
+
+            android:layout_marginBottom="8dp"
+            android:fontFamily="@font/happy_monkey"
             android:text="@string/tv_recycler_item_3"
             android:textColor="@color/design_default_color_primary_dark"
             android:textSize="8sp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="@+id/tv_recycler_item_3"
             app:layout_constraintTop_toBottomOf="@+id/tv_recycler_item_3" />
 
@@ -146,10 +161,24 @@
             android:id="@+id/tv_dv_block_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="12dp"
+            android:fontFamily="@font/happy_monkey"
             android:text="Block ID"
-            app:layout_constraintStart_toEndOf="@+id/tv_dv_item_train_name"
-            app:layout_constraintTop_toTopOf="@+id/tv_dv_item_train_name" />
+            app:layout_constraintBottom_toBottomOf="@+id/tv_dv_item_train_name"
+            app:layout_constraintStart_toEndOf="@+id/tv_dv_item_train_name" />
+
+        <TextView
+            android:id="@+id/tv_dv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="@font/happy_monkey"
+            android:text="12:28"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:translationZ="20dp"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_dv_block_id"
+            app:layout_constraintStart_toEndOf="@+id/tv_dv_block_id" />
 
         <!--RelativeLayout
             android:layout_width="match_parent"

@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 public class DepartureVisionData {
+
     @Persist
     public String tableTime;  // in 8:23 AM
     @Persist
@@ -36,8 +37,9 @@ public class DepartureVisionData {
     @Persist
     public String foreground;
     @Persist
-    public int     index;
-
+    public int index;
+    @Persist
+    public String hackCreateTime;
     @Persist
     public String station_long_name;
 
@@ -56,12 +58,22 @@ public class DepartureVisionData {
         foreground = data.get("foreground").toString();
         station_long_name = data.get("station_long_name").toString();
 
-        index  = Integer.parseInt(data.get("index").toString());
+        index = Integer.parseInt(data.get("index").toString());
         favorite = false;
         header = " " + createTime + " " + to;
+        hackCreateTime = "" + createTime.getTime();
         createTime = new Date();
     }
 
+    public Date getHackCreateTime() {
+        try {
+            return new Date(Long.parseLong(hackCreateTime));
+        } catch (Exception e) {
+            e.printStackTrace();
+            ;
+        }
+        return createTime;
+    }
 
     public DepartureVisionData clone() {
         DepartureVisionData obj = new DepartureVisionData();
@@ -73,7 +85,7 @@ public class DepartureVisionData {
         obj.status = "" + this.status;
         obj.block_id = "" + this.block_id;
         obj.station_code = "" + this.station_code;
-        obj.station_long_name =  this.station_long_name;
+        obj.station_long_name = this.station_long_name;
         obj.favorite = this.favorite;
         obj.createTime = this.createTime;
         obj.header = this.header;
@@ -82,7 +94,7 @@ public class DepartureVisionData {
     }
 
     public String toString() {
-       return JSONObjectSerializer.stringify(this);
+        return JSONObjectSerializer.stringify(this);
     }
 
 

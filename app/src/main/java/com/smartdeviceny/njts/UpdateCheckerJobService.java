@@ -159,6 +159,7 @@ public class UpdateCheckerJobService extends JobService {
 
         long nextTime = -1;
         HashMap<String, DepartureVisionData> dv = new HashMap<>();
+        // what codes do we use ??
         if (!config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION)) {
             if (debug) {
                 Log.d("UPD", "Job Checker, train notification turned off next in 10 minutes");
@@ -168,7 +169,7 @@ public class UpdateCheckerJobService extends JobService {
         try {
             //JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
             JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
-            DepartureVisionWrapper wrapper =(DepartureVisionWrapper) JSONObjectSerializer.unmarshall(DepartureVisionWrapper.class, json);
+            DepartureVisionWrapper wrapper = JSONObjectSerializer.unmarshall(DepartureVisionWrapper.class, json);
 //
 
             String code = wrapper.code;

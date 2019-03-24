@@ -17,12 +17,13 @@ public class RecyclerDepartureViewHolder extends RecyclerView.ViewHolder {
     public TextView tv_recycler_item_3;
     public TextView tv_recycler_item_4;
     public TextView tv_dv_block_id;
+    public TextView tv_dv_time;
     public TextView tv_dv_live;
     public CardView card_view_item_recycler_viev;
 
     public ConstraintLayout card_view_backgroup_layout;
 
-    RecyclerDepartureViewHolder(View itemView) {
+    public RecyclerDepartureViewHolder(View itemView) {
         super(itemView);
         mView = itemView;
         rela_round = itemView.findViewById(R.id.rela_round);
@@ -33,6 +34,7 @@ public class RecyclerDepartureViewHolder extends RecyclerView.ViewHolder {
         tv_recycler_item_3 = itemView.findViewById(R.id.tv_recycler_item_3);
         tv_recycler_item_4 = itemView.findViewById(R.id.tv_recycler_item_4);
         tv_dv_block_id = itemView.findViewById(R.id.tv_dv_block_id);
+        tv_dv_time = itemView.findViewById(R.id.tv_dv_time);
         tv_dv_live = itemView.findViewById(R.id.tv_dv_live);
         card_view_backgroup_layout = itemView.findViewById(R.id.card_view_backgroup_layout);
         card_view_item_recycler_viev = itemView.findViewById(R.id.card_view_item_recycler_viev);

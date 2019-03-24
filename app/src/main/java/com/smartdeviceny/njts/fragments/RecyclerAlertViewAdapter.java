@@ -15,8 +15,11 @@ import android.view.animation.AnimationUtils;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.utils.RailAlertDetails;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements onMoveAndSwipedListener {
@@ -136,10 +139,6 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
         StopHolder stop = mItems.get(position);
 
-//        if (holder instanceof HeaderViewHolder) {
-//            final HeaderViewHolder recyclerViewHolder = (HeaderViewHolder) holder;
-//            recyclerViewHolder.header_text.setText("Footer " + position);
-//        }
         if (holder instanceof RecyclerDepartureViewHolder) {
             final RecyclerDepartureViewHolder recyclerViewHolder = (RecyclerDepartureViewHolder) holder;
 
@@ -153,36 +152,24 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
             AlphaAnimation aa = new AlphaAnimation(0.1f, 1.0f);
             aa.setDuration(400);
 
-//
-//            if (color == 1) {
-//                recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
-//            } else if (color == 2) {
-//                recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_green)));
-//            } else if (color == 3) {
-//                recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_yellow)));
-//            } else if (color == 4) {
-//                recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_red)));
-//            } else {
-//                //recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.gray)));
-//               // recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
-//            }
             recyclerViewHolder.rela_round.setVisibility(View.INVISIBLE);
             recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
-            recyclerViewHolder.tv_dv_item_train_name.setText(stop.stop.getLong_name() + " Line"); //stop.stop.station_code + " #" + stop.stop.block_id + " " + stop.stop.time );
+            recyclerViewHolder.tv_dv_item_train_name.setText(stop.stop.getLong_name()); //stop.stop.station_code + " #" + stop.stop.block_id + " " + stop.stop.time );
             recyclerViewHolder.tv_dv_block_id.setText("");
 
-            recyclerViewHolder.tv_recycler_item_2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
-            recyclerViewHolder.tv_recycler_item_2.setText("" + stop.stop.getTimeDate() + "\n");
+            //recyclerViewHolder.tv_recycler_item_2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+            recyclerViewHolder.tv_recycler_item_2.setText("");
+            recyclerViewHolder.tv_recycler_item_2.setVisibility(View.GONE);
+            recyclerViewHolder.tv_dv_time.setText(new SimpleDateFormat("mm MMM hh:mm:ss a").format(stop.stop.getTimeDate()));
+            recyclerViewHolder.tv_dv_time.setTextColor(context.getResources().getColor(R.color.white));
             recyclerViewHolder.tv_recycler_item_2.setTypeface(Typeface.DEFAULT_BOLD);
 
-            recyclerViewHolder.card_view_backgroup_layout.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
+            recyclerViewHolder.card_view_backgroup_layout.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.blue_jay)));
             recyclerViewHolder.mView.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.app_blue_dark)));
 
-            //recyclerViewHolder.tv_recycler_item_2.setVisibility(View.GONE);
-
-            //recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.B);
             recyclerViewHolder.tv_recycler_item_3.setText(stop.stop.getAlertText());
             recyclerViewHolder.tv_recycler_item_3.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+            recyclerViewHolder.tv_recycler_item_3.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_green)));
 
             if (stop.stop.getAlertText().isEmpty()) {
                 recyclerViewHolder.tv_recycler_item_3.setVisibility(View.GONE);
@@ -192,6 +179,16 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
             recyclerViewHolder.tv_recycler_item_4.setVisibility(View.GONE);
             //recyclerViewHolder.tv_recycler_item_4.setText("refreshed " + stop.stop.tableTime);
             recyclerViewHolder.tv_dv_item_train_name.setTypeface(Typeface.DEFAULT_BOLD);
+
+
+//            Date now = new Date();
+//            if( (now.getTime()-stop.stop.getTimeDate().getTime()) > TimeUnit.MINUTES.toMillis(1)) {
+//                recyclerViewHolder.tv_dv_live.setBackground(context.getResources().getDrawable(R.drawable.stale_background));
+//                recyclerViewHolder.tv_dv_live.setText("Stale");
+//            } else {
+//                recyclerViewHolder.tv_dv_live.setBackground(context.getResources().getDrawable(R.drawable.live_background));
+//                recyclerViewHolder.tv_dv_live.setText("Live");
+//            }
             recyclerViewHolder.tv_dv_live.startAnimation(AnimationUtils.loadAnimation(parentView.getContext(), R.anim.bounce));
             recyclerViewHolder.rela_round.startAnimation(aa);
             recyclerViewHolder.tv_round_track.setText("");
@@ -199,28 +196,6 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
             recyclerViewHolder.rela_round.setVisibility(View.GONE);
 
             recyclerViewHolder.card_view_backgroup_layout.setBackgroundColor(context.getResources().getColor(R.color.google_green));
-//            if( stop.stop.background.toLowerCase().equals("yellow")) {
-//                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.BLACK);
-//                recyclerViewHolder.tv_recycler_item_2.setTextColor(Color.BLACK);
-//                recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.BLACK);
-//                //recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.BLACK);
-//            } else {
-//                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.WHITE);
-//                recyclerViewHolder.tv_recycler_item_2.setTextColor(Color.WHITE);
-//                recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.WHITE);
-//               // recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.WHITE);
-//            }
-//            int color = Color.parseColor(getFromHtmlColor(stop.stop.foreground));
-//            if( stop.stop.background.toLowerCase().equals("yellow")) {
-//                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.BLACK);
-//            } else {
-//                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.parseColor(getFromHtmlColor(stop.stop.background)));
-//            }
-//            recyclerViewHolder.tv_recycler_item_2.setTextColor(color);
-//            recyclerViewHolder.tv_recycler_item_3.setTextColor(color);
-//            recyclerViewHolder.tv_dv_block_id.setTextColor(color);
-
-            // recyclerViewHolder.tv_recycler_item_4.setTextColor(color);
 
             recyclerViewHolder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override

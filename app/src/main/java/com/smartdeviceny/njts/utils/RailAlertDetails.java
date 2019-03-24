@@ -2,19 +2,30 @@ package com.smartdeviceny.njts.utils;
 
 import android.support.annotation.NonNull;
 
+import com.smartdeviceny.njts.annotations.Persist;
+
 import java.util.Date;
 
 public class RailAlertDetails {
+    @Persist
     String long_name;
+    @Persist
     String short_code;
+    @Persist
     boolean alert;
+    @Persist
     String alertText;
+    @Persist
     public long   time;
+
     @NonNull
     @Override
     public String toString() {
         return getTimeDate() + " [ServiceStatus " + long_name + "(" + short_code + ") " + alertText + "]";
     }
+
+    // needed for persist/
+    public RailAlertDetails() {}
 
     public RailAlertDetails(String long_name, String short_code, boolean alert, String text) {
         this.long_name = long_name;

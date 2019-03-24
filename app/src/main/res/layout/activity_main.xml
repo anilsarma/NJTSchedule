@@ -20,10 +20,10 @@
             android:background="?attr/colorPrimary"
             app:title="NJ Train Schedule"
             app:titleTextColor="#FFFFFF"
-            app:contentInsetStartWithNavigation="0dp"
-            app:layout_scrollFlags="enterAlwaysCollapsed|snap"
+
+            app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/AppTheme.PopupOverlay"/>
-        <!-- app:layout_scrollFlags="scroll|enterAlways" -->
+        <!--  app:contentInsetStartWithNavigation="0dp" app:layout_scrollFlags="enterAlwaysCollapsed|snap" app:layout_scrollFlags="scroll|enterAlways" -->
 
         <android.support.design.widget.TabLayout
             android:id="@+id/tab_layout"

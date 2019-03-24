@@ -14,7 +14,4 @@ public class DepartureVisionWrapper {
     public String code;
     @Persist
     public ArrayList<DepartureVisionData> entries = new ArrayList<>();
-
-
-
 }

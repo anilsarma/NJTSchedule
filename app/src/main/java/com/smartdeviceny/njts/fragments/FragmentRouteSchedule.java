@@ -5,10 +5,13 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 public class FragmentRouteSchedule extends Fragment implements ServiceConnected {
     RecycleSheduleAdaptor adapter;
     SharedPreferences config;
+    private FloatingActionButton fab;
 
     @Nullable
     @Override
@@ -57,12 +61,29 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
     String getConfig(SharedPreferences config, String name, String defaultValue) {
         return config.getString(name, defaultValue);
     }
+    private int getScreenWidthDp() {
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        return (int) (displayMetrics.widthPixels / displayMetrics.density);
+    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         RecyclerView recyclerView = getActivity().findViewById(R.id.schedule_vision_scroll_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+        //recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        fab = view.findViewById(R.id.fab_recycler_view);
+        fab.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
+
+        if (getScreenWidthDp() >= 1200) {
+            final GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), 3);
+            recyclerView.setLayoutManager(gridLayoutManager);
+        } else if (getScreenWidthDp() >= 800) {
+            final GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), 2);
+            recyclerView.setLayoutManager(gridLayoutManager);
+        } else {
+            final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+            recyclerView.setLayoutManager(linearLayoutManager);
+        }
+        //recyclerView.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
         config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         ArrayList<Route> routes = new ArrayList<>();
 

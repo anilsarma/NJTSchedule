@@ -7,6 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -87,6 +88,7 @@ public class DepartureVisionParser {
                 //Log.d("DV", "details time:" + time +  " to:" + to + " track:" + track + " line:" + line + " status:" + status + " train:" + train + " station:" + station );
                 DepartureVisionData dv = new DepartureVisionData(data);
                 dv.tableTime = tableTime;
+                dv.createTime  = new Date();
                 result.put(dv.block_id, dv);
             }
 

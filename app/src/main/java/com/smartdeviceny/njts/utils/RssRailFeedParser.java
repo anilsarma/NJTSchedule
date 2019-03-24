@@ -30,7 +30,7 @@ public class RssRailFeedParser {
         return Jsoup.parse(str).text();
     }
 
-    public Feed parse(InputStream stream) {
+    public RailDetailsContainer parse(InputStream stream) {
         //Jul 23, 2018 09:12:30 AM -- MMM d, yyyy HH:mm:ss a
         String format = "MMM d, yyyy HH:mm:ss a";
         DateFormat dateTimeFormat = new SimpleDateFormat(format);
@@ -99,7 +99,8 @@ public class RssRailFeedParser {
 
             Feed feed = new Feed(parent.get("title"), parent.get("link"), parent.get("description"), parent.get("language"), parent.get("copyright"), parent.get("pubDate"));
             feed.setMessages(array);
-            return feed;
+
+            return RssFeedCategorise.categorize(feed, 0);
         } catch (Exception e) {
             e.printStackTrace();
         }

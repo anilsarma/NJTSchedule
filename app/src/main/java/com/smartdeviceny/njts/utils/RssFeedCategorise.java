@@ -10,18 +10,6 @@ import java.util.regex.Pattern;
 public class RssFeedCategorise {
     static DateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm:ss a");
 
-    public class Category {
-        public ArrayList<RailAlertDetails> train = new ArrayList<>();
-        public ArrayList<RailAlertDetails> construction = new ArrayList<>();
-        public ArrayList<RailAlertDetails> service = new ArrayList<>();
-
-        public void sort() {
-            train.sort(Comparator.comparingLong(RailAlertDetails::getTime));
-            construction.sort(Comparator.comparingLong(RailAlertDetails::getTime));
-            service.sort(Comparator.comparingLong(RailAlertDetails::getTime));
-        }
-    }
-
     public static String getLongName(String short_code) {
         switch (short_code) {
             case "NEC":
@@ -29,19 +17,19 @@ public class RssFeedCategorise {
             case "NJCL":
                 return "North Jersey Coast";
             case "RARV":
-                return "Raritan Valley";
+                return "Raritan Valley ";
             case "MNE":
                 return "Morristown Line";
             case "MNBN":
-                return "Main/Bergen-Port Jervis Line";
+                return "Main/Bergen Port Jervis Line";
             case "BNTN":
-                return "Montclair-Boonton";
+                return "Montclair \u279F Boonton";
             case "PASC":
                 return "Pascack Valley";
             case "ATLC":
                 return "Atlantic City";
             case "HBLR":
-                return "Hudson-Bergen Light Rail";
+                return "Hudson \u279F Bergen Light Rail";
             case "NLR":
                 return "Newark Light Rail";
             case "RVR":
@@ -76,8 +64,8 @@ public class RssFeedCategorise {
         }
         return long_name;
     }
-    public Category categorize(Feed feed, long cutoffTime) {
-        Category category = new Category();
+    public static RailDetailsContainer categorize(Feed feed, long cutoffTime) {
+        RailDetailsContainer category = new RailDetailsContainer();
 
         for (FeedMessage msg : feed.getMessages()) {
             //TravelAlertsTo&rel=Rail&selLine=MNE#RailTab
@@ -94,21 +82,22 @@ public class RssFeedCategorise {
                     String short_code = matcher.group(1);
                     RailAlertDetails alert = new RailAlertDetails(long_name, short_code, true, msg.description);
                     alert.setTime(msgTime);
-                    category.train.add(alert);
+                    category.addTrain(alert);
                 }
             } else if (msg.link.contains("ConstructionAdvisoryTo")) {
                 RailAlertDetails alert = new RailAlertDetails("", "", true, msg.description);
                 alert.setTime(msgTime);
-                category.construction.add(alert);
+                category.addConstruction(alert);
             } else if (msg.link.contains("ServiceAdjustmentTo")) {
                 RailAlertDetails alert = new RailAlertDetails("", "", true, msg.description);
                 alert.setTime(msgTime);
-                category.service.add(alert);
+                category.addService(alert);
             } else {
                 System.out.println(msg.link);
             }
         }
-        System.out.println(category.train);
+       // System.out.println(category.train);
+        category.sort();
         return category;
     }
 }
