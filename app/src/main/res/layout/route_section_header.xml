@@ -31,8 +31,8 @@
         android:fontFamily="@font/happy_monkey"
         android:paddingLeft="20sp"
         android:paddingTop="2sp"
-        android:paddingBottom="5sp"
-        android:text="New York Penn Station #10143; New Brunswick"
+        android:paddingBottom="10sp"
+        android:text="New York Penn Station #10143; New Brunswick Secaus and something really long"
         android:textColor="#80FFFFFF"
         android:textSize="14sp"
         android:textStyle="bold" />

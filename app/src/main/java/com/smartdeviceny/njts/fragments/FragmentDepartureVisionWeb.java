@@ -66,6 +66,11 @@ public class FragmentDepartureVisionWeb extends Fragment implements ServiceConne
     }
 
     @Override
+    public void onAlertsUpdated(SystemService systemService) {
+
+    }
+
+    @Override
     public void configChanged(SystemService systemService) {
         WebView web = getActivity().findViewById(R.id.depart_vision_web_view);
         if(web != null) {

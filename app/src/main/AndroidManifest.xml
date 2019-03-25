@@ -8,6 +8,7 @@
         android:roundIcon="@mipmap/app_njs_icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:backupAgent=".NJTSBackupAgent"
         >
 

@@ -496,8 +496,10 @@ public class SystemService extends Service {
 
             String pendingUrl = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
 
-            if (pendingUrl.equals(url)) {
-                count++;
+            if ( status == DownloadManager.STATUS_PENDING||status == DownloadManager.STATUS_RUNNING) {
+                if( pendingUrl.equals(url)) {
+                    count++;
+                }
             }
         }
         Log.d("SVC", "total pending entries in table " + entries);

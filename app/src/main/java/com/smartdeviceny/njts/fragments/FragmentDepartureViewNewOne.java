@@ -191,6 +191,11 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
     }
 
     @Override
+    public void onAlertsUpdated(SystemService systemService) {
+
+    }
+
+    @Override
     public void onSystemServiceConnected(SystemService systemService) {
         this.systemService = systemService;
     }

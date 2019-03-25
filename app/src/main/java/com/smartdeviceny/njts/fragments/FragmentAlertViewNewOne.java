@@ -61,7 +61,10 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
     }
 
     private void initData(Context context) {
-        data = new ArrayList<>();
+        if(data==null) {
+            data = new ArrayList<>();
+        }
+        data.clear();
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
         try {
             JSONObject json = new JSONObject(Utils.getConfig(config, Config.ALERT_JSON, "{}"));
@@ -210,5 +213,12 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
     @Override
     public void configChanged(SystemService systemService) {
 
+    }
+
+    @Override
+    public void onAlertsUpdated(SystemService systemService) {
+        initData(getContext().getApplicationContext());
+        adapter.setItems(data);
+        adapter.notifyDataSetChanged();
     }
 }

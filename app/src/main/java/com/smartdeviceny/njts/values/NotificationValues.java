@@ -2,6 +2,7 @@ package com.smartdeviceny.njts.values;
 
 public interface NotificationValues {
     String BROADCAT_DEPARTURE_VISION_UPDATED = "departure-vision-updated";
+    String BROADCAT_ALERT_UPDATED = "alert-updated";
     String BROADCAT_DATABASE_READY = "database-ready";
     String BROADCAT_DATABASE_CHECK_COMPLETE = "database-check-complete";
     String BROADCAT_PERIODIC_TIMER = "periodic-timer";
@@ -9,6 +10,7 @@ public interface NotificationValues {
 
     String BROADCAT_CHECK_FOR_UPDATE = "check-for-njts-update";
     String BROADCAT_CHECK_FOR_UPDATE_NO_FILTER = "check-for-njts-update-no-filter";
+
 
     String BROADCAT_NOTIFY_CONFIG_CHANGED = "notify-config-changed";
 

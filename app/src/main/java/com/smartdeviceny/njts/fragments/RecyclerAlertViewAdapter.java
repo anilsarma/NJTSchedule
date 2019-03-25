@@ -160,7 +160,7 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
             //recyclerViewHolder.tv_recycler_item_2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             recyclerViewHolder.tv_recycler_item_2.setText("");
             recyclerViewHolder.tv_recycler_item_2.setVisibility(View.GONE);
-            recyclerViewHolder.tv_dv_time.setText(new SimpleDateFormat("mm MMM hh:mm:ss a").format(stop.stop.getTimeDate()));
+            recyclerViewHolder.tv_dv_time.setText(new SimpleDateFormat("dd MMM hh:mm:ss a").format(stop.stop.getTimeDate()));
             recyclerViewHolder.tv_dv_time.setTextColor(context.getResources().getColor(R.color.white));
             recyclerViewHolder.tv_recycler_item_2.setTypeface(Typeface.DEFAULT_BOLD);
 
@@ -168,7 +168,7 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
             recyclerViewHolder.mView.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.app_blue_dark)));
 
             recyclerViewHolder.tv_recycler_item_3.setText(stop.stop.getAlertText());
-            recyclerViewHolder.tv_recycler_item_3.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+            recyclerViewHolder.tv_recycler_item_3.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
             recyclerViewHolder.tv_recycler_item_3.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_green)));
 
             if (stop.stop.getAlertText().isEmpty()) {

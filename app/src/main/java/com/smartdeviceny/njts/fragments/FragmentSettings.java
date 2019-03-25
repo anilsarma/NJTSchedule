@@ -345,6 +345,11 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
     }
 
     @Override
+    public void onAlertsUpdated(SystemService systemService) {
+
+    }
+
+    @Override
     public void onSystemServiceConnected(SystemService systemService) {
         initData(systemService);
     }

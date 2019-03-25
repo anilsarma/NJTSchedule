@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                 progressDialog.dismiss();
             }
             if (!systemService.isDatabaseReady()) {
-                showUpdateProgressDialog(context, "System getting ready.");
+                showUpdateProgressDialog(context, "System downloading a tiny NJ Transit database file");
             }
 
         } else {
@@ -339,7 +339,20 @@ public class MainActivity extends AppCompatActivity {
 
 
                 }
-            } else if (intent.getAction().equals(NotificationValues.BROADCAT_PERIODIC_TIMER)) {
+            } else if (intent.getAction().equals(NotificationValues.BROADCAT_ALERT_UPDATED)) {
+                //Log.d("MAIN", NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED);
+                for (Fragment f : getSupportFragmentManager().getFragments()) {
+                    if (!ServiceConnected.class.isAssignableFrom(f.getClass())) {
+                        continue;
+                    }
+                    ServiceConnected frag = (ServiceConnected) f;
+                    if (systemService != null) {
+                        frag.onAlertsUpdated(systemService);
+                    }
+
+
+                }
+            }else if (intent.getAction().equals(NotificationValues.BROADCAT_PERIODIC_TIMER)) {
                 //Log.d("MAIN", NotificationValues.BROADCAT_PERIODIC_TIMER);
                 boolean hasfrag = false;
                 for (Fragment f : getSupportFragmentManager().getFragments()) {

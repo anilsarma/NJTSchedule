@@ -3,9 +3,11 @@ package com.smartdeviceny.njts;
 import android.app.DownloadManager;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.format.DateUtils;
 import android.util.Log;
 
@@ -23,6 +25,7 @@ import com.smartdeviceny.njts.utils.RssRailFeedParser;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
 import com.smartdeviceny.njts.values.ConfigDefault;
+import com.smartdeviceny.njts.values.NotificationValues;
 
 import org.json.JSONObject;
 
@@ -49,11 +52,11 @@ public class NJTAlertJobService extends JobService {
         }
         try {
             Date now = new Date();
-            if ((now.getHours() >= 4) && config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION))  {
+            if ((now.getHours() >= 4)) {
                 downloadAlert();
             }
         } finally {
-            scheduleJob(new Date().getTime() + TimeUnit.MILLISECONDS.toMillis(15));
+            scheduleJob(new Date().getTime() + TimeUnit.MINUTES.toMillis(15));
         }
 
         return false;
@@ -104,7 +107,7 @@ public class NJTAlertJobService extends JobService {
             public boolean downloadComplete(DownloadFile d, long id, String url, File file) {
                 config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
-
+                boolean allowNotification = config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION);
 
                 if (debug) {
                     Utils.notify_user(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null, "Alert Checker, download complete ",
@@ -117,7 +120,7 @@ public class NJTAlertJobService extends JobService {
                     JSONObject obj = JSONObjectSerializer.marshall(cat);
                     Utils.setConfig(config, Config.ALERT_JSON, obj.toString());
                     Log.d("ALERT", "object ... " + obj.toString());
-
+                    sendAlertsUpdated();
                     //ConfigUtils.setLong(config, Config.LAST_ALERT_TIME, 0);
                     long lastPubTime = config.getLong(Config.LAST_ALERT_TIME, ConfigDefault.LAST_ALERT_TIME);
                     long maxPubTime = lastPubTime;
@@ -128,8 +131,9 @@ public class NJTAlertJobService extends JobService {
                         }
                         if (detail.getTimeDate().getTime() > lastPubTime) {
                             maxPubTime = Math.max(maxPubTime, detail.getTimeDate().getTime());
-                            Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT, "Train " + detail.getLong_name(),
-                                    detail.getTimeDate() + "\n\n" + detail.getAlertText(), NotificationGroup.ALERT.getID() + idCache.getID(detail.getShort_code()));
+                            if( allowNotification) {
+                                Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT, "Train " + detail.getLong_name(), detail.getTimeDate() + "\n\n" + detail.getAlertText(), NotificationGroup.ALERT.getID() + idCache.getID(detail.getShort_code()));
+                            }
                         }
                         index++;
                     }
@@ -143,8 +147,9 @@ public class NJTAlertJobService extends JobService {
                     PrintWriter pw = new PrintWriter(sw);
                     e.printStackTrace(pw);
 
-                    Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null,
-                            "Alert Checker, download complete, " + "failed parsing \n" + sw, NotificationGroup.ALERT_CHECK_SERVICE.getID() + 3);
+                    if (allowNotification && debug) {
+                        Utils.notify_user_big_text(getApplicationContext(), NotificationGroup.ALERT_CHECK_SERVICE, null, "Alert Checker, download complete, " + "failed parsing \n" + sw, NotificationGroup.ALERT_CHECK_SERVICE.getID() + 3);
+                    }
                 }
                 Utils.delete(file);
                 Utils.cleanFiles(file.getParentFile(), "RailAdvisories_feed.xml");
@@ -166,5 +171,12 @@ public class NJTAlertJobService extends JobService {
         DownloadManager.Request request = d.buildRequest("https://www.njtransit.com/rss/RailAdvisories_feed.xml", "RailAdvisories_feed.xml", "NJ Transit Alerts",
                 DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI, "text/html");
         d.enqueue(request);
+    }
+
+    private void sendAlertsUpdated() {
+        Intent intent = new Intent(NotificationValues.BROADCAT_ALERT_UPDATED);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        Log.d("AJOB", "sending " + NotificationValues.BROADCAT_ALERT_UPDATED);
+        //Toast.makeText(getApplicationContext(),"sending " + NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED, Toast.LENGTH_SHORT).show();
     }
 }

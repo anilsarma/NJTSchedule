@@ -105,6 +105,7 @@ public class JSONObjectSerializer {
                         try {
                             fld.set(object, _unmarshall(fld, jsonObject.get(fld.getName())));
                         } catch (Exception e) {
+                            System.out.println("failure details " + fld + " " + jsonObject);
                             e.printStackTrace();
                         }
                     } else {
@@ -195,7 +196,12 @@ public class JSONObjectSerializer {
 
     private static Object _unmarshall(Class cls, Object object) throws Exception {
         if (cls.isAssignableFrom(Date.class)) {
-            return new Date((Long) object);
+            if(Long.class.isAssignableFrom(object.getClass())) {
+                return new Date((Long) object);
+            }  if(Integer.class.isAssignableFrom(object.getClass())) {
+                return new Date((Integer)object);
+            }
+            return new Date(0);
         }
         return object;
     }
