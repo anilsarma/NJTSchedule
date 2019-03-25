@@ -36,6 +36,7 @@ import com.smartdeviceny.njts.values.Config;
 
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -54,16 +55,15 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_recycler_view, container, false);
-        initData(inflater.getContext());
+        data = new ArrayList<>();
+
 
         //return super.onCreateView(inflater, container, savedInstanceState);
         return view;
     }
 
-    private void initData(Context context) {
-        if(data==null) {
-            data = new ArrayList<>();
-        }
+    private ArrayList<RailAlertDetails> initData(Context context) {
+        ArrayList<RailAlertDetails> data = new ArrayList<>();
         data.clear();
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
         try {
@@ -72,11 +72,12 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
 
             Collections.reverse(cat.getTrain());
             for (RailAlertDetails v :cat.getTrain() ) {
-                this.data.add(v);
+                data.add(v);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return data;
     }
 
     private int getScreenWidthDp() {
@@ -89,7 +90,21 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
         systemService = ((MainActivity) getActivity()).systemService;
 
         initView(view);
+        new AsyncTask<String, Void, String>() {
+            @Override
+            protected String doInBackground(String... strings) {
+                     final ArrayList<RailAlertDetails> data = initData(getContext());
+                new Handler(getContext().getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        FragmentAlertViewNewOne.this.data = data;
+                        adapter.setItems(data);
+                    }
+                });
 
+                return "";
+            }
+        }.execute("");
 //        Toolbar toolbar = view.findViewById(R.id.toolbar_recycler_view);
 //        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
 //        if (((AppCompatActivity)getActivity()).getSupportActionBar() != null) {
@@ -217,7 +232,7 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
 
     @Override
     public void onAlertsUpdated(SystemService systemService) {
-        initData(getContext().getApplicationContext());
+        data = initData(getContext().getApplicationContext());
         adapter.setItems(data);
         adapter.notifyDataSetChanged();
     }
