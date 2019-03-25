@@ -136,7 +136,7 @@
                 android:layout_width="64dp"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="number"
+                android:inputType="textImeMultiLine|number"
                 android:textAlignment="center"
                 android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="@+id/textView11"
@@ -240,7 +240,8 @@
                 app:layout_constraintEnd_toStartOf="@+id/edit_text_delta_days"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="@+id/guideline_left"
-                app:layout_constraintTop_toBottomOf="@+id/divider6" />
+                app:layout_constraintTop_toBottomOf="@+id/textView" />
+
 
             <EditText
                 android:id="@+id/edit_text_polling_frequency"
@@ -307,6 +308,39 @@
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
                 app:layout_constraintStart_toStartOf="@+id/guideline_left"
                 app:layout_constraintTop_toBottomOf="@+id/checkbox_debug" />
+
+            <Switch
+                android:id="@+id/checkBox_train_notification"
+                android:layout_width="330dp"
+                android:layout_height="68dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="32dp"
+                android:checked="true"
+                android:text="@string/setting_upcoming_train_notification"
+                app:layout_constraintEnd_toStartOf="@+id/guideline_right"
+                app:layout_constraintHorizontal_bias="0.181"
+                app:layout_constraintStart_toStartOf="@+id/guideline_left"
+                app:layout_constraintTop_toBottomOf="@+id/divider6" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="253dp"
+                android:layout_height="79dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/notification_delay"
+                app:layout_constraintStart_toStartOf="@+id/guideline_left"
+                app:layout_constraintTop_toBottomOf="@+id/checkBox_train_notification" />
+
+            <EditText
+                android:id="@+id/edittext_notification_delay"
+                android:layout_width="56dp"
+                android:layout_height="53dp"
+                android:layout_marginEnd="8dp"
+                android:ems="10"
+                android:inputType="number"
+                android:text="5"
+                app:layout_constraintBottom_toBottomOf="@+id/textView"
+                app:layout_constraintEnd_toStartOf="@+id/guideline_right" />
 
         </android.support.constraint.ConstraintLayout>
     </android.support.v4.widget.NestedScrollView>

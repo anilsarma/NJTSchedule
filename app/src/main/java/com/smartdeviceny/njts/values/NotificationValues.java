@@ -8,6 +8,7 @@ public interface NotificationValues {
     String BROADCAT_SEND_DEPARTURE_VISION_PING = "send-departure-vision-pings";
 
     String BROADCAT_CHECK_FOR_UPDATE = "check-for-njts-update";
+    String BROADCAT_CHECK_FOR_UPDATE_NO_FILTER = "check-for-njts-update-no-filter";
 
     String BROADCAT_NOTIFY_CONFIG_CHANGED = "notify-config-changed";
 

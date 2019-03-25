@@ -13,21 +13,31 @@ import java.util.zip.ZipInputStream;
 // server.
 public class UtilsDBVerCheck {
 
-    static public SQLiteLocalDatabase getSQLDatabase(Context appContext, File dbFilePath) {
-        if (!dbFilePath.exists()) {
+    static public SQLiteLocalDatabase getSQLDatabase(Context appContext, File dbMasterFilePath, File dbFilePath) {
+        if (!dbMasterFilePath.exists()) {
             return null;
         }
-        SQLiteLocalDatabase sql = new SQLiteLocalDatabase(appContext, dbFilePath.getName(), dbFilePath.getParent());
-        sql.getWritableDatabase();
-        try {
-            sql.getWritableDatabase(); // force and open
-        } catch (Exception e) {
-            Log.d("SQL", "get routes failed need to download");
-            sql.close();
-            Utils.delete(dbFilePath);
-            sql = null;
+        if(Utils.copyFileIfNewer(dbMasterFilePath, dbFilePath)) {
+            return null;
         }
-        return sql;
+
+        try {
+            SQLiteLocalDatabase sql = new SQLiteLocalDatabase(appContext, dbFilePath.getName(), dbFilePath.getParent());
+
+            sql.getWritableDatabase();
+            try {
+                sql.getWritableDatabase(); // force and open
+            } catch (Exception e) {
+                Log.d("SQL", "get routes failed need to download");
+                sql.close();
+                Utils.delete(dbFilePath);
+                sql = null;
+            }
+
+            return sql;
+        }catch(Exception e) {
+            return null; // is this a case of access i.e someone else has it open
+        }
     }
 
     // extract the specified name to a temp file.
@@ -74,7 +84,6 @@ public class UtilsDBVerCheck {
             Log.e("DBU", "matchDBVersion failed" + e.getMessage());
         }
         return "";
-
     }
 
 

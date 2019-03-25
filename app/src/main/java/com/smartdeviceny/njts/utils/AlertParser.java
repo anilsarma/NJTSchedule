@@ -39,17 +39,17 @@ public class AlertParser {
             now = date.getTime();
             for(int i=0;i < nodes.getLength(); i ++ ) {
                 //#System.out.println(nodes.item(i).getNodeName());
-                if ( nodes.item(i).getNodeName() == "item") {
+                if ( nodes.item(i).getNodeName().equals("item")) {
                     NodeList items = nodes.item(i).getChildNodes();
                     String descrition = null;
                     String title = null;
                     Date  dt =null;
                     for(int j=0; j < items.getLength();j ++ ) {
-                        if(items.item(j).getNodeName()=="title") {
+                        if(items.item(j).getNodeName().equals("title")) {
                             title = items.item(j).getFirstChild().getNodeValue();
                             dt = dateTimeFormat.parse(title);
 
-                        } else  if(items.item(j).getNodeName()== "description") {
+                        } else  if(items.item(j).getNodeName().equals("description")) {
                             descrition = items.item(j).getFirstChild().getNodeValue();
                             //System.out.println(items.item(j).getFirstChild().getNodeValue());
                         }

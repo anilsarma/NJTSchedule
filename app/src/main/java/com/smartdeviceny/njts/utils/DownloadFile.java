@@ -23,6 +23,7 @@ public class DownloadFile {
     Callback callback;
 
     public interface Callback {
+        // return true if the file is to be frmoved.
         boolean downloadComplete(DownloadFile d, long id, String url, File file);
         void downloadFailed(DownloadFile d, long id, String url);
     }

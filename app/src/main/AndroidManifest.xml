@@ -31,7 +31,6 @@
             android:permission="android.permission.BIND_JOB_SERVICE"/>
         <!-- just trigger events -->
         <receiver android:name=".PowerStartServiceReceiver"
-            android:permission="android.permission.RECEIVE_BOOT_COMPLETED"
             >
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
@@ -39,7 +38,6 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
-
 
         <service android:enabled="true" android:name=".DepartureVisionJobService"
             android:exported="true"
@@ -52,5 +50,5 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
-
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>

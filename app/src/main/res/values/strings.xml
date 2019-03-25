@@ -16,4 +16,8 @@
 
     <string name="setting_polling_frequency"><b>Polling frequency(sec)</b>\nThe application needs to query the remote server to retrieve real-time track information, this is the number of seconds between each query. Recommended value 30. </string>
     <string name="setting_debug_flag"><b>Enable Debugging</b>\nThis is a developer option recommended disabled.</string>
+    <string name="setting_upcoming_train_notification"><b>Enable favorite Train Notification</b>
+        \nWhen enabled a notification will be sent to the notification bar about upcoming trains in the favorite list, note that this can get noisy.
+    \nA favorite train can be selected, by \'long pressing\' a train in the Schedule Tab.</string>
+    <string name="notification_delay"><b>Notification Delay minutes</b>\nThis is delay in of minutes between notifications for upcoming trains.(experimental)</string>
 </resources>

@@ -1,36 +1,62 @@
 package com.smartdeviceny.njts;
 
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.util.Log;
+
+import com.smartdeviceny.njts.utils.ConfigUtils;
+import com.smartdeviceny.njts.utils.JobID;
+import com.smartdeviceny.njts.utils.NotificationGroup;
+import com.smartdeviceny.njts.utils.Utils;
+import com.smartdeviceny.njts.values.Config;
+import com.smartdeviceny.njts.values.ConfigDefault;
 
 public class PowerStartServiceReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        schdeulJob(context.getApplicationContext());
+        SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+        boolean debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
+        if(debug && Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+            Utils.notify_user(context, NotificationGroup.POWER_SERVICE, null, "Power Up detected", NotificationGroup.POWER_SERVICE.getID() +2);
+            // clear published history in case of a reboot.
+            ConfigUtils.setConfig(config, Config.DEPARTURE_VISION_HISTORY, ConfigDefault.DEPARTURE_VISION_HISTORY);
+        }
+        scheduleJob(context.getApplicationContext(), config);
     }
 
 
-    public static void schdeulJob(Context context) {
+    public static void scheduleJob(Context context, @Nullable SharedPreferences config) {
+        if(config ==null) {
+            config =  PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+        }
+        boolean debug = config.getBoolean(Config.DEBUG, ConfigDefault.DEBUG);
         Log.d("PWR", "Scheduling test job.");
         // schedule a job for upgrade check
         long ms_frequency = 1 * 60 * 1000;
-        ComponentName serviceComponent = new ComponentName(context, UpdateCheckerJobService.class);
-        JobInfo.Builder builder = new JobInfo.Builder(2, serviceComponent);
-        builder.setPeriodic(ms_frequency);
-        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED); // require unmetered network wifi
-        //builder.setRequiresDeviceIdle(true); // device should be idle
-        //builder.setRequiresCharging(true);
-        JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        if(jobScheduler.schedule(builder.build()) <= 0) {
+        long diff = Utils.alignTime(ms_frequency);
+        boolean result = Utils.scheduleJob(context.getApplicationContext(), JobID.UpdateCheckerJobService, UpdateCheckerJobService.class, (int) diff, false, null);
+        if(debug) {
+            Utils.notify_user(context, NotificationGroup.POWER_SERVICE, null, "scheduling UpdateChecker " + diff, NotificationGroup.POWER_SERVICE.getID() +1);
+        }
+
+        if(!result) {
             Log.e("PWR", "error: Some error while scheduling the job");
+            if(debug) {
+                Utils.notify_user(context, NotificationGroup.POWER_SERVICE,  null, "scheduling UpdateChecker failed", NotificationGroup.POWER_SERVICE.getID() + 1);
+            }
         }
         else {
             Log.d("PWR", "job scheduled " + ms_frequency);
+            //Utils.notify_user(context, NotificationGroup.POWER_SERVICE, "system up, scheduling process succedeed", NotificationGroup.POWER_SERVICE.getID() +2);
+
         }
     }
+
+
+
+
 }

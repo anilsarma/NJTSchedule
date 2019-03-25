@@ -1,15 +1,11 @@
 package com.smartdeviceny.njts.fragments;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,14 +13,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.smartdeviceny.njts.MainActivity;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.SystemService;
 import com.smartdeviceny.njts.adapters.RecycleSheduleAdaptor;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
+import com.smartdeviceny.njts.parser.DepartureVisionData;
+import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.ConfigUtils;
+import com.smartdeviceny.njts.utils.NotificationChannels;
+import com.smartdeviceny.njts.utils.NotificationGroup;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
 import com.smartdeviceny.njts.values.ConfigDefault;
@@ -35,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 public class FragmentRouteSchedule extends Fragment implements ServiceConnected {
     RecycleSheduleAdaptor adapter;
@@ -64,7 +64,7 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
         config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-        ArrayList<SystemService.Route> routes = new ArrayList<>();
+        ArrayList<Route> routes = new ArrayList<>();
 
         adapter = new RecycleSheduleAdaptor(getActivity(), routes);
         SystemService systemService = ((MainActivity)getActivity()).systemService;
@@ -100,11 +100,12 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         recyclerView.invalidate();
     }
 
+    HashMap<String, Date> blocks_notified  = new HashMap<>();
     @Override
     public void onDepartureVisionUpdated(SystemService systemService) {
         // get the departure vision data.
-        HashMap<String, SystemService.DepartureVisionData> data =  systemService.getCachedDepartureVisionStatus_byTrip();
-        data = (data==null)?new HashMap<>():data;
+        HashMap<String, DepartureVisionData> data =  systemService.getCachedDepartureVisionStatus_byTrip();
+        data = (data==null)?new HashMap<>():data;// this should never happen
         if(data.isEmpty() ) {
             //nothing to do
             return;
@@ -117,15 +118,38 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         }
         //TODO: this is expensive need to remove in the future.
         ((MainActivity)getActivity()).systemService.updateActiveDepartureVisionStation(((MainActivity)getActivity()).getStationCode());
-        for(SystemService.DepartureVisionData dv:data.values()) {
-           try {
-               if(notifyUser(dv) ) {
-                   break;
-               }
-           } catch(Exception e ) {
 
-           }
-        }
+        // dont' do this everytime, now done in background thread.
+//        String startStation = getConfig(config, Config.START_STATION,  ConfigDefault.START_STATION);
+//        String stopStation = getConfig(config, Config.STOP_STATION, ConfigDefault.STOP_STATION);
+//        ArrayList<Route> routes = systemService.getRoutes(startStation, stopStation, null, 1);
+//        HashMap<String, Route> rt = new HashMap<>();
+//        for(Route r: routes) {
+//            rt.put(r.block_id, r);
+//        }
+//        if(config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION) ) {
+//            Date now = new Date();
+//            for (DepartureVisionData dv : data.values()) {
+//                try {
+//                    if (rt.keySet().contains(dv.block_id) && dv.favorite) {
+//                        String key = dv.block_id + startStation;
+//                        if( blocks_notified.keySet().contains(key)) {
+//                            long diff = blocks_notified.get(key).getTime() - now.getTime();
+//                            int duration = config.getInt(Config.NOTIFICATION_DELAY, ConfigDefault.NOTIFICATION_DELAY);
+//                            if( diff < TimeUnit.MINUTES.toMillis(duration)) {
+//                                continue;
+//                            }
+//                        }
+//                        if (notifyUser(dv)) {
+//                            blocks_notified.put(key, now);
+//                            //break;
+//                        }
+//                    }
+//                } catch (Exception e) {
+//
+//                }
+//            }
+//        }
     }
 
 
@@ -145,7 +169,7 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
 
         int delta = -1;
         try {delta = Integer.parseInt(ConfigUtils.getConfig(config, Config.DELTA_DAYS, "" + delta)); } catch (Exception e){ }
-        ArrayList<SystemService.Route> routes = systemService.getRoutes(startStation, stopStation, null, delta);
+        ArrayList<Route> routes = systemService.getRoutes(startStation, stopStation, null, delta);
 
         systemService.schdeuleDepartureVision(departureVisionCode, 30000);
         //Log.d("FRAGRT", "updated routes start:" + startStation + " stop:"  + stopStation);
@@ -157,12 +181,12 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         recyclerView.scrollToPosition(getPosition(routes));
         Log.d("FRAGRT", "updated routes ");
     }
-    int getPosition(ArrayList<SystemService.Route> routes) {
+    int getPosition(ArrayList<Route> routes) {
         int index = -1;
         int i = 0;
         Date now = new Date();
         try {
-            for (SystemService.Route rt : routes) {
+            for (Route rt : routes) {
                 if (rt.departure_time_as_date.getTime() > now.getTime()) {
                     break; // we want this to be in the middle of the page some what.
                 }
@@ -173,7 +197,7 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         }
         return index;
     }
-    boolean notifyUser( SystemService.DepartureVisionData dv) throws ParseException
+    boolean notifyUser( DepartureVisionData dv) throws ParseException
     {
         // do this for favs only.
         if (dv == null) {
@@ -185,16 +209,30 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         if( dv.status.isEmpty() && dv.track.isEmpty()) {
             return false;
         }
-        long diff = Utils.makeDate(Utils.getTodayYYYYMMDD(null),  dv.time, "yyyyMMdd HH:mm").getTime() - new Date().getTime();
-        if (diff > 0 ) {  // other checks needed.
-            String msg  = "Train " + dv.block_id + " departs " + dv.time + " from " + dv.station;
+        // need to check of the current train in the current route.
+        Date now = new Date();
+        long diff = Utils.makeDate(Utils.getTodayYYYYMMDD(null),  dv.time, "yyyyMMdd HH:mm").getTime() - now.getTime();
+        // if after 12 we need to make an adjustment to the time in the departure vision.
+        if( now.getHours()>12) {
+            diff += TimeUnit.HOURS.toMillis(12);
+        }
+        String startStation = getConfig(config, Config.START_STATION,  ConfigDefault.START_STATION);
+        SystemService systemService = ((MainActivity)getActivity()).systemService;
+        String stationCode = systemService!=null?systemService.getStationCode(startStation):"";
+
+        // is this train status in the correct i.e does i
+
+        if (diff > 0 && stationCode.equals(dv.station_code)) {  // other checks needed.
+            String msg  = "Train " + dv.block_id + " departs " + dv.time + " from " + dv.station_code;
+            String subject= msg;
             if( !dv.track.isEmpty()) {
                 msg += " Track " + dv.track;
             }
             if( !dv.status.isEmpty()) {
                 msg += " " + dv.status;
             }
-            Utils.notify_user(this.getActivity(), "NJTS", "NJTS", msg, 3);
+            Log.d(NotificationGroup.UPCOMING.getName(), msg);
+            //Utils.notify_user(this.getActivity(),  NotificationGroup.UPCOMING, subject,  msg, NotificationGroup.UPCOMING.getID() + 10000 + Integer.parseInt(dv.block_id));
             //Toast.makeText(getActivity().getApplicationContext(), (String) "sent notification ", Toast.LENGTH_SHORT).show();
             return true;
             //notification = true;
