@@ -37,8 +37,8 @@
 
             <TextView
                 android:id="@+id/track_number"
-                android:layout_width="36sp"
-                android:layout_height="36sp"
+                android:layout_width="50sp"
+                android:layout_height="50sp"
                 android:layout_marginEnd="16dp"
                 android:background="@drawable/card_text_border_green"
                 android:gravity="center"
@@ -85,7 +85,7 @@
             android:layout_weight="1"
             android:padding="2sp"
             android:paddingStart="20sp"
-            android:text="Northeast #7817"
+            android:text="updated 12 minutes ago"
             android:textColor="#8000FF00"
             android:textSize="12sp" />
 
@@ -141,8 +141,8 @@
             android:gravity="center_horizontal"
             android:padding="0sp"
             android:paddingStart="5sp"
-            android:text="Track 6, Route Delayed"
 
+            android:text="Track 6, Route Delayed"
             android:textColor="#7FFFFFFF"
             android:textSize="17sp" />
     </LinearLayout>

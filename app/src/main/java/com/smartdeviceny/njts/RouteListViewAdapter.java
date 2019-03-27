@@ -31,13 +31,14 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
     private List<RouteListRecyclerData> mItems;
     private int color = 0;
     private View parentView;
+    String current_header = "N/A";
 
     public static final int TYPE_NORMAL = 1;
     //    public static final int TYPE_FOOTER = 2;
-//    public static final int TYPE_HEADER = 3;
-    private final String FOOTER = "footer";
-    private final String HEADER = "header";
-    Date current_header = new Date();
+    public static final int TYPE_HEADER = 3;
+//    private final String FOOTER = "footer";
+//    private final String HEADER = "header";
+
 
     public RouteListViewAdapter(Context context) {
         this.context = context;
@@ -74,14 +75,14 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
 //        notifyItemInserted(mItems.size() - 1);
 //    }
 
-//    public void addHeader() {
-////        this.mItems.add(HEADER);
-//        Calendar c = Calendar.getInstance();
-//        c.setTime(current_header);
-//        c.add(Calendar.DATE, 1);
-//        current_header = c.getTime();
-//        //notifyItemInserted(mItems.size() - 1);
-//    }
+    public void addHeader(String header, String route_name, String block_id) {
+        StopDetails d = new StopDetails(header, "B", "C");
+        d.route_name = route_name;
+        d.block_id = block_id;
+        d.stop_name = header;
+        this.mItems.add(new RouteListRecyclerData(d));
+        current_header = header;
+    }
 
 //    public void addFooter() {
 ////        mItems.add(FOOTER);
@@ -101,10 +102,13 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         parentView = parent;
-        //if (viewType == TYPE_NORMAL) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_view, parent, false);
-        return new RecyclerDepartureViewHolder(view);
-        // }
+        if (viewType == TYPE_NORMAL) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_view, parent, false);
+            return new RecyclerDepartureViewHolder(view);
+         }
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_header, parent, false);
+          return new HeaderViewHolder(view);
+
 //        else if (viewType == TYPE_FOOTER) {
 //            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_footer, parent, false);
 //            return new FooterViewHolder(view);
@@ -148,19 +152,18 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
             recyclerViewHolder.rela_round.startAnimation(aa);
             String stop_name = Utils.capitalize(details.data.getStop_name().trim());
 
-            recyclerViewHolder.tv_dv_item_train_name.setText(stop_name );
-            recyclerViewHolder.tv_dv_item_train_name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            recyclerViewHolder.tv_dv_item_train_name.setText( stop_name.trim() );
+            recyclerViewHolder.tv_dv_item_train_name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f);
 
             recyclerViewHolder.tv_dv_time.setText(details.data.getPrintableArrivalTime());
-            recyclerViewHolder.tv_dv_time.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            //recyclerViewHolder.tv_dv_time.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             recyclerViewHolder.tv_dv_time.setVisibility(View.GONE);
-
-            recyclerViewHolder.tv_dv_block_id.setVisibility(View.GONE);
-            String msg = "";
-
-            msg+=  "arrives " + details.data.getPrintableArrivalTime()  +  " departs " + details.data.getPrintableDepartureTime();
+            recyclerViewHolder.tv_dv_block_id.setText("");
+            recyclerViewHolder.tv_dv_block_id.setVisibility(View.VISIBLE);
+            String msg = "\t" + details.data.getPrintableArrivalTime();
             recyclerViewHolder.tv_recycler_item_2.setText(msg);
-            recyclerViewHolder.tv_recycler_item_3.setText(Utils.capitalize(details.data.getStop_name()));
+            //recyclerViewHolder.tv_recycler_item_2.setVisibility(View.GONE);
+            //recyclerViewHolder.tv_recycler_item_3.setText("\tDeparts " + details.data.getPrintableDepartureTime());
             recyclerViewHolder.tv_recycler_item_3.setVisibility(View.GONE);
             recyclerViewHolder.tv_dv_live.setVisibility(View.GONE);
             recyclerViewHolder.tv_recycler_item_4.setVisibility(View.GONE);
@@ -185,7 +188,10 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
                     recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_red)));
                 }
             }
-
+            recyclerViewHolder.tv_dv_block_id.setTextColor(context.getResources().getColor(R.color.black));
+            recyclerViewHolder.tv_recycler_item_2.setTextColor(context.getResources().getColor(R.color.black));
+            recyclerViewHolder.tv_recycler_item_3.setTextColor(context.getResources().getColor(R.color.black));
+            recyclerViewHolder.card_view_backgroup_layout.setBackgroundColor(context.getResources().getColor(R.color.white));
             recyclerViewHolder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -195,11 +201,20 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
 //                            ((Activity) context, recyclerViewHolder.rela_round, "shareView").toBundle());
                 }
             });
+        } else { // mus tbe header ...
+            RouteListRecyclerData details = mItems.get(position);
+            final HeaderViewHolder recyclerViewHolder = (HeaderViewHolder)holder;
+            recyclerViewHolder.header_text.setText(current_header);
+            recyclerViewHolder.textViewHeaderLine2.setText(details.data.route_name + " #" + details.data.block_id);
+           // recyclerViewHolder.header_text.setTextColor(context.getResources().getColor(R.color.black));
         }
     }
 
     @Override
     public int getItemViewType(int position) {
+        if( position ==0) {
+            return TYPE_HEADER;
+        }
         return TYPE_NORMAL;
 //        if( position >= mItems.size()) {
 //            return TYPE_FOOTER;
@@ -260,10 +275,12 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     private class HeaderViewHolder extends RecyclerView.ViewHolder {
         private TextView header_text;
+        private TextView textViewHeaderLine2;
 
         private HeaderViewHolder(View itemView) {
             super(itemView);
             header_text = itemView.findViewById(R.id.header_text);
+            textViewHeaderLine2 = itemView.findViewById(R.id.textViewHeaderLine2);
         }
     }
 

@@ -3,5 +3,8 @@
     <array name="preloaded_fonts" translatable="false">
         <item>@font/happy_monkey</item>
         <item>@font/michroma</item>
+        <item>@font/roboto</item>
+        <item>@font/roboto_medium</item>
+        <item>@font/roboto_thin</item>
     </array>
 </resources>

@@ -168,8 +168,9 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
             recyclerViewHolder.mView.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.app_blue_dark)));
 
             recyclerViewHolder.tv_recycler_item_3.setText(stop.stop.getAlertText());
-            recyclerViewHolder.tv_recycler_item_3.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
-            recyclerViewHolder.tv_recycler_item_3.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_green)));
+            recyclerViewHolder.tv_recycler_item_3.setTypeface(Typeface.DEFAULT );
+            recyclerViewHolder.tv_recycler_item_3.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            recyclerViewHolder.tv_recycler_item_3.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.white)));
 
             if (stop.stop.getAlertText().isEmpty()) {
                 recyclerViewHolder.tv_recycler_item_3.setVisibility(View.GONE);
@@ -195,7 +196,7 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
 
             recyclerViewHolder.rela_round.setVisibility(View.GONE);
 
-            recyclerViewHolder.card_view_backgroup_layout.setBackgroundColor(context.getResources().getColor(R.color.google_green));
+            recyclerViewHolder.card_view_backgroup_layout.setBackgroundColor(context.getResources().getColor(R.color.white));
 
             recyclerViewHolder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override

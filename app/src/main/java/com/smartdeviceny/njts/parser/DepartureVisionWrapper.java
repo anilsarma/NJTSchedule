@@ -7,11 +7,23 @@ import java.util.Date;
 
 public class DepartureVisionWrapper {
     @Persist
-    public Date time;
+    public Date time = new Date();
     @Persist
     public String url;
     @Persist
     public String code;
     @Persist
     public ArrayList<DepartureVisionData> entries = new ArrayList<>();
+
+
+    public DepartureVisionWrapper() {
+
+    }
+
+    public DepartureVisionWrapper(Date time, String code, String url) {
+        this.time = time;
+        this.code = code;
+        this.url = url;
+    }
+
 }

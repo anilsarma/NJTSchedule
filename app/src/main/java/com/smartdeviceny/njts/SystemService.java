@@ -552,6 +552,7 @@ public class SystemService extends Service {
                    // Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
 
                     HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, getStationNameFromCode(code), doc);
+
                     updateDepartureVision(code, result);
                     // we should use only the active stations
                     HashMap<String, DepartureVisionData> tmp_trip = new HashMap<>();
@@ -564,6 +565,12 @@ public class SystemService extends Service {
                     wrapper.time = new Date();
                     wrapper.url = url;
                     wrapper.code = code;
+
+                    DepartureVisionWrapper currentWrapper = new DepartureVisionWrapper(wrapper.time, code, url);
+                    for(Map.Entry<String, DepartureVisionData> e: result.entrySet()) {
+                        currentWrapper.entries.add(e.getValue());
+                    }
+
                     for (String key : activeList) {
                         for (DepartureVisionData dd : status.get(key).values()) {
                             wrapper.entries.add(dd);
@@ -576,7 +583,7 @@ public class SystemService extends Service {
                         }
                     }
                     Utils.setConfig(config,Config.DEPARTURE_VISION, JSONObjectSerializer.marshall(wrapper).toString());
-                    Utils.setConfig(config,Config.DEPARTURE_VISION + "." + code, JSONObjectSerializer.marshall(wrapper).toString());
+                    Utils.setConfig(config,Config.DEPARTURE_VISION + "." + code, JSONObjectSerializer.marshall(currentWrapper).toString());
                     synchronized (lock_status_by_trip) {
                         status_by_trip = tmp_trip;
                     }

@@ -42,6 +42,7 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
     String from;
     String route_name;
     String to;
+    String header;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +53,7 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
         to = bundle.getString("to");
         route_name = bundle.getString("route_name");
 
+        header = from + " \u279F " + to;
         doBindService();
 
         setContentView(R.layout.activity_routelist_recycler_view);
@@ -62,8 +64,9 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             //getSupportActionBar().setHomeButtonEnabled(true);
         }
+
         if(toolbar!=null) {
-            toolbar.setTitle( "Stops " + route_name + "#" + block_id);
+            toolbar.setTitle(route_name );
         }
         initData();
         initView();
@@ -119,7 +122,7 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
         //mItemTouchHelper.attachToRecyclerView(mRecyclerView);
 
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout_routelist_recycler_view);
-        swipeRefreshLayout.setColorSchemeResources(R.color.google_blue, R.color.google_green, R.color.google_red, R.color.google_yellow);
+        swipeRefreshLayout.setColorSchemeResources(R.color.google_blue, R.color.white, R.color.google_red, R.color.google_yellow);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -195,6 +198,7 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
                 st.to = to;
 
             }
+            adapter.addHeader(header, route_name, block_id);
             adapter.setItems(stops);
 
         }

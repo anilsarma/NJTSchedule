@@ -193,8 +193,8 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
     void showDetailDailog(ViewHolder holder) {
 
         //
-        Intent intent = new Intent();
-        intent.setClass(context, RouteListRecyclerViewActivity.class);
+        Intent intent = new Intent(context.getApplicationContext(), RouteListRecyclerViewActivity.class);
+        //intent.setClass(context, RouteListRecyclerViewActivity.class);
         Bundle bundle = new Bundle();
 
         bundle.putString("trip_id", holder.route.trip_id);

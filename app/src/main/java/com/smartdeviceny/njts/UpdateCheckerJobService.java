@@ -170,6 +170,7 @@ public class UpdateCheckerJobService extends JobService {
             //JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
             JSONObject json = new JSONObject(Utils.getConfig(config, Config.DEPARTURE_VISION, ConfigDefault.DEPARTURE_VISION));
             DepartureVisionWrapper wrapper = JSONObjectSerializer.unmarshall(DepartureVisionWrapper.class, json);
+            Utils.setConfig(config,Config.DEPARTURE_VISION + "." + wrapper.code, JSONObjectSerializer.marshall(wrapper).toString());
 //
 
             String code = wrapper.code;

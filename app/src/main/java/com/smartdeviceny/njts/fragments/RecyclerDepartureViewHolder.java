@@ -38,7 +38,5 @@ public class RecyclerDepartureViewHolder extends RecyclerView.ViewHolder {
         tv_dv_live = itemView.findViewById(R.id.tv_dv_live);
         card_view_backgroup_layout = itemView.findViewById(R.id.card_view_backgroup_layout);
         card_view_item_recycler_viev = itemView.findViewById(R.id.card_view_item_recycler_viev);
-
-
     }
 }
