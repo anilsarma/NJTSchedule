@@ -42,6 +42,8 @@ public class DepartureVisionData {
     public String hackCreateTime;
     @Persist
     public String station_long_name;
+    @Persist
+    public Date adjusted_time = new Date(0);
 
     public DepartureVisionData() {
     }
@@ -63,6 +65,8 @@ public class DepartureVisionData {
         header = " " + createTime + " " + to;
         hackCreateTime = "" + createTime.getTime();
         createTime = new Date();
+        // time =
+
     }
 
     public Date getHackCreateTime() {
@@ -89,6 +93,10 @@ public class DepartureVisionData {
         obj.favorite = this.favorite;
         obj.createTime = this.createTime;
         obj.header = this.header;
+        obj.background = this.background;
+        obj.foreground = this.foreground;
+        obj.adjusted_time = this.adjusted_time;
+
 
         return obj;
     }

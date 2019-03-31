@@ -22,9 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Created by zhang on 2016.08.07.
- */
+
 public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private Context context;
@@ -104,7 +102,7 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
         parentView = parent;
         if (viewType == TYPE_NORMAL) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_view, parent, false);
-            return new RecyclerDepartureViewHolder(view);
+            return new RecyclerDepartureViewHolder(null, null, view);
          }
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_header, parent, false);
           return new HeaderViewHolder(view);

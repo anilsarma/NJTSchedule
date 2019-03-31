@@ -54,7 +54,7 @@ public class Utils {
         if (dt == null) {
             dt = new Date();
         }
-        DateFormat dateFormat = new SimpleDateFormat("YYYYMMdd");
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
         return dateFormat.format(dt);
     }
 
@@ -62,7 +62,7 @@ public class Utils {
         Calendar cal = Calendar.getInstance();
         TimeZone tz = cal.getTimeZone();
 
-        DateFormat dateFormat = new SimpleDateFormat("YYYY/MM/dd");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
         dateFormat.setTimeZone(tz);
 
         return dateFormat.format(dt);
@@ -90,7 +90,7 @@ public class Utils {
         Calendar cal = Calendar.getInstance();
         TimeZone tz = cal.getTimeZone();
 
-        DateFormat dateFormat = new SimpleDateFormat("YYYYMMdd HH:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
         dateFormat.setTimeZone(tz);
 
         return dateFormat.format(dt);
@@ -100,7 +100,7 @@ public class Utils {
         Calendar cal = Calendar.getInstance();
         TimeZone tz = cal.getTimeZone();
 
-        DateFormat dateFormat = new SimpleDateFormat("YYYYMMdd HH:mm:ss.SSS z");
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss.SSS z");
         dateFormat.setTimeZone(tz);
         Date date = new Date();
         return dateFormat.format(date);
@@ -124,7 +124,7 @@ public class Utils {
         Calendar cal = Calendar.getInstance();
         TimeZone tz = cal.getTimeZone();
 
-        DateFormat dateFormat = new SimpleDateFormat("YYYYMMdd");
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
         dateFormat.setTimeZone(tz);
         Date date = new Date();
         if (days > 0) {
@@ -404,12 +404,16 @@ public class Utils {
         //builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED); // require unmetered network
         //builder.setRequiresDeviceIdle(true); // device should be idle
         //builder.setRequiresCharging(true); // we don't care if the device is charging or not
-        JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        if (jobScheduler.schedule(builder.build()) <= 0) {
-            Log.e("JOB", "error: Some error while scheduling the job");
-            return false;
-        } else {
-            // Log.d("JOB", "job scheduled " + ms_frequency);
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M) {
+            JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+            if (jobScheduler.schedule(builder.build()) <= 0) {
+                Log.e("JOB", "error: Some error while scheduling the job");
+                return false;
+            } else {
+                // Log.d("JOB", "job scheduled " + ms_frequency);
+            }
+        }else {
+            Log.e("JOB", "error: Some error while scheduling the job feature not available in version  < Marshmallow");
         }
         return true;
     }
@@ -719,5 +723,27 @@ public class Utils {
             byte[] encodedString = Base64.decode(fileContent, 0);
             return new String(encodedString);
         }
+    }
+
+    public static String getFromHtmlColor(String color) {
+        switch (color.toLowerCase()) {
+            case "cornflowerblue":
+                return "#6495ed";
+            case "white":
+                return "#ffffff";
+            case "red":
+                return "#ff0000";
+            case "blue":
+                return "#0000ff";
+            case "green":
+                return "#008000";
+            case "black":
+                return "#000000";
+            case "brown":
+                return "#a52a2a";
+            case "yellow":
+                return "#ffff00";
+        }
+        return "#008000";
     }
 }

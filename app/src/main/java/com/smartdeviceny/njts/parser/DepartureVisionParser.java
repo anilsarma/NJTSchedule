@@ -10,6 +10,7 @@ import org.jsoup.nodes.Node;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class DepartureVisionParser {
     public HashMap<String, DepartureVisionData> parseDepartureVision(String station_code, String long_name, Document doc) {
@@ -89,6 +90,23 @@ public class DepartureVisionParser {
                 DepartureVisionData dv = new DepartureVisionData(data);
                 dv.tableTime = tableTime;
                 dv.createTime  = new Date();
+
+                try {
+                    Date tm = Utils.makeDate(Utils.getTodayYYYYMMDD(null), dv.time, "yyyyMMdd HH:mm");
+                    long diff = dv.createTime.getTime() - tm.getTime();
+                    if (TimeUnit.MILLISECONDS.toHours(Math.abs(diff)) > 7) {
+                        // need adjustment
+                        if (tm.getTime() < dv.createTime.getTime()) {
+                            tm = new Date(tm.getTime() + TimeUnit.HOURS.toMillis(12));
+                        } else {
+                            // rea
+                            tm = new Date(tm.getTime() - TimeUnit.HOURS.toMillis(12));
+                        }
+                    }
+                    dv.adjusted_time = tm;
+                }catch (Exception e) {
+                    e.printStackTrace();;
+                }
                 result.put(dv.block_id, dv);
             }
 

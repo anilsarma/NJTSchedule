@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewPropertyAnimator;
 import android.view.animation.Interpolator;
 
-
+// used from XML file in FabButton/
 public class FabBehavior extends FloatingActionButton.Behavior {
 
     private static final Interpolator INTERPOLATOR = new FastOutSlowInInterpolator();
@@ -24,18 +24,22 @@ public class FabBehavior extends FloatingActionButton.Behavior {
         super(context, attrs);
     }
 
+
+
     @Override
     public boolean onStartNestedScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull FloatingActionButton child, @NonNull View directTargetChild, @NonNull View target,
-                                       int nestedScrollAxes) {
+                                       int nestedScrollAxes, int type) {
         if (child.getVisibility() == View.VISIBLE && viewY == 0) {
             viewY = coordinatorLayout.getHeight() - child.getY();
         }
-        return nestedScrollAxes == ViewCompat.SCROLL_AXIS_VERTICAL || super.onStartNestedScroll(coordinatorLayout, child, directTargetChild, target, nestedScrollAxes);
+        return nestedScrollAxes == ViewCompat.SCROLL_AXIS_VERTICAL || super.onStartNestedScroll(coordinatorLayout, child, directTargetChild, target, nestedScrollAxes, type);
     }
+
+
 
     @Override
     public void onNestedPreScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull FloatingActionButton child, @NonNull View target, int dx, int dy,
-                                  @NonNull int[] consumed) {
+                                  @NonNull int[] consumed, int type) {
         if (dy >= 0 && !isAnimate && child.getVisibility() == View.VISIBLE) {
             hide(child);
         } else if (dy < 0 && !isAnimate && child.getVisibility() == View.INVISIBLE) {

@@ -11,30 +11,31 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.LinearInterpolator;
 
 import com.smartdeviceny.njts.MainActivity;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.SystemService;
+import com.smartdeviceny.njts.adapters.NJTScheduleData;
+import com.smartdeviceny.njts.adapters.NJTScheduleHeader;
+import com.smartdeviceny.njts.adapters.NJTScheduleAdapter;
 import com.smartdeviceny.njts.adapters.RecycleDepartureVisionData;
 import com.smartdeviceny.njts.adapters.RecycleDepartureVisionHeaderData;
-import com.smartdeviceny.njts.adapters.RecyclerDepartureWithHeaderViewAdapter;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
 import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.lib.ExpandableFabButtons;
-import com.smartdeviceny.njts.lib.RouteOperations;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionWrapper;
+import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
@@ -44,74 +45,38 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-public class FragmentDepartureViewNewOne extends Fragment implements ServiceConnected, RouteOperations {
+public class FragmentNJTScheduleViewNew extends Fragment implements ServiceConnected {
     private List<DepartureVisionData> data;
     private FloatingActionButton fab;
-    private FloatingActionButton fab_toggle;
-    private FloatingActionButton fab_recycler_refresh;
-
-
     private RecyclerView mRecyclerView;
-    private RecyclerDepartureWithHeaderViewAdapter adapter;
+    private NJTScheduleAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     SystemService systemService;
     SharedPreferences config;
     MainActivity mainActivity;
-    boolean expanded  = false;
 
-    ExpandableFabButtons fbExpand ;
+
+    ExpandableFabButtons fbExpand;
+    private FloatingActionButton fab_toggle;
+    private FloatingActionButton fab_recycler_refresh;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.activity_recycler_view, container, false);
-
-
-        //return super.onCreateView(inflater, container, savedInstanceState);
+        View view = inflater.inflate(R.layout.njts_recycler_view, container, false);
+        if (data == null) {
+            data = new ArrayList<>();
+        }
         return view;
     }
 
-    void updateBackground(boolean swiping) {
-        new AsyncTask<Context, Void, String>() {
-            @Override
-            protected String doInBackground(Context... contexts) {
-                List<DepartureVisionData> data = getDepartureData(getContext());
-                final Object c = adapter.createDataContext();
-                String prevHeader = "";
-                for (DepartureVisionData dv : data) {
-                    String currentHeader = dv.station_code;
-                    if (!prevHeader.equals(currentHeader)) {
-                        RecycleDepartureVisionHeaderData hdr = new RecycleDepartureVisionHeaderData(RecycleDepartureVisionHeaderData.HEADER_TYPE, R.layout.njts_header_item_1);
-                        String name = (systemService == null) ? dv.station_code : systemService.getStationNameFromCode(dv.station_code);
-                        name = name == null ? dv.station_code : name;
-                        hdr.setTitle(name + " Departures ");
-                        hdr.setSubtitle(Utils.formatPrintableTime(dv.getHackCreateTime(), "MMM, dd yyyy hh:mm a"));
-                        prevHeader = currentHeader;
-                        adapter.addHeader(c, hdr);
-                    }
-                    RecycleDepartureVisionData item = new RecycleDepartureVisionData(dv);
-                    adapter.addItem(c, item);
-                }
-                new Handler(getContext().getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (swiping) {
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
-                        adapter.updateDataContext(c);
-                        adapter.notifyDataSetChanged();
-                    }
-                });
-                return "";
-            }
-        }.execute(getContext());
-    }
-
-    private List<DepartureVisionData> getDepartureData(Context context) {
+    private List<DepartureVisionData> getDepartureVisionData(Context context) {
         List<DepartureVisionData> data = new ArrayList<>();
-
         SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
         try {
             String currentStationCode = ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
@@ -120,14 +85,11 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
             DepartureVisionWrapper wrapper = JSONObjectSerializer.unmarshall(DepartureVisionWrapper.class, json);
             //long time = wrapper.time.getTime();
             for (DepartureVisionData v : wrapper.entries) {
-                //Date dt = new Date(time);
                 if (!currentStationCode.isEmpty() && !v.station_code.equals(currentStationCode)) {
                     continue;
                 }
-                //v.createTime = Utils.makeDate(Utils.getTodayYYYYMMDD(dt), v.tableTime, "yyyyMMdd HH:mm a");
                 data.add(v);
             }
-            //data.sort((d0, d1) -> Integer.compare(d0.index, d1.index)); API 24
             Collections.sort(data, (d0, d1) -> Integer.compare(d0.index, d1.index));
         } catch (Exception e) {
             e.printStackTrace();
@@ -147,34 +109,31 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
         config = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
 
         initView(view);
-        updateBackground(false);
+
 //        Toolbar toolbar = view.findViewById(R.id.toolbar_recycler_view);
 //        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
 //        if (((AppCompatActivity)getActivity()).getSupportActionBar() != null) {
 //            ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 //        }
-
+        SystemService systemService = ((MainActivity) getActivity()).systemService;
+        if (systemService != null) {
+            updateBackground(false); //
+        }
         super.onViewCreated(view, savedInstanceState);
     }
 
     private void initView(View activity_recycler_view) {
-
-        fab = activity_recycler_view.findViewById(R.id.fab_recycler_view);
-        fab_toggle = activity_recycler_view.findViewById(R.id.fab_recycler_toggle);
-        fab_recycler_refresh = activity_recycler_view.findViewById(R.id.fab_recycler_refresh);
+        fab = activity_recycler_view.findViewById(R.id.njts_fab);
+        fab_toggle = activity_recycler_view.findViewById(R.id.njts_fb_toggle);
+        fab_recycler_refresh = activity_recycler_view.findViewById(R.id.njts_fb_refresh);
 
         fbExpand = new ExpandableFabButtons(getContext(), fab, R.drawable.ic_outline_close_24px, R.drawable.ic_outline_more_vert_24px);
         fbExpand.addFloatingActionButton(fab_toggle);
         fbExpand.addFloatingActionButton(fab_recycler_refresh);
-
-//        fab.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
-//        fab_toggle.animate().translationY(-getResources().getDimension(R.dimen.standard_105)); // outside of the screen.
-//        fab_recycler_refresh.animate().translationY(-getResources().getDimension(R.dimen.standard_155)); // outside of the screen.
-
-
-
         fbExpand.show(false);
-        mRecyclerView = activity_recycler_view.findViewById(R.id.recycler_view_recycler_view);
+
+        mRecyclerView = activity_recycler_view.findViewById(R.id.njts_recyclerView);
+
 
         if (getScreenWidthDp() >= 1200) {
             final GridLayoutManager gridLayoutManager = new GridLayoutManager(activity_recycler_view.getContext(), 3);
@@ -187,18 +146,17 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
             mRecyclerView.setLayoutManager(linearLayoutManager);
         }
 
-        adapter = new RecyclerDepartureWithHeaderViewAdapter(activity_recycler_view.getContext(), this);
+        adapter = new NJTScheduleAdapter(getActivity(), activity_recycler_view.getContext());
         mRecyclerView.setAdapter(adapter);
+
         //adapter.setItems(data);
-
-
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 fbExpand.toggle();
             }
         });
+
         fab_recycler_refresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -210,6 +168,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
                     Snackbar.make(view, "Refreshing Departure Vision for " + departureVisionCode, Snackbar.LENGTH_SHORT).show();
                     adapter.notifyDataSetChanged();
                 }
+                updateBackground(false);
             }
         });
 
@@ -218,13 +177,14 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
             public void onClick(View view) {
                 fbExpand.show(false);
                 toggleDestinations();
+                updateBackground(false);
                 Snackbar.make(view, "Switching Start/Stop Stations", Snackbar.LENGTH_SHORT).show();
             }
         });
         ItemTouchHelper.Callback callback = new ItemTouchHelperCallback(adapter);
         ItemTouchHelper mItemTouchHelper = new ItemTouchHelper(callback);
         mItemTouchHelper.attachToRecyclerView(mRecyclerView);
-        swipeRefreshLayout = activity_recycler_view.findViewById(R.id.swipe_refresh_layout_recycler_view);
+        swipeRefreshLayout = activity_recycler_view.findViewById(R.id.njts_swipe_refresh_layout_recycler_view);
         swipeRefreshLayout.setColorSchemeResources(R.color.google_blue, R.color.google_green, R.color.google_red, R.color.google_yellow);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -238,7 +198,16 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
                             String departureVisionCode = ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
                             systemService.schdeuleDepartureVision(departureVisionCode, 5000);
                         }
-                        updateBackground(true);
+                        List<DepartureVisionData> dvData = FragmentNJTScheduleViewNew.this.getDepartureVisionData(FragmentNJTScheduleViewNew.this.getContext());
+                        new Handler(getContext().getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                swipeRefreshLayout.setRefreshing(false);
+                                FragmentNJTScheduleViewNew.this.data = dvData;
+                                adapter.notifyDataSetChanged();
+                            }
+                        });
+
                         return "";
                     }
                 }.execute("");
@@ -246,27 +215,6 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
             }
         });
     }
-
-//    void showFabExpanded(boolean expand) {
-//        if(expand) {
-//            fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_outline_close_24px));
-//
-//            fab_toggle.animate().translationZ(0);
-//            fab_recycler_refresh.animate().translationZ(0);
-//
-//            fab_toggle.animate().translationY(-getResources().getDimension(R.dimen.standard_55)).setInterpolator(new FastOutSlowInInterpolator());
-//            fab_recycler_refresh.animate().translationY(-getResources().getDimension(R.dimen.standard_55)).setInterpolator(new FastOutSlowInInterpolator());
-//
-//        } else {
-//            fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_outline_more_vert_24px));
-//            fab_toggle.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
-//            fab_toggle.animate().translationZ(-100);
-//
-//            fab_recycler_refresh.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
-//            fab_recycler_refresh.animate().translationZ(-100);
-//
-//        }
-//    }
 
     public void toggleDestinations() {
         String start = ConfigUtils.getConfig(config, Config.START_STATION, ConfigDefault.START_STATION);
@@ -294,8 +242,101 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
     @Override
     public void onDepartureVisionUpdated(SystemService systemService) {
         updateBackground(false);
-        //adapter.setItems(data); // notify called internally.
-        //adapter.notifyDataSetChanged();
+    }
+
+
+    void updateBackground(boolean swiping) {
+        new AsyncTask<Context, Void, String>() {
+            @Override
+            protected String doInBackground(Context... contexts) {
+                if (mainActivity.systemService == null) {
+                    return "";
+                }
+                final List<Route> routes = getRoutes(mainActivity.systemService);
+                final Object c = adapter.createDataContext();
+                String prevHeader = "";
+                for (Route rt : routes) {
+                    String currentHeader = Utils.formatPrintableTime(rt.departure_time_as_date, "EEE, MMM dd, yyyy");
+                    if (!prevHeader.equals(currentHeader)) {
+                        NJTScheduleHeader hdr = new NJTScheduleHeader(NJTScheduleHeader.HEADER_TYPE_1, R.layout.njts_header_item_1);
+                        hdr.setRouteName(currentHeader);
+                        hdr.setTitle(rt.from + " \u279F " + rt.to);
+                        prevHeader = currentHeader;
+                        adapter.addHeader(c, hdr);
+                    }
+                    NJTScheduleData item = new NJTScheduleData(rt);
+                    adapter.addItem(c, item);
+                }
+                List<DepartureVisionData> dvData = FragmentNJTScheduleViewNew.this.getDepartureVisionData(FragmentNJTScheduleViewNew.this.getContext());
+                final HashMap<String, DepartureVisionData> data = systemService.getCachedDepartureVisionStatus_byTrip();
+                new Handler(getContext().getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (swiping) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                        adapter.updateDataContext(c);
+                        adapter.notifyDataSetChanged();
+
+                        FragmentNJTScheduleViewNew.this.data = dvData;
+                        if (data != null) {
+                            adapter.updateDepartureVision(data);
+                        }
+
+                        mRecyclerView.scrollToPosition(getPosition(routes));
+                    }
+                });
+                return "";
+            }
+        }.execute(getContext());
+    }
+
+    private ArrayList<Route> getRoutes(SystemService systemService) {
+
+        String startStation = config.getString(Config.START_STATION, ConfigDefault.START_STATION);
+        String stopStation = config.getString(Config.STOP_STATION, ConfigDefault.STOP_STATION);
+        String departureVisionCode = ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
+
+        int delta = -1;
+        try {
+            delta = Integer.parseInt(ConfigUtils.getConfig(config, Config.DELTA_DAYS, "" + delta));
+        } catch (Exception e) {
+        }
+        return systemService.getRoutes(startStation, stopStation, null, delta);
+    }
+
+    int getPosition(final List<Route> routes) {
+        int index = -1;
+        int i = 0;
+        Date now = new Date();
+        Route start = null;
+        try {
+            for (Route rt : routes) {
+                if (start == null) {
+                    start = rt;
+                }
+                if (rt.departure_time_as_date.getTime() > now.getTime()) {
+                    break; // we want this to be in the middle of the page some what.
+                }
+                index = i;
+                i++;
+            }
+        } catch (Exception e) {
+        }
+        if (start != null) {
+            long days = TimeUnit.MILLISECONDS.toDays(routes.get(index).departure_time_as_date.getTime() - start.departure_time_as_date.getTime());
+            if (days > 0) {
+                index += days;
+            }
+            if (index > routes.size()) {
+
+                index = routes.size() - 1;
+            }
+        }
+        index = Math.min(index, routes.size()-1);
+        index = Math.max(index, 0);
+
+        return index;
     }
 
     @Override
@@ -306,6 +347,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
     @Override
     public void onSystemServiceConnected(SystemService systemService) {
         this.systemService = systemService;
+        updateBackground(false);
     }
 
     @Override

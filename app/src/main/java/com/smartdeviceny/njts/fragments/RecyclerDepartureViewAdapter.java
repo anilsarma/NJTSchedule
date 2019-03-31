@@ -14,6 +14,7 @@ import android.view.animation.AnimationUtils;
 
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
+import com.smartdeviceny.njts.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,18 +65,18 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
         notifyDataSetChanged();
     }
 
-//    public void addItem(int position, DepartureVisionData insertData) {
+//    public void addItem(int position, RecycleDepartureVisionData insertData) {
 //        StopHolder h = new StopHolder("", insertData);
 //        mItems.add(position, h);
 //        notifyItemInserted(position);
 //    }
 
-//    public void addItems(List<DepartureVisionData> data) {
+//    public void addItems(List<RecycleDepartureVisionData> data) {
 //        StopHolder h = new StopHolder(HEADER, null);
 //        mItems.add(h);
 //
 //        ArrayList<StopHolder> sh = new ArrayList<>();
-//        for(DepartureVisionData s:data) {
+//        for(RecycleDepartureVisionData s:data) {
 //             h = new StopHolder("", s);
 //
 //            sh.add(h);
@@ -110,30 +111,10 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         parentView = parent;
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_view, parent, false);
-        return new RecyclerDepartureViewHolder(view);
+        return new RecyclerDepartureViewHolder(null, parent.getContext(),view);
     }
 
-    String getFromHtmlColor(String color) {
-        switch (color.toLowerCase()) {
-            case "cornflowerblue":
-                return "#6495ed";
-            case "white":
-                return "#ffffff";
-            case "red":
-                return "#ff0000";
-            case "blue":
-                return "#0000ff";
-            case "green":
-                return "#008000";
-            case "black":
-                return "#000000";
-            case "brown":
-                return "#a52a2a";
-            case "yellow":
-                return "#ffff00";
-        }
-        return "#008000";
-    }
+
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
@@ -211,7 +192,7 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
             if (!stop.stop.track.isEmpty()) {
                 recyclerViewHolder.rela_round.setVisibility(View.VISIBLE);
             }
-            recyclerViewHolder.card_view_backgroup_layout.setBackgroundColor(Color.parseColor(getFromHtmlColor(stop.stop.background)));
+            recyclerViewHolder.card_view_backgroup_layout.setBackgroundColor(Color.parseColor(Utils.getFromHtmlColor(stop.stop.background)));
 //            if( stop.stop.background.toLowerCase().equals("yellow")) {
 //                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.BLACK);
 //                recyclerViewHolder.tv_recycler_item_2.setTextColor(Color.BLACK);
@@ -223,11 +204,11 @@ public class RecyclerDepartureViewAdapter extends RecyclerView.Adapter<RecyclerV
 //                recyclerViewHolder.tv_recycler_item_3.setTextColor(Color.WHITE);
 //               // recyclerViewHolder.tv_recycler_item_4.setTextColor(Color.WHITE);
 //            }
-            int color = Color.parseColor(getFromHtmlColor(stop.stop.foreground));
+            int color = Color.parseColor(Utils.getFromHtmlColor(stop.stop.foreground));
             if (stop.stop.background.toLowerCase().equals("yellow")) {
                 recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.BLACK);
             } else {
-                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.parseColor(getFromHtmlColor(stop.stop.background)));
+                recyclerViewHolder.tv_dv_item_train_name.setTextColor(Color.parseColor(Utils.getFromHtmlColor(stop.stop.background)));
             }
             recyclerViewHolder.tv_recycler_item_2.setTextColor(color);
             recyclerViewHolder.tv_recycler_item_3.setTextColor(color);

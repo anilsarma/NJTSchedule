@@ -667,7 +667,7 @@ public class SystemService extends Service {
             for (Map.Entry entry : status_by_trip.entrySet()) {
                 data.put((String) entry.getKey(), ((DepartureVisionData) entry.getValue()).clone());
             }
-            //return (HashMap<String, DepartureVisionData>) status_by_trip.clone();
+            //return (HashMap<String, RecycleDepartureVisionData>) status_by_trip.clone();
             return data;
         }
     }

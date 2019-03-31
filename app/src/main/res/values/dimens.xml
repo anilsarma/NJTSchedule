@@ -37,7 +37,7 @@
   <dimen name="text_margin_very_small">4dp</dimen>
 
 
-  <dimen name="standard_55">55dp</dimen>
-  <dimen name="standard_105">105dp</dimen>
-  <dimen name="standard_155">155dp</dimen>
+  <dimen name="standard_55">50sp</dimen>
+  <dimen name="standard_105">65sp</dimen>
+  <dimen name="standard_155">90sp</dimen>
 </resources>

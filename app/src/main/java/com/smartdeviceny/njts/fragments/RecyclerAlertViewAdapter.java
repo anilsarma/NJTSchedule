@@ -64,18 +64,18 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
         notifyDataSetChanged();
     }
 
-//    public void addItem(int position, DepartureVisionData insertData) {
+//    public void addItem(int position, RecycleDepartureVisionData insertData) {
 //        StopHolder h = new StopHolder("", insertData);
 //        mItems.add(position, h);
 //        notifyItemInserted(position);
 //    }
 
-//    public void addItems(List<DepartureVisionData> data) {
+//    public void addItems(List<RecycleDepartureVisionData> data) {
 //        StopHolder h = new StopHolder(HEADER, null);
 //        mItems.add(h);
 //
 //        ArrayList<StopHolder> sh = new ArrayList<>();
-//        for(DepartureVisionData s:data) {
+//        for(RecycleDepartureVisionData s:data) {
 //             h = new StopHolder("", s);
 //
 //            sh.add(h);
@@ -110,7 +110,7 @@ public class RecyclerAlertViewAdapter extends RecyclerView.Adapter<RecyclerView.
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         parentView = parent;
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_view, parent, false);
-        return new RecyclerDepartureViewHolder(view);
+        return new RecyclerDepartureViewHolder(null, null, view);
     }
 
     String getFromHtmlColor(String color) {

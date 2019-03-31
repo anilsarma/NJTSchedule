@@ -150,7 +150,7 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
 //        }
 //        if(config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION) ) {
 //            Date now = new Date();
-//            for (DepartureVisionData dv : data.values()) {
+//            for (RecycleDepartureVisionData dv : data.values()) {
 //                try {
 //                    if (rt.keySet().contains(dv.block_id) && dv.favorite) {
 //                        String key = dv.block_id + startStation;

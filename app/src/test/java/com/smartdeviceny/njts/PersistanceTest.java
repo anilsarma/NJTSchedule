@@ -14,7 +14,7 @@ import org.robolectric.annotation.Config;
 public class PersistanceTest {
     @Test
     public void marshallTest() throws Exception {
-//        DepartureVisionData departureVisionData = new DepartureVisionData();
+//        RecycleDepartureVisionData departureVisionData = new RecycleDepartureVisionData();
 //
 //
 //        departureVisionData.block_id="12333";

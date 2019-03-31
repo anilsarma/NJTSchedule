@@ -43,6 +43,7 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
     String route_name;
     String to;
     String header;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +56,7 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
 
         header = from + " \u279F " + to;
         doBindService();
+        //systemService = ((MainActivity)getApplicationContext()).systemService;
 
         setContentView(R.layout.activity_routelist_recycler_view);
 
@@ -63,10 +65,20 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             //getSupportActionBar().setHomeButtonEnabled(true);
+            // getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        if(toolbar!=null) {
-            toolbar.setTitle(route_name );
+        if (toolbar != null) {
+            //toolbar.setTitle(route_name);
+            toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_close_white_24dp));
+            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //What to do on back clicked
+                    //super.onBackPressed();
+                    RouteListRecyclerViewActivity.this.onBackPressed();
+                }
+            });
         }
         initData();
         initView();
@@ -111,7 +123,7 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               RouteListRecyclerViewActivity.this.finish();
+                RouteListRecyclerViewActivity.this.finish();
                 //LinearLayoutManager linearLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
                 //adapter.addItem(linearLayoutManager.findFirstVisibleItemPosition() + 1, insertData);
             }
@@ -184,6 +196,7 @@ public class RouteListRecyclerViewActivity extends AppCompatActivity {
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         return (int) (displayMetrics.widthPixels / displayMetrics.density);
     }
+
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {

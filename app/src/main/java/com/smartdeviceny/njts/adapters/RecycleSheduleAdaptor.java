@@ -75,7 +75,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
             super(itemView);
             recyclerView = itemView;
             fab = itemView.findViewById(R.id.fab_recycler_view);
-            img_fav = itemView.findViewById(R.id.img_route_card_favorite);
+            img_fav = itemView.findViewById(R.id.ntsrv_fav_img);
             img_refresh = itemView.findViewById(R.id.img_route_card_refresh);
             img_change_direction = itemView.findViewById(R.id.img_route_card_change_direction);
 
@@ -353,6 +353,7 @@ public class RecycleSheduleAdaptor extends RecyclerView.Adapter<RecycleSheduleAd
 
             boolean current_trains = false; // current train could
             try {
+
                 Date tm = Utils.makeDate(Utils.getTodayYYYYMMDD(null), dv.time, "yyyyMMdd HH:mm"); // departure time has no hours
                 long diff = route.departure_time_as_date.getTime() - tm.getTime();
 
