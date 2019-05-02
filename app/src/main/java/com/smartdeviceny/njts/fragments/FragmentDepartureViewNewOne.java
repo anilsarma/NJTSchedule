@@ -59,9 +59,9 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
     SystemService systemService;
     SharedPreferences config;
     MainActivity mainActivity;
-    boolean expanded  = false;
+    boolean expanded = false;
 
-    ExpandableFabButtons fbExpand ;
+    ExpandableFabButtons fbExpand;
 
     @Nullable
     @Override
@@ -135,6 +135,24 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
         return data;
     }
 
+    void refresh() {
+        SystemService systemService = mainActivity.systemService;
+        if (systemService != null) {
+            String departureVisionCode = ConfigUtils.getConfig(config, Config.DV_STATION, ConfigDefault.DV_STATION);
+            systemService.schdeuleDepartureVision(departureVisionCode, 30000);
+            //Snackbar.make(view, "Refreshing Departure Vision for " + departureVisionCode, Snackbar.LENGTH_SHORT).show();
+            //adapter.notifyDataSetChanged();
+        } else {
+//            new Handler(getContext().getMainLooper()).postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                   refresh();
+//                }
+//            }, 2000);
+        }
+
+    }
+
     private int getScreenWidthDp() {
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         return (int) (displayMetrics.widthPixels / displayMetrics.density);
@@ -147,6 +165,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
         config = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
 
         initView(view);
+        refresh();
         updateBackground(false);
 //        Toolbar toolbar = view.findViewById(R.id.toolbar_recycler_view);
 //        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
@@ -170,7 +189,6 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
 //        fab.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
 //        fab_toggle.animate().translationY(-getResources().getDimension(R.dimen.standard_105)); // outside of the screen.
 //        fab_recycler_refresh.animate().translationY(-getResources().getDimension(R.dimen.standard_155)); // outside of the screen.
-
 
 
         fbExpand.show(false);
@@ -294,6 +312,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
     @Override
     public void onDepartureVisionUpdated(SystemService systemService) {
         updateBackground(false);
+
         //adapter.setItems(data); // notify called internally.
         //adapter.notifyDataSetChanged();
     }
@@ -306,6 +325,7 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
     @Override
     public void onSystemServiceConnected(SystemService systemService) {
         this.systemService = systemService;
+        refresh();
     }
 
     @Override
