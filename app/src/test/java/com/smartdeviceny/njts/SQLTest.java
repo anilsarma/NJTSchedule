@@ -19,8 +19,8 @@ public class SQLTest {
 
         appInfo.dataDir = null;
         Mockito.when(context.getApplicationInfo()).thenReturn(appInfo);
-        File file = new File(getClass().getClassLoader().getResource("rail_data.db").getFile());
+        //File file = new File(getClass().getClassLoader().getResource("rail_data.db").getFile());
 
-        SQLiteLocalDatabase sql = new SQLiteLocalDatabase(context, file.getName(), file.getParent());
+        //SQLiteLocalDatabase sql = new SQLiteLocalDatabase(context, file.getName(), file.getParent());
     }
 }

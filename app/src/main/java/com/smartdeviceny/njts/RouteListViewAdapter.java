@@ -101,7 +101,7 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         parentView = parent;
         if (viewType == TYPE_NORMAL) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_view, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_route_list_recycler_view, parent, false);
             return new RecyclerDepartureViewHolder(null, null, view);
          }
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_recycler_header, parent, false);
@@ -130,7 +130,11 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
 
             AlphaAnimation aa1 = new AlphaAnimation(1.0f, 0.1f);
             aa1.setDuration(400);
-            recyclerViewHolder.rela_round.startAnimation(aa1);
+            if( recyclerViewHolder.rela_round!=null) {
+                recyclerViewHolder.rela_round.startAnimation(aa1);
+            } else {
+                recyclerViewHolder.tv_round_track.startAnimation(aa1);
+            }
 
             AlphaAnimation aa = new AlphaAnimation(0.1f, 1.0f);
             aa.setDuration(400);
@@ -147,7 +151,11 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
 //                recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.gray)));
 //            }
             RouteListRecyclerData details = mItems.get(position);
-            recyclerViewHolder.rela_round.startAnimation(aa);
+            if( recyclerViewHolder.rela_round!=null) {
+                recyclerViewHolder.rela_round.startAnimation(aa);
+            } else {
+                recyclerViewHolder.tv_round_track.startAnimation(aa);
+            }
             String stop_name = Utils.capitalize(details.data.getStop_name().trim());
 
             recyclerViewHolder.tv_dv_item_train_name.setText( stop_name.trim() );
@@ -165,25 +173,42 @@ public class RouteListViewAdapter extends RecyclerView.Adapter<RecyclerView.View
             recyclerViewHolder.tv_recycler_item_3.setVisibility(View.GONE);
             recyclerViewHolder.tv_dv_live.setVisibility(View.GONE);
             recyclerViewHolder.tv_recycler_item_4.setVisibility(View.GONE);
-            recyclerViewHolder.rela_round.setVisibility(View.GONE);
+            if( recyclerViewHolder.rela_round!=null) {
+                recyclerViewHolder.rela_round.setVisibility(View.GONE);
+            } else {
+                recyclerViewHolder.tv_round_track.setVisibility(View.GONE);
+            }
+
              {
                 if( details.data.stop_name.toLowerCase().trim().equals(details.data.from.toLowerCase()) ) {
-                    recyclerViewHolder.rela_round.setVisibility(View.VISIBLE);
+                    if( recyclerViewHolder.rela_round!=null) {
+                        recyclerViewHolder.rela_round.setVisibility(View.VISIBLE);
+                    }
                     recyclerViewHolder.tv_round_track.setVisibility(View.VISIBLE);
-                    recyclerViewHolder.tv_round_track.setText("B");
-                    recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_yellow)));
+                    recyclerViewHolder.tv_round_track.setText("Start");
+                    if( recyclerViewHolder.rela_round!=null) {
+                        recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_yellow)));
+                    } else {
+                        recyclerViewHolder.tv_round_track.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_yellow)));
+                    }
                     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         recyclerViewHolder.tv_round_track.setTooltipText("Start Station");
                     }
                 }
                 if( details.data.stop_name.toLowerCase().trim().equals(details.data.to.toLowerCase()) ) {
-                    recyclerViewHolder.rela_round.setVisibility(View.VISIBLE);
+                    if( recyclerViewHolder.rela_round!=null) {
+                        recyclerViewHolder.rela_round.setVisibility(View.VISIBLE);
+                    }
                     recyclerViewHolder.tv_round_track.setVisibility(View.VISIBLE);
-                    recyclerViewHolder.tv_round_track.setText("E");
+                    recyclerViewHolder.tv_round_track.setText("Stop");
                     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         recyclerViewHolder.tv_round_track.setTooltipText("Destination Station");
                     }
-                    recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_red)));
+                    if( recyclerViewHolder.rela_round!=null) {
+                        recyclerViewHolder.rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_red)));
+                    } else {
+                        recyclerViewHolder.tv_round_track.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_red)));
+                    }
                 }
             }
             recyclerViewHolder.tv_dv_block_id.setTextColor(context.getResources().getColor(R.color.black));

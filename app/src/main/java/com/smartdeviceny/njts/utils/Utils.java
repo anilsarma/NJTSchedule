@@ -702,7 +702,7 @@ public class Utils {
             return new String(encodedString);
         } else {
             String encodedString = Base64.encodeToString(fileContent, fileContent.length);
-            return new String(encodedString);
+            return encodedString;
         }
 
 

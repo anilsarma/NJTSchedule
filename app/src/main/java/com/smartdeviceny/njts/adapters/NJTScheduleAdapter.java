@@ -148,6 +148,7 @@ public class NJTScheduleAdapter extends StickHeaderRecyclerView<NJTScheduleData,
         bundle.putString("departure_time", holder.getData().rt.departure_time);
         bundle.putString("block_id", holder.getData().rt.block_id);
         bundle.putString("route_name", holder.getData().rt.route_name);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         intent.putExtras( bundle);
         context.getApplicationContext().startActivity(intent);

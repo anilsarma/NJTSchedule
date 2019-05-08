@@ -78,13 +78,19 @@ public class RecyclerDepartureViewHolder extends RecyclerView.ViewHolder {
 
         AlphaAnimation aa1 = new AlphaAnimation(1.0f, 0.1f);
         aa1.setDuration(400);
-        rela_round.startAnimation(aa1);
+        if(rela_round!=null) {
+            rela_round.startAnimation(aa1);
+        }
 
         AlphaAnimation aa = new AlphaAnimation(0.1f, 1.0f);
         aa.setDuration(400);
 
-        rela_round.setVisibility(View.INVISIBLE);
-        rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
+        if( rela_round != null) {
+            rela_round.setVisibility(View.INVISIBLE);
+            rela_round.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(R.color.google_blue)));
+        } else {
+            tv_round_track.setVisibility(View.INVISIBLE);
+        }
         tv_dv_item_train_name.setText(stop.stop.line); //stop.stop.station_code + " #" + stop.stop.block_id + " " + stop.stop.time );
         tv_dv_block_id.setText("#" + stop.stop.block_id + " Departs ");
         tv_dv_time.setText(stop.stop.time);
@@ -120,10 +126,18 @@ public class RecyclerDepartureViewHolder extends RecyclerView.ViewHolder {
 
         tv_dv_live.startAnimation(AnimationUtils.loadAnimation(context, R.anim.bounce));
 
-        rela_round.startAnimation(aa);
+        if(rela_round!=null) {
+            rela_round.startAnimation(aa);
+        } else {
+            tv_round_track.startAnimation(aa);
+        }
         tv_round_track.setText(stop.stop.track);
         if (!stop.stop.track.isEmpty()) {
-            rela_round.setVisibility(View.VISIBLE);
+            if(rela_round!=null) {
+                rela_round.setVisibility(View.VISIBLE);
+            } else {
+                tv_round_track.setVisibility(View.VISIBLE);
+            }
         }
         card_view_backgroup_layout.setBackgroundColor(Color.parseColor(Utils.getFromHtmlColor(stop.stop.background)));
 //            if( stop.stop.background.toLowerCase().equals("yellow")) {
