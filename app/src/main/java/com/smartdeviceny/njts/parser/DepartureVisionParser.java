@@ -6,10 +6,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.select.Elements;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class DepartureVisionParser {
@@ -19,22 +19,22 @@ public class DepartureVisionParser {
         try {
             Element table = doc.getElementById("GridView1");
             Node node = table;
-            List<Node> child = node.childNodes().get(1).childNodes();
+            Elements child =table.getElementsByTag("tr");
             String header_string = "";
             if (child.size() > 0) {
                 // discard the frist 3
                 //Log.d("DV", "child ===================== Size:" + child.size());
                 Node header = child.get(1);
-                List<Node> header_elements = header.childNodes();
+                Elements header_elements = child.get(1).getElementsByTag("td");
                 Element h = (Element) header_elements.get(0);
-                header_string = h.child(0).html().toString() + " " + h.child(1).html().toString().replace("&nbsp; &nbsp; Select a train to view station stops", "");
+                //header_string = h.child(0).html().toString() + " " + h.child(1).html().toString().replace("&nbsp; &nbsp; Select a train to view station stops", "");
                 //System.out.println(header_string);
             }
             String tableTime = "0:00 AM";
             {
-                Node tr = child.get(1);
-                List<Node> td = tr.childNodes().get(0).childNodes();
-                String time = ((Element) td.get(1)).html().toString();
+                //Node tr = child.get(1);
+                //List<Node> td = tr.childNodes().get(0).childNodes();
+                String time = child.get(0).getElementsByTag("div").get(1).html().toString();
                 if( time.contains("&nbsp")) {
                     time = time.split("&nbsp")[0];
                 }
@@ -46,7 +46,7 @@ public class DepartureVisionParser {
             int index = 0;
             for (int i = 3; i < child.size(); i++) {
                 Node tr = child.get(i);
-                List<Node> td = tr.childNodes();
+                Elements td = child.get(i).getElementsByTag("td");
                 //Log.d("DV", "childNodes(td) ===================== Size:" + td.size());
 
                 if (td.size() < 4) {
@@ -65,12 +65,12 @@ public class DepartureVisionParser {
 
                 }
 
-                String time = ((Element) td.get(1)).html().toString();
-                String to = Jsoup.parse(td.get(3).toString()).text();
-                String track = ((Element) td.get(5)).html().toString();
-                String line = ((Element) td.get(7)).html().toString();
-                String train = ((Element) td.get(9)).html().toString();
-                String status = Jsoup.parse(td.get(11).toString()).text();
+                String time = ((Element) td.get(0)).html().toString();
+                String to = Jsoup.parse(td.get(1).toString()).text();
+                String track = ((Element) td.get(2)).html().toString();
+                String line = ((Element) td.get(3)).html().toString();
+                String train = ((Element) td.get(4)).html().toString();
+                String status = Jsoup.parse(td.get(5).toString()).text();
                 String background = stylemap.get("background-color");
                 String foreground = stylemap.get("color");
 

@@ -75,8 +75,12 @@ public class UpdateCheckerJobService extends JobService {
             }
 
         } finally {
-            scheduleJob(nextTime);
-            jobFinished(jobParameters, true);
+            try {
+                scheduleJob(nextTime);
+                jobFinished(jobParameters, true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return false; // let the system know we have no job running ..
     }
@@ -397,13 +401,17 @@ public class UpdateCheckerJobService extends JobService {
     }
 
     void oneTimeCheck() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-        boolean isWiFi = activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
-        boolean isMobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
-        Log.d("UPDJOB", "onStartJob - periodic job. " + isConnected + " wifi:" + isWiFi + " isMobile:" + isMobile);
-        sendCheckForUpdate();
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+            boolean isWiFi = activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
+            boolean isMobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
+            Log.d("UPDJOB", "onStartJob - periodic job. " + isConnected + " wifi:" + isWiFi + " isMobile:" + isMobile);
+            sendCheckForUpdate();
+        }catch (Exception e) {
+            e.printStackTrace(); // nothing we can do.
+        }
     }
 
     private void sendCheckForUpdate() {

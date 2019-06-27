@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayout2"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -25,8 +25,8 @@
                 android:id="@+id/textView12"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
                 android:layout_marginTop="28dp"
+                android:layout_marginEnd="8dp"
                 android:text="@string/setting_polling_frequency"
                 app:layout_constraintEnd_toStartOf="@+id/edit_text_polling_frequency"
                 app:layout_constraintHorizontal_bias="0.0"
@@ -47,9 +47,9 @@
                 android:id="@+id/divider5"
                 android:layout_width="327dp"
                 android:layout_height="1dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:background="?android:attr/listDivider"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.512"
@@ -60,9 +60,9 @@
                 android:id="@+id/divider4"
                 android:layout_width="327dp"
                 android:layout_height="1dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:background="?android:attr/listDivider"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.512"
@@ -123,9 +123,9 @@
                 android:id="@+id/divider6"
                 android:layout_width="340dp"
                 android:layout_height="1dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:background="?android:attr/listDivider"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -146,9 +146,9 @@
                 android:id="@+id/start_stop_submit"
                 android:layout_width="112dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="16dp"
+                android:layout_marginEnd="8dp"
                 android:text="Update"
                 android:textSize="12sp"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
@@ -170,8 +170,8 @@
                 android:id="@+id/textView7"
                 android:layout_width="wrap_content"
                 android:layout_height="26dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginTop="32dp"
+                android:layout_marginEnd="8dp"
                 android:text="NJ Transit Schedule Database"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
@@ -183,9 +183,9 @@
                 android:id="@+id/button_schedule_update"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="16dp"
+                android:layout_marginEnd="8dp"
                 android:text="Check Server"
                 android:textSize="12sp"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
@@ -234,8 +234,8 @@
                 android:id="@+id/textView11"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
                 android:layout_marginTop="24dp"
+                android:layout_marginEnd="8dp"
                 android:text="@string/setting_delta_days_text"
                 app:layout_constraintEnd_toStartOf="@+id/edit_text_delta_days"
                 app:layout_constraintHorizontal_bias="0.0"
@@ -286,35 +286,46 @@
                 android:id="@+id/checkbox_debug"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
-                android:layout_marginTop="16dp"
                 android:text="@string/setting_debug_flag"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
                 app:layout_constraintHorizontal_bias="0.571"
                 app:layout_constraintStart_toStartOf="@+id/guideline_left"
                 app:layout_constraintTop_toBottomOf="@+id/textView12" />
 
+            <Switch
+                android:id="@+id/checkBox_experimental_features"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:checked="false"
+                android:text="@string/setting_experimental_features"
+                app:layout_constraintEnd_toEndOf="@+id/checkbox_debug"
+                app:layout_constraintHorizontal_bias="0.217"
+                app:layout_constraintStart_toStartOf="@+id/checkbox_debug"
+                app:layout_constraintTop_toBottomOf="@+id/checkbox_debug" />
+
             <Button
                 android:id="@+id/debugForceUpgrade"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="16dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="16dp"
                 android:text="Change DB Version"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
                 app:layout_constraintStart_toStartOf="@+id/guideline_left"
-                app:layout_constraintTop_toBottomOf="@+id/checkbox_debug" />
+                app:layout_constraintTop_toBottomOf="@+id/checkBox_experimental_features" />
 
             <Switch
                 android:id="@+id/checkBox_train_notification"
                 android:layout_width="330dp"
                 android:layout_height="68dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginTop="32dp"
+                android:layout_marginEnd="8dp"
                 android:checked="true"
                 android:text="@string/setting_upcoming_train_notification"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right"
@@ -342,9 +353,9 @@
                 app:layout_constraintBottom_toBottomOf="@+id/textView"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_right" />
 
+
         </android.support.constraint.ConstraintLayout>
     </android.support.v4.widget.NestedScrollView>
-
 
 
 </android.support.constraint.ConstraintLayout>

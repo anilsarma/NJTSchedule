@@ -21,6 +21,7 @@
     \nA favorite train can be selected, by \'long pressing\' a train in the Schedule Tab.</string>
     <string name="notification_delay"><b>Notification Delay minutes</b>\nThis is delay in of minutes between notifications for upcoming trains.(experimental)</string>
 
+    <string name="setting_experimental_features"><b>Experimental Features</b>\nRequires restart. </string>
 
 
     <string name="title_activity_recycler_view">RecyclerView</string>

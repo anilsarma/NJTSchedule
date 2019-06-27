@@ -18,4 +18,6 @@ public interface ConfigDefault {
 
     long LAST_UPDATE_CHECK = 0;
     long LAST_ALERT_TIME = 0;
+
+    boolean EXPERMENTAL_FEATURES = false;
 }

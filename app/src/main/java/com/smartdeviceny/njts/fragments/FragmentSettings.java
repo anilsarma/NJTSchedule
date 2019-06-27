@@ -50,6 +50,7 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
     Switch checkBox_upcoming_train_notificaiton;
     EditText edit_text_notification_delay;
     Switch checkBox_debug;
+    Switch checkBox_experimental_features;
     SharedPreferences config;
 
     @Nullable
@@ -211,6 +212,16 @@ public class FragmentSettings extends Fragment implements ServiceConnected {
             view.invalidate();
 
         });
+
+
+        checkBox_experimental_features = view.findViewById(R.id.checkBox_experimental_features);
+        checkBox_experimental_features.setChecked(config.getBoolean(Config.EXPERMENTAL_FEATURES, ConfigDefault.EXPERMENTAL_FEATURES));
+        checkBox_experimental_features.setOnCheckedChangeListener((compoundButton, b) -> {
+            SharedPreferences.Editor edit = config.edit();
+            edit.putBoolean(Config.EXPERMENTAL_FEATURES, b);
+            edit.apply();
+        });
+
 
         Button debugUpgrade = view.findViewById(R.id.debugForceUpgrade);
         debugUpgrade.setVisibility(checkBox_debug.isChecked() ? View.VISIBLE : View.INVISIBLE);

@@ -23,5 +23,6 @@ public interface Config {
     String LAST_ALERT_TIME = "CONFIG_LAST_ALERT_TIME";
     String ALERT_JSON = "CONFIG_ALERT_JSON";
 
+    String EXPERMENTAL_FEATURES="EXPERMENTAL_FEATURES";
 
 }

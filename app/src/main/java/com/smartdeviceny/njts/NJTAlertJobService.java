@@ -168,9 +168,13 @@ public class NJTAlertJobService extends JobService {
 
             }
         });
-        DownloadManager.Request request = d.buildRequest("https://www.njtransit.com/rss/RailAdvisories_feed.xml", "RailAdvisories_feed.xml", "NJ Transit Alerts",
-                DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI, "text/html");
-        d.enqueue(request);
+        try {
+            DownloadManager.Request request = d.buildRequest("https://www.njtransit.com/rss/RailAdvisories_feed.xml", "RailAdvisories_feed.xml", "NJ Transit Alerts",
+                    DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI, "text/html");
+            d.enqueue(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendAlertsUpdated() {
