@@ -142,7 +142,7 @@ public class NJTAlertJobService extends JobService {
                         ConfigUtils.setLong(config, Config.LAST_ALERT_TIME, maxPubTime);
                     }
 
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     StringWriter sw = new StringWriter();
                     PrintWriter pw = new PrintWriter(sw);
                     e.printStackTrace(pw);

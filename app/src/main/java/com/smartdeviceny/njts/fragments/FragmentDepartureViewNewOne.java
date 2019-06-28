@@ -77,33 +77,37 @@ public class FragmentDepartureViewNewOne extends Fragment implements ServiceConn
         new AsyncTask<Context, Void, String>() {
             @Override
             protected String doInBackground(Context... contexts) {
-                List<DepartureVisionData> data = getDepartureData(getContext());
-                final Object c = adapter.createDataContext();
-                String prevHeader = "";
-                for (DepartureVisionData dv : data) {
-                    String currentHeader = dv.station_code;
-                    if (!prevHeader.equals(currentHeader)) {
-                        RecycleDepartureVisionHeaderData hdr = new RecycleDepartureVisionHeaderData(RecycleDepartureVisionHeaderData.HEADER_TYPE, R.layout.njts_header_item_1);
-                        String name = (systemService == null) ? dv.station_code : systemService.getStationNameFromCode(dv.station_code);
-                        name = name == null ? dv.station_code : name;
-                        hdr.setTitle(name + " Departures ");
-                        hdr.setSubtitle(Utils.formatPrintableTime(dv.getHackCreateTime(), "MMM, dd yyyy hh:mm a"));
-                        prevHeader = currentHeader;
-                        adapter.addHeader(c, hdr);
-                    }
-                    RecycleDepartureVisionData item = new RecycleDepartureVisionData(dv);
-                    adapter.addItem(c, item);
-                }
-                new Handler(getContext().getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (swiping) {
-                            swipeRefreshLayout.setRefreshing(false);
+                try {
+                    List<DepartureVisionData> data = getDepartureData(getContext());
+                    final Object c = adapter.createDataContext();
+                    String prevHeader = "";
+                    for (DepartureVisionData dv : data) {
+                        String currentHeader = dv.station_code;
+                        if (!prevHeader.equals(currentHeader)) {
+                            RecycleDepartureVisionHeaderData hdr = new RecycleDepartureVisionHeaderData(RecycleDepartureVisionHeaderData.HEADER_TYPE, R.layout.njts_header_item_1);
+                            String name = (systemService == null) ? dv.station_code : systemService.getStationNameFromCode(dv.station_code);
+                            name = name == null ? dv.station_code : name;
+                            hdr.setTitle(name + " Departures ");
+                            hdr.setSubtitle(Utils.formatPrintableTime(dv.getHackCreateTime(), "MMM, dd yyyy hh:mm a"));
+                            prevHeader = currentHeader;
+                            adapter.addHeader(c, hdr);
                         }
-                        adapter.updateDataContext(c);
-                        adapter.notifyDataSetChanged();
+                        RecycleDepartureVisionData item = new RecycleDepartureVisionData(dv);
+                        adapter.addItem(c, item);
                     }
-                });
+                    new Handler(getContext().getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (swiping) {
+                                swipeRefreshLayout.setRefreshing(false);
+                            }
+                            adapter.updateDataContext(c);
+                            adapter.notifyDataSetChanged();
+                        }
+                    });
+                } catch (Throwable e) {
+                    e.printStackTrace(); // something bad ???
+                }
                 return "";
             }
         }.execute(getContext());
