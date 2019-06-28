@@ -13,7 +13,7 @@ android {
         versionName "${versionMajor}.${versionMinor}.${versionPatch}"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
+        setProperty("archivesBaseName", "NJTSchedule_v" + versionName)
     }
     buildTypes {
         release {

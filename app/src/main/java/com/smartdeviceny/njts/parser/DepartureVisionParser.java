@@ -44,7 +44,7 @@ public class DepartureVisionParser {
             // discard the frist 3
             //Log.d("DV", "child ===================== Size:" + child.size());
             int index = 0;
-            for (int i = 3; i < child.size(); i++) {
+            for (int i = 2; i < child.size(); i++) {
                 Node tr = child.get(i);
                 Elements td = child.get(i).getElementsByTag("td");
                 //Log.d("DV", "childNodes(td) ===================== Size:" + td.size());
