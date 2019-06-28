@@ -562,7 +562,7 @@ public class SystemService extends Service {
                     json.put("url", url);
                     json.put("data", encoded);
                     json.put("code", code);
-                   // Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
+                    // Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
 
                     HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, getStationNameFromCode(code), doc);
 
@@ -580,7 +580,7 @@ public class SystemService extends Service {
                     wrapper.code = code;
 
                     DepartureVisionWrapper currentWrapper = new DepartureVisionWrapper(wrapper.time, code, url);
-                    for(Map.Entry<String, DepartureVisionData> e: result.entrySet()) {
+                    for (Map.Entry<String, DepartureVisionData> e : result.entrySet()) {
                         currentWrapper.entries.add(e.getValue());
                     }
 
@@ -595,14 +595,17 @@ public class SystemService extends Service {
                             //Log.d("SVC", "entry code=" + code + " key=" + key + " " + dd.createTime + " " + dd.time + " train:" + dd.block_id + " " + dd.station  + " track#" + dd.track + " stale:" + dd.stale);
                         }
                     }
-                    Utils.setConfig(config,Config.DEPARTURE_VISION, JSONObjectSerializer.marshall(wrapper).toString());
-                    Utils.setConfig(config,Config.DEPARTURE_VISION + "." + code, JSONObjectSerializer.marshall(currentWrapper).toString());
+                    Utils.setConfig(config, Config.DEPARTURE_VISION, JSONObjectSerializer.marshall(wrapper).toString());
+                    Utils.setConfig(config, Config.DEPARTURE_VISION + "." + code, JSONObjectSerializer.marshall(currentWrapper).toString());
                     synchronized (lock_status_by_trip) {
                         status_by_trip = tmp_trip;
                     }
                     sendDepartVisionUpdated();
                     // send this off on an intent.
+
                 } catch (Exception e) {
+                    Log.d("SVC", "Failed to parse soup " + e.getMessage());
+                } catch(Throwable e) {
                     Log.d("SVC", "Failed to parse soup " + e.getMessage());
                 } finally {
                     dvPendingRequests.updatePending(station, -1, null);
