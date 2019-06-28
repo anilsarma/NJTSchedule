@@ -22,6 +22,7 @@ import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 @RunWith(PowerMockRunner.class)
@@ -66,12 +67,12 @@ public class TestDepartureVision {
                 DepartureVisionData data = result.get(key);
                 System.out.println(key +  "=[" + data + "]");
             }
-            DepartureVisionData data = result.get("3227");
-            assertNotEquals(data, null);
+            DepartureVisionData data = result.get("3293"); // check first entry.
+            assertNotNull(data);
             assertEquals(data.status, "BOARDING");
-            assertEquals(data.track, "12");
+            assertEquals(data.track, "13");
 
-            data = result.get("6617");
+            data = result.get("3805");
             assertNotEquals(data, null);
             assertEquals(data.status, "CANCELLED");
             assertEquals(data.track, "");
