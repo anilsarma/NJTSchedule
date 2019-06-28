@@ -68,28 +68,32 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
     }
 
     private void updateBackgroundData() {
-        new AsyncTask<String, Void, String>() {
-            @Override
-            protected String doInBackground(String... strings) {
-                final ArrayList<RailAlertDetails> data = getAlertData(getContext());
+        try {
+            new AsyncTask<String, Void, String>() {
+                @Override
+                protected String doInBackground(String... strings) {
+                    final ArrayList<RailAlertDetails> data = getAlertData(getContext());
 
-                new Handler(getContext().getMainLooper()).post(() -> {
-                    FragmentAlertViewNewOne.this.data = data;
-                    adapter.setItems(data);
-                    adapter.notifyDataSetChanged();
+                    new Handler(getContext().getMainLooper()).post(() -> {
+                        FragmentAlertViewNewOne.this.data = data;
+                        adapter.setItems(data);
+                        adapter.notifyDataSetChanged();
 
-                });
+                    });
 
-                return "";
-            }
-        }.execute("");
+                    return "";
+                }
+            }.execute("");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private ArrayList<RailAlertDetails> getAlertData(Context context) {
         ArrayList<RailAlertDetails> data = new ArrayList<>();
-        data.clear();
-        SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
         try {
+            data.clear();
+            SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
             JSONObject json = new JSONObject(Utils.getConfig(config, Config.ALERT_JSON, "{}"));
             RailDetailsContainer cat = JSONObjectSerializer.unmarshall(RailDetailsContainer.class, json);
 
@@ -110,16 +114,13 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        systemService = ((MainActivity) getActivity()).systemService;
-
-        initView(view);
-        updateBackgroundData();
-//        Toolbar toolbar = view.findViewById(R.id.toolbar_recycler_view);
-//        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
-//        if (((AppCompatActivity)getActivity()).getSupportActionBar() != null) {
-//            ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        }
-
+        try {
+            systemService = ((MainActivity) getActivity()).systemService;
+            initView(view);
+            updateBackgroundData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         super.onViewCreated(view, savedInstanceState);
     }
 
@@ -185,29 +186,33 @@ public class FragmentAlertViewNewOne extends Fragment implements ServiceConnecte
     }
 
     private void backgroundRefresh() {
-        new AsyncTask<String, Void, String>() {
-            @Override
-            protected String doInBackground(String... strings) {
-                if (systemService != null) {
-                    SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
-                    ConfigUtils.setLong(config, Config.LAST_ALERT_TIME, 0);
+        try {
+            new AsyncTask<String, Void, String>() {
+                @Override
+                protected String doInBackground(String... strings) {
+                    if (systemService != null) {
+                        SharedPreferences config = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
+                        ConfigUtils.setLong(config, Config.LAST_ALERT_TIME, 0);
 
-                    // send a broad cast out
+                        // send a broad cast out
 
-                    PersistableBundle bundle = new PersistableBundle();
-                    bundle.putBoolean("periodic", true);
-                    Utils.scheduleJob(getContext().getApplicationContext(), JobID.NJTAlertJobService, NJTAlertJobService.class, (int) 2, false, bundle);
-                }
-                new Handler(getContext().getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        swipeRefreshLayout.setRefreshing(false);
+                        PersistableBundle bundle = new PersistableBundle();
+                        bundle.putBoolean("periodic", true);
+                        Utils.scheduleJob(getContext().getApplicationContext(), JobID.NJTAlertJobService, NJTAlertJobService.class, (int) 2, false, bundle);
                     }
-                });
+                    new Handler(getContext().getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    });
 
-                return "";
-            }
-        }.execute("");
+                    return "";
+                }
+            }.execute("");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

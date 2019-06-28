@@ -292,10 +292,14 @@ public class SystemService extends Service {
     }
 
     private void sendDatabaseReady() {
-        if (isDatabaseReady()) {
-            Intent intent = new Intent(NotificationValues.BROADCAT_DATABASE_READY);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-            Log.d("SVC", "sending database ready");
+        try {
+            if (isDatabaseReady()) {
+                Intent intent = new Intent(NotificationValues.BROADCAT_DATABASE_READY);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                Log.d("SVC", "sending database ready");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -321,37 +325,46 @@ public class SystemService extends Service {
 
     // SQL related messages similar to the uil
     public boolean isDatabaseReady() {
-        if (sql == null) {
+        try {
+            if (sql == null) {
+                return false;
+            }
+            SQLiteDatabase db = sql.getWritableDatabase();
+            if (SqlUtils.check_if_user_pref_exists(db)) {
+                Log.d("SVC", "checking if database is ready.");
+                if (SqlUtils.check_if_table_exists(db, "routes") && SqlUtils.check_if_table_exists(db, "trips")) {
+                    Log.d("SVC", "database is ready.");
+                    return true;
+                }
+            }
+            Log.d("SVC", "database is not ready.");
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
-        SQLiteDatabase db = sql.getWritableDatabase();
-        if (SqlUtils.check_if_user_pref_exists(db)) {
-            Log.d("SVC", "checking if database is ready.");
-            if (SqlUtils.check_if_table_exists(db, "routes") && SqlUtils.check_if_table_exists(db, "trips")) {
-                Log.d("SVC", "database is ready.");
-                return true;
-            }
-        }
-        Log.d("SVC", "database is not ready.");
-        return false;
     }
 
     private void setupDb() {
-        if (sql == null) {
-            File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
-            if (f.exists()) {
-                sql = createSQLDB(f.getName(), LOCAL_DB_NAME);
+        try {
+            if (sql == null) {
+                File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
+                if (f.exists()) {
+                    sql = createSQLDB(f.getName(), LOCAL_DB_NAME);
+                }
             }
-        }
-        if (sql != null) {
-            // check for a valid database.
-            String db = UtilsDBVerCheck.getDBVersion(sql);
-            if (db.isEmpty()) {
+            if (sql != null) {
+                // check for a valid database.
+                String db = UtilsDBVerCheck.getDBVersion(sql);
+                if (db.isEmpty()) {
+                    checkForUpdate(false);
+                }
+            } else {
+                // we don't have a  db get it.
                 checkForUpdate(false);
             }
-        } else {
-            // we don't have a  db get it.
-            checkForUpdate(false);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
