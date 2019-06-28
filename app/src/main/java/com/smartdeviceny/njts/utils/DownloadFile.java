@@ -87,7 +87,11 @@ public class DownloadFile {
         @Override
         public void onReceive(Context context, Intent intent) {
             //if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action))
-            handle_download_complete();
+            try {
+                handle_download_complete();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
         }
         public void handle_download_complete() {
             DownloadManager.Query query = new DownloadManager.Query();
@@ -112,7 +116,11 @@ public class DownloadFile {
                     boolean removeFile = true;
                     if (DownloadFile.this.callback != null) {
                         String url = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
-                        removeFile = DownloadFile.this.callback.downloadComplete(DownloadFile.this, ID, url, mFile);
+                        try {
+                            removeFile = DownloadFile.this.callback.downloadComplete(DownloadFile.this, ID, url, mFile);
+                        }catch (Throwable e) {
+                            e.printStackTrace();
+                        }
                     }
                     if (removeFile) {
                         Utils.delete(mFile);

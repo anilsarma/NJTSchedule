@@ -292,10 +292,14 @@ public class SystemService extends Service {
     }
 
     private void sendDatabaseReady() {
-        if (isDatabaseReady()) {
-            Intent intent = new Intent(NotificationValues.BROADCAT_DATABASE_READY);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-            Log.d("SVC", "sending database ready");
+        try {
+            if (isDatabaseReady()) {
+                Intent intent = new Intent(NotificationValues.BROADCAT_DATABASE_READY);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                Log.d("SVC", "sending database ready");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -321,37 +325,46 @@ public class SystemService extends Service {
 
     // SQL related messages similar to the uil
     public boolean isDatabaseReady() {
-        if (sql == null) {
+        try {
+            if (sql == null) {
+                return false;
+            }
+            SQLiteDatabase db = sql.getWritableDatabase();
+            if (SqlUtils.check_if_user_pref_exists(db)) {
+                Log.d("SVC", "checking if database is ready.");
+                if (SqlUtils.check_if_table_exists(db, "routes") && SqlUtils.check_if_table_exists(db, "trips")) {
+                    Log.d("SVC", "database is ready.");
+                    return true;
+                }
+            }
+            Log.d("SVC", "database is not ready.");
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
-        SQLiteDatabase db = sql.getWritableDatabase();
-        if (SqlUtils.check_if_user_pref_exists(db)) {
-            Log.d("SVC", "checking if database is ready.");
-            if (SqlUtils.check_if_table_exists(db, "routes") && SqlUtils.check_if_table_exists(db, "trips")) {
-                Log.d("SVC", "database is ready.");
-                return true;
-            }
-        }
-        Log.d("SVC", "database is not ready.");
-        return false;
     }
 
     private void setupDb() {
-        if (sql == null) {
-            File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
-            if (f.exists()) {
-                sql = createSQLDB(f.getName(), LOCAL_DB_NAME);
+        try {
+            if (sql == null) {
+                File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
+                if (f.exists()) {
+                    sql = createSQLDB(f.getName(), LOCAL_DB_NAME);
+                }
             }
-        }
-        if (sql != null) {
-            // check for a valid database.
-            String db = UtilsDBVerCheck.getDBVersion(sql);
-            if (db.isEmpty()) {
+            if (sql != null) {
+                // check for a valid database.
+                String db = UtilsDBVerCheck.getDBVersion(sql);
+                if (db.isEmpty()) {
+                    checkForUpdate(false);
+                }
+            } else {
+                // we don't have a  db get it.
                 checkForUpdate(false);
             }
-        } else {
-            // we don't have a  db get it.
-            checkForUpdate(false);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -549,7 +562,7 @@ public class SystemService extends Service {
                     json.put("url", url);
                     json.put("data", encoded);
                     json.put("code", code);
-                   // Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
+                    // Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
 
                     HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, getStationNameFromCode(code), doc);
 
@@ -567,7 +580,7 @@ public class SystemService extends Service {
                     wrapper.code = code;
 
                     DepartureVisionWrapper currentWrapper = new DepartureVisionWrapper(wrapper.time, code, url);
-                    for(Map.Entry<String, DepartureVisionData> e: result.entrySet()) {
+                    for (Map.Entry<String, DepartureVisionData> e : result.entrySet()) {
                         currentWrapper.entries.add(e.getValue());
                     }
 
@@ -582,14 +595,17 @@ public class SystemService extends Service {
                             //Log.d("SVC", "entry code=" + code + " key=" + key + " " + dd.createTime + " " + dd.time + " train:" + dd.block_id + " " + dd.station  + " track#" + dd.track + " stale:" + dd.stale);
                         }
                     }
-                    Utils.setConfig(config,Config.DEPARTURE_VISION, JSONObjectSerializer.marshall(wrapper).toString());
-                    Utils.setConfig(config,Config.DEPARTURE_VISION + "." + code, JSONObjectSerializer.marshall(currentWrapper).toString());
+                    Utils.setConfig(config, Config.DEPARTURE_VISION, JSONObjectSerializer.marshall(wrapper).toString());
+                    Utils.setConfig(config, Config.DEPARTURE_VISION + "." + code, JSONObjectSerializer.marshall(currentWrapper).toString());
                     synchronized (lock_status_by_trip) {
                         status_by_trip = tmp_trip;
                     }
                     sendDepartVisionUpdated();
                     // send this off on an intent.
+
                 } catch (Exception e) {
+                    Log.d("SVC", "Failed to parse soup " + e.getMessage());
+                } catch(Throwable e) {
                     Log.d("SVC", "Failed to parse soup " + e.getMessage());
                 } finally {
                     dvPendingRequests.updatePending(station, -1, null);
