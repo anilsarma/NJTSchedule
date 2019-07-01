@@ -31,10 +31,16 @@ public class DepartureVisionParser {
                 //System.out.println(header_string);
             }
             String tableTime = "0:00 AM";
+            int startIndex = 2;
             {
                 //Node tr = child.get(1);
                 //List<Node> td = tr.childNodes().get(0).childNodes();
-                String time = child.get(0).getElementsByTag("div").get(1).html().toString();
+                Elements e = child.get(0).getElementsByTag("div");
+                if( e.size()<2){
+                    startIndex ++;
+                    e = child.get(1).getElementsByTag("div");
+                }
+                String time = e.get(1).html().toString();
                 if( time.contains("&nbsp")) {
                     time = time.split("&nbsp")[0];
                 }
@@ -44,7 +50,7 @@ public class DepartureVisionParser {
             // discard the frist 3
             //Log.d("DV", "child ===================== Size:" + child.size());
             int index = 0;
-            for (int i = 2; i < child.size(); i++) {
+            for (int i = startIndex; i < child.size(); i++) {
                 Node tr = child.get(i);
                 Elements td = child.get(i).getElementsByTag("td");
                 //Log.d("DV", "childNodes(td) ===================== Size:" + td.size());
