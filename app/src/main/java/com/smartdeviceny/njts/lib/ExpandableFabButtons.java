@@ -1,9 +1,11 @@
 package com.smartdeviceny.njts.lib;
 
 import android.content.Context;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.util.TypedValue;
+
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 

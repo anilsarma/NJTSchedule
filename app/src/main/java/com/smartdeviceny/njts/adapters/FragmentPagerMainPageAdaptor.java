@@ -3,13 +3,14 @@ package com.smartdeviceny.njts.adapters;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 
-import com.smartdeviceny.njts.fragments.FragmentDepartureViewNewOne;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+
 import com.smartdeviceny.njts.fragments.FragmentAlertViewNewOne;
+import com.smartdeviceny.njts.fragments.FragmentDepartureViewNewOne;
 import com.smartdeviceny.njts.fragments.FragmentNJTScheduleViewNew;
 import com.smartdeviceny.njts.fragments.FragmentRouteSchedule;
 import com.smartdeviceny.njts.fragments.FragmentSettings;

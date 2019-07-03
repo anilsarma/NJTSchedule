@@ -1,12 +1,10 @@
 package com.smartdeviceny.njts.utils;
 
-import android.support.annotation.Nullable;
-import android.text.format.Time;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Set;
 
 public class TimerKeeper {
     class TimerKeeperRecord {

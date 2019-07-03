@@ -1,10 +1,8 @@
 package com.smartdeviceny.njts.adapters;
 
-import android.support.annotation.LayoutRes;
+import androidx.annotation.LayoutRes;
 
 import com.smartdeviceny.njts.lib.RecyclerHeader;
-import com.smartdeviceny.njts.lib.RecyclerMainItemData;
-import com.smartdeviceny.njts.parser.Route;
 
 public class RecycleDepartureVisionHeaderData implements RecyclerHeader {
     public static final int HEADER_TYPE = 1;

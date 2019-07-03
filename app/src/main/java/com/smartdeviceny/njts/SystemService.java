@@ -12,10 +12,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Log;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
@@ -24,7 +25,6 @@ import com.smartdeviceny.njts.parser.DepartureVisionWrapper;
 import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.DownloadFile;
-import com.smartdeviceny.njts.utils.NotificationChannels;
 import com.smartdeviceny.njts.utils.NotificationGroup;
 import com.smartdeviceny.njts.utils.SQLHelper;
 import com.smartdeviceny.njts.utils.SQLiteLocalDatabase;

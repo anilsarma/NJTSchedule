@@ -1,7 +1,7 @@
 package com.smartdeviceny.njts.adapters;
 
 
-import android.support.annotation.LayoutRes;
+import androidx.annotation.LayoutRes;
 
 import com.smartdeviceny.njts.lib.RecyclerHeader;
 

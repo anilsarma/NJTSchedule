@@ -1,7 +1,7 @@
 package com.smartdeviceny.njts;
 
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.annotations.Persist;

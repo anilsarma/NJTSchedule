@@ -1,9 +1,6 @@
 package com.smartdeviceny.njts.adapters;
 
 
-import android.support.annotation.LayoutRes;
-
-import com.smartdeviceny.njts.lib.RecyclerHeader;
 import com.smartdeviceny.njts.lib.RecyclerMainItemData;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 

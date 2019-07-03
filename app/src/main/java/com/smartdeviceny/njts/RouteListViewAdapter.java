@@ -3,7 +3,7 @@ package com.smartdeviceny.njts;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.os.Build;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;

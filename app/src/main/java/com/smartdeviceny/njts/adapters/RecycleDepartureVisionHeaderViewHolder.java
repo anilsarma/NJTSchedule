@@ -1,12 +1,13 @@
 package com.smartdeviceny.njts.adapters;
 
 import android.animation.ObjectAnimator;
-import android.support.v7.widget.RecyclerView;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.smartdeviceny.njts.R;
 

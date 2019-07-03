@@ -4,29 +4,21 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
+import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.smartdeviceny.njts.R;
-import com.smartdeviceny.njts.SystemService;
 import com.smartdeviceny.njts.adapters.RecycleDepartureVisionData;
 import com.smartdeviceny.njts.adapters.RecyclerDepartureWithHeaderViewAdapter;
-import com.smartdeviceny.njts.parser.DepartureVisionData;
-import com.smartdeviceny.njts.parser.Route;
-import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.Utils;
-import com.smartdeviceny.njts.values.Config;
-import com.smartdeviceny.njts.values.ConfigDefault;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 

@@ -1,19 +1,16 @@
 package com.smartdeviceny.njts;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteQuery;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
 
-import com.smartdeviceny.njts.utils.SQLiteLocalDatabase;
-import com.smartdeviceny.njts.utils.SqlUtils;
-import com.smartdeviceny.njts.utils.UtilsDBVerCheck;
+import androidx.test.InstrumentationRegistry;
+import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Instrumented test, which will execute on an Android device.

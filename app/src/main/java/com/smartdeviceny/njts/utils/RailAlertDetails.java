@@ -1,6 +1,6 @@
 package com.smartdeviceny.njts.utils;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.smartdeviceny.njts.annotations.Persist;
 

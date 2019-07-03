@@ -6,12 +6,12 @@
     android:background="@color/blue_jay"
     android:orientation="vertical">
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraintLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -65,8 +65,8 @@
                 android:typeface="serif"
                 android:background="@drawable/round_button"
                 android:text="details" /-->
-        </android.support.constraint.ConstraintLayout>
-    </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <LinearLayout
         android:id="@+id/details_line_layout"
@@ -223,7 +223,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.support.percent.PercentRelativeLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        <androidx.percentlayout.widget.PercentRelativeLayout xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight=".7">
@@ -234,7 +234,7 @@
                 android:layout_centerInParent="true"
                 android:background="@drawable/route_divider"
                 app:layout_widthPercent="80%"></View>
-        </android.support.percent.PercentRelativeLayout>
+        </androidx.percentlayout.widget.PercentRelativeLayout>
     </LinearLayout>
 
     <LinearLayout

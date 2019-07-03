@@ -9,9 +9,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.Nullable;
-import android.support.v4.content.res.TypedArrayUtils;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
