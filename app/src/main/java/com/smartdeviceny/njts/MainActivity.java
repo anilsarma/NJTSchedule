@@ -9,20 +9,26 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 import com.smartdeviceny.njts.adapters.FragmentPagerMainPageAdaptor;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
@@ -35,7 +41,7 @@ import com.smartdeviceny.njts.values.NotificationValues;
 
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements  NavigationView.OnNavigationItemSelectedListener {
     boolean mIsBound = false;
     public SystemService systemService;
     public ProgressDialog progressDialog = null;
@@ -53,8 +59,10 @@ public class MainActivity extends AppCompatActivity {
 
         startService(new Intent(this, PowerStartService.class));
         startService(new Intent(this, SystemService.class));
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main_new);
         initToolbar();
+        NavigationView navigationView =  findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
 
         TabLayout tabLayout = findViewById(R.id.tab_layout);
         ViewPager viewPager = findViewById(R.id.view_pager);
@@ -383,4 +391,40 @@ public class MainActivity extends AppCompatActivity {
 
     // Our handler for received Intents. This will be called whenever an Intent
     private BroadcastReceiver mMessageReceiver = new LocalBcstReceiver();
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        Toast.makeText(this, "Selected something " + menuItem.getTitle() ,  Toast.LENGTH_LONG).show();
+        switch(menuItem.getItemId()) {
+            case R.id.nav_license:
+                directToWeb("http://www.google.com/");
+                break;
+            case R.id.nave_rate:
+                openPlayStore();
+                break;
+        }
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    void directToWeb(String site) {
+      try {
+          Intent intent = new Intent();
+          intent.setAction(Intent.ACTION_VIEW);
+          intent.addCategory(Intent.CATEGORY_BROWSABLE);
+          intent.setData(Uri.parse(site));
+          startActivity(intent);
+      } catch (Exception e) {
+          e.printStackTrace();
+      }
+    }
+
+    void openPlayStore() {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.smartdeviceny.njts")));
+        } catch (android.content.ActivityNotFoundException anfe) {
+            directToWeb("https://play.google.com/store/apps/details?id=com.smartdeviceny.njts");
+        }
+    }
 }
