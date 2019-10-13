@@ -415,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toast.makeText(this, "Selected something " + menuItem.getTitle(), Toast.LENGTH_LONG).show();
         switch (menuItem.getItemId()) {
             case R.id.nav_license:
-                directToWeb("http://www.google.com/");
+                directToWeb("https://app.termly.io/document/privacy-policy/494f21c9-a7f5-4b8d-8051-da6858593a5b");
                 break;
             case R.id.nave_rate:
                 openPlayStore();
