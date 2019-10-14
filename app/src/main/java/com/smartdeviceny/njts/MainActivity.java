@@ -43,6 +43,9 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 import com.smartdeviceny.njts.adapters.FragmentPagerMainPageAdaptor;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
+import com.smartdeviceny.njts.billing.IabHelper;
+import com.smartdeviceny.njts.billing.IabResult;
+import com.smartdeviceny.njts.billing.Inventory;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.Utils;
@@ -64,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     int tabSelected = -1;
     SharedPreferences config;
 
-    String skus[]= { "donation_dollar_4", "njts_subscription_monthly", "njts_yearly_subscription"};
+    String skus[] = {"donation_dollar_4", "njts_subscription_monthly", "njts_yearly_subscription"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -412,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        Toast.makeText(this, "Selected something " + menuItem.getTitle(), Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "Selected something " + menuItem.getTitle(), Toast.LENGTH_LONG).show();
         switch (menuItem.getItemId()) {
             case R.id.nav_license:
                 directToWeb("https://app.termly.io/document/privacy-policy/494f21c9-a7f5-4b8d-8051-da6858593a5b");
@@ -429,35 +432,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    //IabHelper mHelper;
+
     private BillingClient billingClient;
-Map<String, SkuDetails> details = new HashMap<>();
+    Map<String, SkuDetails> details = new HashMap<>();
+    IabHelper mHelper = null;
+
     void donate() {
-//        if (mHelper == null) {
-//            mHelper = new IabHelper(this, "");
-//            try {
-//                mHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
-//                    public void onIabSetupFinished(IabResult result) {
-//                        if (!result.isSuccess()) {
-//                            String msg = "Problem setting up In-app Billing: " + result;
-//                            Log.e("BILLING", msg);
-//                            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-//                        } else {
-//                            try {
-//                                loadProducts();
-//                            } catch (Exception e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                        Toast.makeText(MainActivity.this, "PBilling complete" + result, Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        } else {
-//            loadProducts();
-//        }
+        if (mHelper == null) {
+            mHelper = new IabHelper(this, "");
+            try {
+                mHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
+                    public void onIabSetupFinished(IabResult result) {
+                        if (!result.isSuccess()) {
+                            String msg = "Problem setting up In-app Billing: " + result;
+                            Log.e("BILLING", msg);
+                            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                        } else {
+                            try {
+                                loadProducts();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        Toast.makeText(MainActivity.this, "PBilling complete" + result, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            loadProducts();
+        }
 
         try {
 
@@ -466,8 +471,8 @@ Map<String, SkuDetails> details = new HashMap<>();
                     @Override
                     public void onPurchasesUpdated(BillingResult billingResult, @Nullable List<Purchase> purchases) {
                         System.out.println("CONN onPurchasesUpdated SKU: " + billingResult.getDebugMessage());
-                        if(purchases!=null) {
-                            for(Purchase p:purchases) {
+                        if (purchases != null) {
+                            for (Purchase p : purchases) {
                                 System.out.println("CONN Purchase getOrderId:" + p.getOrderId());
                                 System.out.println("CONN Purchase getSku:" + p.getSku());
                                 System.out.println("CONN Purchase getDeveloperPayload:" + p.getDeveloperPayload());
@@ -483,30 +488,33 @@ Map<String, SkuDetails> details = new HashMap<>();
                     public void onBillingSetupFinished(BillingResult billingResult) {
                         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                             System.out.println("CONN onBillingSetupFinished OK: " + billingResult.getDebugMessage());
+                        } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) {
+
+                            billingClient = null;
                         } else {
-                            System.out.println("CONN onBillingSetupFinished error: " + billingResult.getDebugMessage());
-                            billingClient=null;
+                            //Toast.makeText(MainActivity.this, "No SKU ", Toast.LENGTH_LONG).show();
+                            System.out.println("CONN startConnection error: " + billingResult.getResponseCode());
+                            billingClient = null;
                         }
                     }
 
                     @Override
                     public void onBillingServiceDisconnected() {
-                        System.out.println("CONN onBillingSetupFinished SKU: " );
+                        System.out.println("CONN onBillingSetupFinished SKU: ");
                         billingClient = null;
                     }
                 });
             } else {
                 ArrayList<String> r = new ArrayList<>();
-                for(String s:skus) {
+                for (String s : skus) {
                     r.add(s);
                 }
-                SkuDetailsParams param = SkuDetailsParams.newBuilder()
-                        .setSkusList(r).setType(BillingClient.SkuType.INAPP).build();
+                SkuDetailsParams param = SkuDetailsParams.newBuilder().setSkusList(r).setType(BillingClient.SkuType.INAPP).build();
                 billingClient.querySkuDetailsAsync(param, new SkuDetailsResponseListener() {
                     @Override
                     public void onSkuDetailsResponse(BillingResult billingResult, List<com.android.billingclient.api.SkuDetails> skuDetailsList) {
-                        System.out.println("querySkuDetailsAsync INAPP: " + billingResult.getDebugMessage() + " " + skuDetailsList.size() );
-                        for (com.android.billingclient.api.SkuDetails sku:skuDetailsList) {
+                        System.out.println("querySkuDetailsAsync INAPP: " + billingResult.getDebugMessage() + " " + skuDetailsList.size());
+                        for (com.android.billingclient.api.SkuDetails sku : skuDetailsList) {
 
                             Log.d("INAPP SKU", "descr: " + sku.getDescription());
                             Log.d("INAPP SKU", "price: " + sku.getPrice());
@@ -517,13 +525,12 @@ Map<String, SkuDetails> details = new HashMap<>();
                         }
                     }
                 });
-                SkuDetailsParams param2= SkuDetailsParams.newBuilder()
-                        .setSkusList(r).setType(BillingClient.SkuType.SUBS).build();
+                SkuDetailsParams param2 = SkuDetailsParams.newBuilder().setSkusList(r).setType(BillingClient.SkuType.SUBS).build();
                 billingClient.querySkuDetailsAsync(param2, new SkuDetailsResponseListener() {
                     @Override
                     public void onSkuDetailsResponse(BillingResult billingResult, List<com.android.billingclient.api.SkuDetails> skuDetailsList) {
-                        System.out.println("querySkuDetailsAsync SUb : " + billingResult.getDebugMessage() + " " + skuDetailsList.size() );
-                        for (com.android.billingclient.api.SkuDetails sku:skuDetailsList) {
+                        System.out.println("querySkuDetailsAsync SUb : " + billingResult.getDebugMessage() + " " + skuDetailsList.size());
+                        for (com.android.billingclient.api.SkuDetails sku : skuDetailsList) {
 
                             Log.d("SUB SKU", "descr: " + sku.getDescription());
                             Log.d("SUB SKU", "price: " + sku.getPrice());
@@ -535,24 +542,29 @@ Map<String, SkuDetails> details = new HashMap<>();
                     }
                 });
             }
-            Purchase.PurchasesResult result =  billingClient.queryPurchases(BillingClient.SkuType.INAPP);
+            if (billingClient == null) {
+                Log.d("SUB", "billing service not available");
+                Toast.makeText(MainActivity.this, "billing system not available", Toast.LENGTH_LONG).show();
+                return;
+            }
+            Purchase.PurchasesResult result = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
 
-            if(result==null || result.getPurchasesList()==null||result.getPurchasesList().size()==0) {
+            if (result == null || result.getPurchasesList() == null || result.getPurchasesList().size() == 0) {
                 System.out.println("PURCHASE " + result);
 
                 SkuDetails sku = details.get("donation_dollar_4");
-                if(sku!=null) {
+                if (sku != null) {
                     BillingFlowParams params = BillingFlowParams.newBuilder().setSkuDetails(sku).build();
-                   BillingResult r =  billingClient.launchBillingFlow(MainActivity.this, params);
+                    BillingResult r = billingClient.launchBillingFlow(MainActivity.this, params);
                     Toast.makeText(MainActivity.this, "SKU " + r.getDebugMessage() + " " + r.getResponseCode(), Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(MainActivity.this, "No SKU ", Toast.LENGTH_LONG).show();
                 }
 
                 sku = details.get(skus[1]);
-                if(sku!=null) {
+                if (sku != null) {
                     BillingFlowParams params = BillingFlowParams.newBuilder().setSkuDetails(sku).build();
-                    BillingResult r =  billingClient.launchBillingFlow(MainActivity.this, params);
+                    BillingResult r = billingClient.launchBillingFlow(MainActivity.this, params);
                     Toast.makeText(MainActivity.this, "SKU " + r.getDebugMessage() + " " + r.getResponseCode(), Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(MainActivity.this, "No SKU ", Toast.LENGTH_LONG).show();
@@ -587,56 +599,56 @@ Map<String, SkuDetails> details = new HashMap<>();
             List<String> moreItemSkus = Arrays.asList("donation_dollar_4");
             List<String> moreSubItemSkus = Arrays.asList();
 
-//            mHelper.launchPurchaseFlow(MainActivity.this, "donation_dollar_4", 10001, new IabHelper.OnIabPurchaseFinishedListener() {
-//                @Override
-//                public void onIabPurchaseFinished(IabResult result, com.smartdeviceny.njts.billing.Purchase info) {
-//                    System.out.println("RESULT BIL " + result.getMessage());
-//                    if (result.getResponse() == 7) { // already owned
-//                        // cons
-//                        //mHelper.consumeAsync();
-//                    }
-//                    if (info != null) {
-//                        System.out.println("PURCHASE:" + info.getOrderId());
-//                        System.out.println("PURCHASE:" + info.getSku());
-//                        System.out.println("PURCHASE:" + info.getPurchaseState());
-//                        System.out.println("PURCHASE:" + info.getPurchaseTime());
-//                    }
-//                }
-//            });
-//
-//            mHelper.queryInventoryAsync(true, moreItemSkus, moreSubItemSkus, new IabHelper.QueryInventoryFinishedListener() {
-//                @Override
-//                public void onQueryInventoryFinished(IabResult result, Inventory inv) {
-//                    try {
-//                        //Field method = inv.getClass().getDeclaredField("mSkuMap");
-//                        //method.setAccessible(true);
-//                        System.out.println("BILLING getTitle" + inv);
-//                        for (SkuDetails sku : Arrays.asList(inv.getSkuDetails("donation_dollar_4"))) {
-//                            //SkuDetails sku = inv.getSkuDetails("DONATE");
-//
-//                            System.out.println("BILLING getTitle" + sku.getTitle());
-//                            System.out.println("BILLING getDescription" + sku.getDescription());
-//                            System.out.println("BILLING getPrice" + sku.getPrice());
-//                            System.out.println("BILLING getSku" + sku.getSku());
-//                            System.out.println("BILLING getType" + sku.getType());
-//                            com.smartdeviceny.njts.billing.Purchase purchase = inv.getPurchase(sku.getSku());
-//                            System.out.println("BILLING Purchase" + purchase);
-//                            if (purchase != null) {
-//                                mHelper.consumeAsync(purchase, new IabHelper.OnConsumeFinishedListener() {
-//                                    @Override
-//                                    public void onConsumeFinished(com.smartdeviceny.njts.billing.Purchase purchase, IabResult result) {
-//                                        System.out.println("BILLING Purchase" + purchase + " consumed");
-//                                    }
-//                                });
-//                            } else {
-//
-//                            }
-//                        }
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            });
+            mHelper.launchPurchaseFlow(MainActivity.this, "donation_dollar_4", 10001, new IabHelper.OnIabPurchaseFinishedListener() {
+                @Override
+                public void onIabPurchaseFinished(IabResult result, com.smartdeviceny.njts.billing.Purchase info) {
+                    System.out.println("RESULT BIL " + result.getMessage());
+                    if (result.getResponse() == 7) { // already owned
+                        // cons
+                        //mHelper.consumeAsync();
+                    }
+                    if (info != null) {
+                        System.out.println("PURCHASE:" + info.getOrderId());
+                        System.out.println("PURCHASE:" + info.getSku());
+                        System.out.println("PURCHASE:" + info.getPurchaseState());
+                        System.out.println("PURCHASE:" + info.getPurchaseTime());
+                    }
+                }
+            });
+
+            mHelper.queryInventoryAsync(true, moreItemSkus, moreSubItemSkus, new IabHelper.QueryInventoryFinishedListener() {
+                @Override
+                public void onQueryInventoryFinished(IabResult result, Inventory inv) {
+                    try {
+                        //Field method = inv.getClass().getDeclaredField("mSkuMap");
+                        //method.setAccessible(true);
+                        System.out.println("BILLING getTitle" + inv);
+                        for (com.smartdeviceny.njts.billing.SkuDetails sku : Arrays.asList(inv.getSkuDetails("donation_dollar_4"))) {
+                            //SkuDetails sku = inv.getSkuDetails("DONATE");
+
+                            System.out.println("BILLING getTitle" + sku.getTitle());
+                            System.out.println("BILLING getDescription" + sku.getDescription());
+                            System.out.println("BILLING getPrice" + sku.getPrice());
+                            System.out.println("BILLING getSku" + sku.getSku());
+                            System.out.println("BILLING getType" + sku.getType());
+                            com.smartdeviceny.njts.billing.Purchase purchase = inv.getPurchase(sku.getSku());
+                            System.out.println("BILLING Purchase" + purchase);
+                            if (purchase != null) {
+                                mHelper.consumeAsync(purchase, new IabHelper.OnConsumeFinishedListener() {
+                                    @Override
+                                    public void onConsumeFinished(com.smartdeviceny.njts.billing.Purchase purchase, IabResult result) {
+                                        System.out.println("BILLING Purchase" + purchase + " consumed");
+                                    }
+                                });
+                            } else {
+
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
