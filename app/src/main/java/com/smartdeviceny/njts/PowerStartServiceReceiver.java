@@ -5,8 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.JobID;
@@ -54,6 +55,7 @@ public class PowerStartServiceReceiver extends BroadcastReceiver {
             //Utils.notify_user(context, NotificationGroup.POWER_SERVICE, "system up, scheduling process succedeed", NotificationGroup.POWER_SERVICE.getID() +2);
 
         }
+        Utils.scheduleJob(context.getApplicationContext(), JobID.NJTAlertJobService, NJTAlertJobService.class, (int) diff, false, null);
     }
 
 

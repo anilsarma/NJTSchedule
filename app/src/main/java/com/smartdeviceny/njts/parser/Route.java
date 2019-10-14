@@ -11,7 +11,7 @@ public class Route {
     //final DateFormatCont time24HFmt = new SimpleDateFormat("HH:mm:ss");
     final DateFormat dateFmt = new SimpleDateFormat("yyyyMMdd");
     public String station_code;
-    public String departture_time;
+    public String departure_time;
     public String arrival_time;
     public String block_id;
     public String route_name;
@@ -29,7 +29,7 @@ public class Route {
 
     public Route(String station_code, String date, String from, String to, HashMap<String, Object> data, boolean isfavorite) {
         this.station_code = station_code;
-        departture_time = data.get("departure_time").toString();
+        departure_time = data.get("departure_time").toString();
         arrival_time = data.get("destination_time").toString();
         block_id = data.get("block_id").toString();
         route_name = data.get("route_long_name").toString();
@@ -41,7 +41,7 @@ public class Route {
         this.favorite = isfavorite;
         try {
             // remember hours are more than 24 hrs here to represent the next day.
-            this.departure_time_as_date = dateTim24HrFmt.parse(date + " " + departture_time);
+            this.departure_time_as_date = dateTim24HrFmt.parse(date + " " + departure_time);
             this.arrival_time_as_date = dateTim24HrFmt.parse(date + " " + arrival_time);
 
             this.date = dateFmt.format(departure_time_as_date);
@@ -64,6 +64,6 @@ public class Route {
 
     @Override
     public String toString() {
-        return "Route@" + block_id + " Time:" + departture_time;
+        return "Route@" + block_id + " Time:" + departure_time;
     }
 }

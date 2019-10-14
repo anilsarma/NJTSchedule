@@ -3,40 +3,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/route_header_background"
+    android:background="@color/blue_jay"
     android:textColor="@android:color/white"
     android:orientation="vertical"
 
     >
+
     <TextView
         android:id="@+id/list_item_section_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/route_header_background"
-        android:paddingTop="5sp"
+
+
         android:paddingLeft="5sp"
+        android:paddingTop="5sp"
         android:paddingRight="5sp"
-        android:textColor="#80FFFFFF"
         android:text="2018"
-        android:textSize="20sp" />
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
     <TextView
         android:id="@+id/list_item_section_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/route_header_background"
+
+
         android:paddingLeft="20sp"
         android:paddingTop="2sp"
-        android:paddingBottom="5sp"
+        android:paddingBottom="10sp"
+        android:text="New York Penn Station #10143; New Brunswick Secaus and something really long"
         android:textColor="#80FFFFFF"
-        android:text="New York Penn Station #10143; New Brunswick"
-        android:textSize="15sp" />
-
-
-        <View
-            android:paddingBottom="5sp"
-            android:layout_width="match_parent"
-            android:layout_height="10sp"
-            android:layout_centerInParent="true"
-            android:background="#000000"></View>
+        android:textSize="14sp"
+        android:textStyle="bold" />
 
 </LinearLayout>

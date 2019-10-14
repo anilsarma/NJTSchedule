@@ -13,6 +13,7 @@
         android:id="@+id/menu_reverse"
         android:titleCondensed="Reverse"
         android:title="Reverse"
+        android:visible="false"
         android:icon="@mipmap/ic_menu_swap_foreground"
         app:showAsAction="always">
     </item>
@@ -20,6 +21,7 @@
         android:id="@+id/menu_Refresh"
         android:titleCondensed="Refresh"
         android:title="Refresh"
+        android:visible="false"
         android:icon="@android:drawable/ic_menu_rotate"
         app:showAsAction="always">
     </item>

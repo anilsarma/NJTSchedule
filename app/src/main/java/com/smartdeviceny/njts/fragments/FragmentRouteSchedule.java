@@ -3,17 +3,22 @@ package com.smartdeviceny.njts.fragments;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.smartdeviceny.njts.MainActivity;
 import com.smartdeviceny.njts.R;
 import com.smartdeviceny.njts.SystemService;
@@ -22,23 +27,19 @@ import com.smartdeviceny.njts.adapters.ServiceConnected;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.ConfigUtils;
-import com.smartdeviceny.njts.utils.NotificationChannels;
-import com.smartdeviceny.njts.utils.NotificationGroup;
-import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
 import com.smartdeviceny.njts.values.ConfigDefault;
 
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
 
 public class FragmentRouteSchedule extends Fragment implements ServiceConnected {
     RecycleSheduleAdaptor adapter;
     SharedPreferences config;
+    private FloatingActionButton fab;
 
     @Nullable
     @Override
@@ -57,12 +58,29 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
     String getConfig(SharedPreferences config, String name, String defaultValue) {
         return config.getString(name, defaultValue);
     }
+    private int getScreenWidthDp() {
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        return (int) (displayMetrics.widthPixels / displayMetrics.density);
+    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         RecyclerView recyclerView = getActivity().findViewById(R.id.schedule_vision_scroll_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
+        //recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        fab = view.findViewById(R.id.fab_recycler_view);
+        fab.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
+
+        if (getScreenWidthDp() >= 1200) {
+            final GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), 3);
+            recyclerView.setLayoutManager(gridLayoutManager);
+        } else if (getScreenWidthDp() >= 800) {
+            final GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), 2);
+            recyclerView.setLayoutManager(gridLayoutManager);
+        } else {
+            final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+            recyclerView.setLayoutManager(linearLayoutManager);
+        }
+        //recyclerView.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT));
         config = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         ArrayList<Route> routes = new ArrayList<>();
 
@@ -129,7 +147,7 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
 //        }
 //        if(config.getBoolean(Config.TRAIN_NOTIFICTION, ConfigDefault.TRAIN_NOTIFICTION) ) {
 //            Date now = new Date();
-//            for (DepartureVisionData dv : data.values()) {
+//            for (RecycleDepartureVisionData dv : data.values()) {
 //                try {
 //                    if (rt.keySet().contains(dv.block_id) && dv.favorite) {
 //                        String key = dv.block_id + startStation;
@@ -152,6 +170,10 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
 //        }
     }
 
+    @Override
+    public void onAlertsUpdated(SystemService systemService) {
+
+    }
 
     @Override
     public void onSystemServiceConnected(SystemService systemService) {
@@ -196,48 +218,6 @@ public class FragmentRouteSchedule extends Fragment implements ServiceConnected 
         } catch (Exception e) {
         }
         return index;
-    }
-    boolean notifyUser( DepartureVisionData dv) throws ParseException
-    {
-        // do this for favs only.
-        if (dv == null) {
-            return false;
-        }
-        if(!dv.favorite || dv.stale) {
-            return false;
-        }
-        if( dv.status.isEmpty() && dv.track.isEmpty()) {
-            return false;
-        }
-        // need to check of the current train in the current route.
-        Date now = new Date();
-        long diff = Utils.makeDate(Utils.getTodayYYYYMMDD(null),  dv.time, "yyyyMMdd HH:mm").getTime() - now.getTime();
-        // if after 12 we need to make an adjustment to the time in the departure vision.
-        if( now.getHours()>12) {
-            diff += TimeUnit.HOURS.toMillis(12);
-        }
-        String startStation = getConfig(config, Config.START_STATION,  ConfigDefault.START_STATION);
-        SystemService systemService = ((MainActivity)getActivity()).systemService;
-        String stationCode = systemService!=null?systemService.getStationCode(startStation):"";
-
-        // is this train status in the correct i.e does i
-
-        if (diff > 0 && stationCode.equals(dv.station_code)) {  // other checks needed.
-            String msg  = "Train " + dv.block_id + " departs " + dv.time + " from " + dv.station_code;
-            String subject= msg;
-            if( !dv.track.isEmpty()) {
-                msg += " Track " + dv.track;
-            }
-            if( !dv.status.isEmpty()) {
-                msg += " " + dv.status;
-            }
-            Log.d(NotificationGroup.UPCOMING.getName(), msg);
-            //Utils.notify_user(this.getActivity(),  NotificationGroup.UPCOMING, subject,  msg, NotificationGroup.UPCOMING.getID() + 10000 + Integer.parseInt(dv.block_id));
-            //Toast.makeText(getActivity().getApplicationContext(), (String) "sent notification ", Toast.LENGTH_SHORT).show();
-            return true;
-            //notification = true;
-        }
-        return  false;
     }
 
 

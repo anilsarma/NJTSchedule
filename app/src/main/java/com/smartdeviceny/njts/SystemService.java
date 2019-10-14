@@ -12,17 +12,19 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionParser;
+import com.smartdeviceny.njts.parser.DepartureVisionWrapper;
 import com.smartdeviceny.njts.parser.Route;
 import com.smartdeviceny.njts.utils.ConfigUtils;
 import com.smartdeviceny.njts.utils.DownloadFile;
-import com.smartdeviceny.njts.utils.NotificationChannels;
 import com.smartdeviceny.njts.utils.NotificationGroup;
 import com.smartdeviceny.njts.utils.SQLHelper;
 import com.smartdeviceny.njts.utils.SQLiteLocalDatabase;
@@ -290,10 +292,14 @@ public class SystemService extends Service {
     }
 
     private void sendDatabaseReady() {
-        if (isDatabaseReady()) {
-            Intent intent = new Intent(NotificationValues.BROADCAT_DATABASE_READY);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-            Log.d("SVC", "sending database ready");
+        try {
+            if (isDatabaseReady()) {
+                Intent intent = new Intent(NotificationValues.BROADCAT_DATABASE_READY);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                Log.d("SVC", "sending database ready");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -319,37 +325,46 @@ public class SystemService extends Service {
 
     // SQL related messages similar to the uil
     public boolean isDatabaseReady() {
-        if (sql == null) {
+        try {
+            if (sql == null) {
+                return false;
+            }
+            SQLiteDatabase db = sql.getWritableDatabase();
+            if (SqlUtils.check_if_user_pref_exists(db)) {
+                Log.d("SVC", "checking if database is ready.");
+                if (SqlUtils.check_if_table_exists(db, "routes") && SqlUtils.check_if_table_exists(db, "trips")) {
+                    Log.d("SVC", "database is ready.");
+                    return true;
+                }
+            }
+            Log.d("SVC", "database is not ready.");
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
-        SQLiteDatabase db = sql.getWritableDatabase();
-        if (SqlUtils.check_if_user_pref_exists(db)) {
-            Log.d("SVC", "checking if database is ready.");
-            if (SqlUtils.check_if_table_exists(db, "routes") && SqlUtils.check_if_table_exists(db, "trips")) {
-                Log.d("SVC", "database is ready.");
-                return true;
-            }
-        }
-        Log.d("SVC", "database is not ready.");
-        return false;
     }
 
     private void setupDb() {
-        if (sql == null) {
-            File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
-            if (f.exists()) {
-                sql = createSQLDB(f.getName(), LOCAL_DB_NAME);
+        try {
+            if (sql == null) {
+                File f = new File(getApplicationContext().getApplicationInfo().dataDir + File.separator + "rails_db.sql");
+                if (f.exists()) {
+                    sql = createSQLDB(f.getName(), LOCAL_DB_NAME);
+                }
             }
-        }
-        if (sql != null) {
-            // check for a valid database.
-            String db = UtilsDBVerCheck.getDBVersion(sql);
-            if (db.isEmpty()) {
+            if (sql != null) {
+                // check for a valid database.
+                String db = UtilsDBVerCheck.getDBVersion(sql);
+                if (db.isEmpty()) {
+                    checkForUpdate(false);
+                }
+            } else {
+                // we don't have a  db get it.
                 checkForUpdate(false);
             }
-        } else {
-            // we don't have a  db get it.
-            checkForUpdate(false);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -494,8 +509,10 @@ public class SystemService extends Service {
 
             String pendingUrl = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
 
-            if (pendingUrl.equals(url)) {
-                count++;
+            if ( status == DownloadManager.STATUS_PENDING||status == DownloadManager.STATUS_RUNNING) {
+                if( pendingUrl.equals(url)) {
+                    count++;
+                }
             }
         }
         Log.d("SVC", "total pending entries in table " + entries);
@@ -545,9 +562,10 @@ public class SystemService extends Service {
                     json.put("url", url);
                     json.put("data", encoded);
                     json.put("code", code);
-                    Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
+                    // Utils.setConfig(config,Config.DEPARTURE_VISION, json.toString());
 
-                    HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, doc);
+                    HashMap<String, DepartureVisionData> result = parser.parseDepartureVision(code, getStationNameFromCode(code), doc);
+
                     updateDepartureVision(code, result);
                     // we should use only the active stations
                     HashMap<String, DepartureVisionData> tmp_trip = new HashMap<>();
@@ -556,9 +574,19 @@ public class SystemService extends Service {
                         activeList.add(code);// just so that things are not empty.
                     }
 
+                    DepartureVisionWrapper wrapper = new DepartureVisionWrapper();
+                    wrapper.time = new Date();
+                    wrapper.url = url;
+                    wrapper.code = code;
+
+                    DepartureVisionWrapper currentWrapper = new DepartureVisionWrapper(wrapper.time, code, url);
+                    for (Map.Entry<String, DepartureVisionData> e : result.entrySet()) {
+                        currentWrapper.entries.add(e.getValue());
+                    }
 
                     for (String key : activeList) {
                         for (DepartureVisionData dd : status.get(key).values()) {
+                            wrapper.entries.add(dd);
                             dd.favorite = false;
                             if (favorites.contains(dd.block_id)) {
                                 dd.favorite = true;
@@ -567,12 +595,17 @@ public class SystemService extends Service {
                             //Log.d("SVC", "entry code=" + code + " key=" + key + " " + dd.createTime + " " + dd.time + " train:" + dd.block_id + " " + dd.station  + " track#" + dd.track + " stale:" + dd.stale);
                         }
                     }
+                    Utils.setConfig(config, Config.DEPARTURE_VISION, JSONObjectSerializer.marshall(wrapper).toString());
+                    Utils.setConfig(config, Config.DEPARTURE_VISION + "." + code, JSONObjectSerializer.marshall(currentWrapper).toString());
                     synchronized (lock_status_by_trip) {
                         status_by_trip = tmp_trip;
                     }
                     sendDepartVisionUpdated();
                     // send this off on an intent.
+
                 } catch (Exception e) {
+                    Log.d("SVC", "Failed to parse soup " + e.getMessage());
+                } catch(Throwable e) {
                     Log.d("SVC", "Failed to parse soup " + e.getMessage());
                 } finally {
                     dvPendingRequests.updatePending(station, -1, null);
@@ -650,7 +683,7 @@ public class SystemService extends Service {
             for (Map.Entry entry : status_by_trip.entrySet()) {
                 data.put((String) entry.getKey(), ((DepartureVisionData) entry.getValue()).clone());
             }
-            //return (HashMap<String, DepartureVisionData>) status_by_trip.clone();
+            //return (HashMap<String, RecycleDepartureVisionData>) status_by_trip.clone();
             return data;
         }
     }
@@ -687,7 +720,17 @@ public class SystemService extends Service {
         }
         return value;
     }
+     public String getStationNameFromCode(String code) {
+         if (sql == null) {
+             return code;
+         }
+         String value = SqlUtils.getStationNameFromCode(sql.getReadableDatabase(), code);
 
+         if (value == null || value.isEmpty()) {
+             return code;
+         }
+         return value;
+    }
     public ArrayList<HashMap<String, Object>> getTripStops(String trip_id) {
         SQLiteDatabase db = null;
         ArrayList<HashMap<String, Object>> tripStops = new ArrayList<>();

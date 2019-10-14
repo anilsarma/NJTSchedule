@@ -13,7 +13,7 @@ import java.io.File;
 
 public class SystemServiceTest {
 
-    @Test
+    //@Test
     public void systemServiceBasic() {
         SystemService systemService = Mockito.spy(new SystemService());
         Context context = Mockito.mock(Context.class);

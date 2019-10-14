@@ -7,9 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,8 +51,10 @@ public class DownloadFile {
         request.setVisibleInDownloadsUi(false);
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
         request.setAllowedNetworkTypes(request_flags);
-        request.setRequiresDeviceIdle(false);
-        request.setRequiresCharging(false);
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N) {
+            request.setRequiresDeviceIdle(false);
+            request.setRequiresCharging(false);
+        }
         request.setTitle(title);
         request.addRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 5.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36");
 
@@ -83,11 +87,21 @@ public class DownloadFile {
         @Override
         public void onReceive(Context context, Intent intent) {
             //if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action))
-            handle_download_complete();
+            try {
+                handle_download_complete();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
         }
         public void handle_download_complete() {
             DownloadManager.Query query = new DownloadManager.Query();
-            long rids[] = requestid.stream().mapToLong(l -> l).toArray();
+            //long rids[] = requestid.stream().mapToLong(l -> l).toArray(); // api 24
+            long rids[] =  new long[requestid.size()];
+            int i=0;
+            for(Long l:requestid) {
+                rids[i++]=(long)l;
+            }
+           // requestid.toArray(new Long[0])
             query.setFilterById(rids);
             if (rids.length == 0) {
                 return;
@@ -102,7 +116,11 @@ public class DownloadFile {
                     boolean removeFile = true;
                     if (DownloadFile.this.callback != null) {
                         String url = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
-                        removeFile = DownloadFile.this.callback.downloadComplete(DownloadFile.this, ID, url, mFile);
+                        try {
+                            removeFile = DownloadFile.this.callback.downloadComplete(DownloadFile.this, ID, url, mFile);
+                        }catch (Throwable e) {
+                            e.printStackTrace();
+                        }
                     }
                     if (removeFile) {
                         Utils.delete(mFile);

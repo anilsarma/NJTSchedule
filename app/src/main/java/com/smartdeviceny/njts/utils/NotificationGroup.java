@@ -93,7 +93,38 @@ public enum NotificationGroup {
         public String getDescription() {
             return  "Update Check - Debug";
         }
-    };
+    },
+    ALERT_CHECK_SERVICE {
+        public NotificationChannels getChannel() { return NotificationChannels.DEBUG;}
+        public int  getID() {
+            return 7000;
+        }
+        public String getGroupID() {
+            return "NJTS";
+        }
+        public String getName() {
+            return "Alert Check";
+        }
+        public String getDescription() {
+            return  "Alert Check - Debug";
+        }
+    },
+    ALERT {
+        public NotificationChannels getChannel() { return NotificationChannels.DEBUG;}
+        public int  getID() {
+            return 8000;
+        }
+        public String getGroupID() {
+            return "NJTS";
+        }
+        public String getName() {
+            return "Alert";
+        }
+        public String getDescription() {
+            return  "Alert";
+        }
+    }
+    ;
     abstract public NotificationChannels getChannel();
     abstract public int  getID();
     public String getUniqueID() { return getChannel().getUniqueID() + "." + getGroupID() + "." + getID();}

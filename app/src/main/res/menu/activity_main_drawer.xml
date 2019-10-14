@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/nave_rate"
+            android:icon="@drawable/ic_baseline_rate_review_24px"
+            android:enabled="true"
+            android:title="Rate in Play Store" />
+        <item
+            android:id="@+id/nav_donate"
+            android:icon="@drawable/ic_favorite_red_border_24px"
+            android:enabled="false"
+            android:title="Donate" />
+    </group>
+
+    <item
+        android:id="@+id/nav_license"
+        android:icon="@drawable/ic_baseline_library_books_24px"
+        android:title="Legal Stuff" />
+
+</menu>

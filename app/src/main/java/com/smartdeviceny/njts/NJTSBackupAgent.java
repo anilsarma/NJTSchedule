@@ -4,6 +4,7 @@ import android.app.backup.BackupAgentHelper;
 import android.app.backup.BackupDataInput;
 import android.app.backup.BackupDataOutput;
 import android.app.backup.SharedPreferencesBackupHelper;
+import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -20,8 +21,10 @@ public class NJTSBackupAgent extends BackupAgentHelper {
     @Override
     public void onCreate() {
         Log.d("BACKUP", "created");
-        SharedPreferencesBackupHelper helper = new SharedPreferencesBackupHelper(this, PreferenceManager.getDefaultSharedPreferencesName(this));
-        addHelper(PREFS_BACKUP_KEY, helper);
+        if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.N) {
+            SharedPreferencesBackupHelper helper = new SharedPreferencesBackupHelper(this, PreferenceManager.getDefaultSharedPreferencesName(this));
+            addHelper(PREFS_BACKUP_KEY, helper);
+        }
     }
 
     @Override

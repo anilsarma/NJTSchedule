@@ -7,11 +7,15 @@ import com.smartdeviceny.njts.utils.Utils;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.io.IOException;
 
 
-
+@RunWith(RobolectricTestRunner.class)
+@Config(sdk = 24)
 public class Base64Test {
 
     @Test
