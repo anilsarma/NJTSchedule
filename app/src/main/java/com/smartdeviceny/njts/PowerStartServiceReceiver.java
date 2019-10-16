@@ -41,7 +41,8 @@ public class PowerStartServiceReceiver extends BroadcastReceiver {
         long diff = Utils.alignTime(ms_frequency);
         boolean result = Utils.scheduleJob(context.getApplicationContext(), JobID.UpdateCheckerJobService, UpdateCheckerJobService.class, (int) diff, false, null);
         if(debug) {
-            Utils.notify_user(context, NotificationGroup.POWER_SERVICE, null, "scheduling UpdateChecker " + diff, NotificationGroup.POWER_SERVICE.getID() +1);
+            Utils.notify_user(context, NotificationGroup.POWER_SERVICE, null, "scheduling UpdateChecker " +
+                    diff/1000 + " (s)", NotificationGroup.POWER_SERVICE.getID() +1);
         }
 
         if(!result) {

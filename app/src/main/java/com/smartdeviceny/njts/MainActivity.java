@@ -25,6 +25,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.ViewPager;
 
@@ -41,6 +42,7 @@ import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
+import com.smartdeviceny.SharedLiveData;
 import com.smartdeviceny.njts.adapters.FragmentPagerMainPageAdaptor;
 import com.smartdeviceny.njts.adapters.ServiceConnected;
 import com.smartdeviceny.njts.billing.IabHelper;
@@ -125,6 +127,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             filter.addAction(NotificationValues.BROADCAT_PERIODIC_TIMER);
             filter.addAction(NotificationValues.BROADCAT_NOTIFY_CONFIG_CHANGED);
             LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, filter);
+            SharedLiveData.instance().getDataBaseCheckComplete().observe( this, x -> {
+                Intent intent = new Intent();
+                intent.setAction(x);
+                mMessageReceiver.onReceive(getApplicationContext(), intent);
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -331,6 +339,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void sendNotifyConfigChanged() {
         Intent intent = new Intent(NotificationValues.BROADCAT_NOTIFY_CONFIG_CHANGED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        SharedLiveData.instance().getDataBaseCheckComplete().postValue(NotificationValues.BROADCAT_NOTIFY_CONFIG_CHANGED);
         Log.d("MAIN", "sending BROADCAT_NOTIFY_CONFIG_CHANGED");
 
     }

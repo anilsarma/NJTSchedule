@@ -15,8 +15,13 @@ import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.smartdeviceny.SharedLiveData;
 import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionParser;
@@ -44,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class UpdateCheckerJobService extends JobService {
+public class UpdateCheckerJobService extends JobService  {
 
     public UpdateCheckerJobService() {
         super();
@@ -415,8 +420,10 @@ public class UpdateCheckerJobService extends JobService {
         }
     }
 
+
     private void sendCheckForUpdate() {
         Intent intent = new Intent(NotificationValues.BROADCAT_CHECK_FOR_UPDATE_NO_FILTER);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        SharedLiveData.instance().getComunicate().postValue(NotificationValues.BROADCAT_CHECK_FOR_UPDATE_NO_FILTER);
     }
 }

@@ -16,8 +16,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.util.Log;
 
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.smartdeviceny.SharedLiveData;
 import com.smartdeviceny.njts.annotations.JSONObjectSerializer;
 import com.smartdeviceny.njts.parser.DepartureVisionData;
 import com.smartdeviceny.njts.parser.DepartureVisionParser;
@@ -51,7 +56,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public class SystemService extends Service {
+public class SystemService extends Service implements LifecycleOwner {
 
     boolean checkingVersion;
     SQLiteLocalDatabase sql;
@@ -73,7 +78,7 @@ public class SystemService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        registry.setCurrentState(Lifecycle.State.STARTED);
 
         config = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Set<String> tmp = config.getStringSet(Config.FAVORITES, favorites);
@@ -83,12 +88,31 @@ public class SystemService extends Service {
         filter.addAction(NotificationValues.BROADCAT_CHECK_FOR_UPDATE);
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, filter);
 
+
+        SharedLiveData.instance().getComunicate().observe( this, x -> {
+                Intent intent = new Intent();
+                intent.setAction(x);
+                mMessageReceiver.onReceive(getApplicationContext(), intent);
+
+        });
+
+
         setupDb();
         sendDatabaseReady();
     }
 
+
+    LifecycleRegistry registry = new LifecycleRegistry(this);
+    @NonNull
+    @Override
+    public Lifecycle getLifecycle() {
+
+        return registry;
+    }
+
     @Override
     public void onDestroy() {
+        registry.setCurrentState(Lifecycle.State.DESTROYED);
         if (sql != null) {
             sql.close();
             sql = null;
@@ -296,6 +320,7 @@ public class SystemService extends Service {
             if (isDatabaseReady()) {
                 Intent intent = new Intent(NotificationValues.BROADCAT_DATABASE_READY);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                SharedLiveData.instance().getDataBaseCheckComplete().postValue(NotificationValues.BROADCAT_DATABASE_READY);
                 Log.d("SVC", "sending database ready");
             }
         } catch (Exception e) {
@@ -307,12 +332,14 @@ public class SystemService extends Service {
         Intent intent = new Intent(NotificationValues.BROADCAT_DATABASE_CHECK_COMPLETE);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         Log.d("SVC", "sending " + NotificationValues.BROADCAT_DATABASE_CHECK_COMPLETE);
+        SharedLiveData.instance().getDataBaseCheckComplete().postValue( NotificationValues.BROADCAT_DATABASE_CHECK_COMPLETE);
 
     }
 
     private void sendDepartVisionUpdated() {
         Intent intent = new Intent(NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        SharedLiveData.instance().getDataBaseCheckComplete().postValue(NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
         Log.d("SVC", "sending " + NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED);
         //Toast.makeText(getApplicationContext(),"sending " + NotificationValues.BROADCAT_DEPARTURE_VISION_UPDATED, Toast.LENGTH_SHORT).show();
     }
@@ -320,6 +347,7 @@ public class SystemService extends Service {
     public void sendTimerEvent() {
         Intent intent = new Intent(NotificationValues.BROADCAT_PERIODIC_TIMER);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        SharedLiveData.instance().getDataBaseCheckComplete().postValue(NotificationValues.BROADCAT_PERIODIC_TIMER);
         Log.d("SVC", "sending " + NotificationValues.BROADCAT_PERIODIC_TIMER);
     }
 

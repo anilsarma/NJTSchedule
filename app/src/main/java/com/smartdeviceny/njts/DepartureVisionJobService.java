@@ -12,6 +12,7 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.smartdeviceny.SharedLiveData;
 import com.smartdeviceny.njts.utils.JobID;
 import com.smartdeviceny.njts.utils.Utils;
 import com.smartdeviceny.njts.values.Config;
@@ -81,11 +82,13 @@ public class DepartureVisionJobService extends JobService {
     public void sendTimerEvent() {
         Intent intent = new Intent(NotificationValues.BROADCAT_PERIODIC_TIMER);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        SharedLiveData.instance().getDataBaseCheckComplete().postValue(NotificationValues.BROADCAT_PERIODIC_TIMER);
         //Log.d("JOB", "sending " + NotificationValues.BROADCAT_PERIODIC_TIMER);
     }
     public void sendDepartureVisionPings() {
         Intent intent = new Intent(NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        SharedLiveData.instance().getDataBaseCheckComplete().postValue(NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
         //Log.d("JOB", "sending " + NotificationValues.BROADCAT_SEND_DEPARTURE_VISION_PING);
     }
 
